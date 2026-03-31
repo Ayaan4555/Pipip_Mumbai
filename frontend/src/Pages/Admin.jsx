@@ -15,10 +15,10 @@ import {
 import axios from "axios";
 
 import { Link } from "react-router-dom";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-// import { Badge } from "../components/ui/badge";
-// import { Button } from "../components/ui/button";
+// import { Badge } from "../components/ui/Badge";
+// import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 
 const Admin = () => {
   const [submissions, setSubmissions] = useState([]);

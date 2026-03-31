@@ -15,15 +15,15 @@ import {
   Filter,
 } from "lucide-react";
 
-import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/Select";
+} from "../components/ui/select";
 import { Skeleton } from "../components/ui/skeleton";
 
 import Header from "../components/Header";

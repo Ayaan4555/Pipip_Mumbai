@@ -9,7 +9,7 @@ import Bikes from "./Pages/admin/Bikes";
 import BookBike from "./Pages/BookBike";
 import ScrollToTop from "./components/ScrollToTop";
 import Bookings from "./Pages/admin/Booking";
-import AdminLayout from "./components/admin/adminLayout";
+import AdminLayout from "./components/admin/AdminLayout";
 import Areas from "./Pages/admin/Areas";
 import Customers from "./Pages/admin/Customers";
 import ActiveRentals from "./Pages/admin/ActiveRentals";

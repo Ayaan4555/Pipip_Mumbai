@@ -20,8 +20,8 @@ import {
   Phone
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 

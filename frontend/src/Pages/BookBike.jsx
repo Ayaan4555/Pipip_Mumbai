@@ -26,7 +26,7 @@ import {
 
 
 import { toast } from "sonner";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useBike } from "../hooks/useBikes";
@@ -34,9 +34,9 @@ import { useActiveAreas } from "../hooks/useAreas";
 import { useBikeAvailability } from "../hooks/useBikeAvailability";
 import { useCreateCustomer } from "../hooks/useCustomer";
 import { useCreateBooking } from "../hooks/useBooking";
-import { Label } from "../components/ui/Label";
-import { Input } from "../components/ui/Input";
-import { Textarea } from "../components/ui/Textarea";
+import { Label } from "../components/ui/label";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription } from "../components/ui/alert";
 
 const initialCustomerData = {

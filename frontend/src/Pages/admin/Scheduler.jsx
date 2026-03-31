@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/Button';
+import { Button } from '../../components/ui/button';
 import { useBookings } from '../../hooks/useBooking';
 import { useBikes } from '../..//hooks/useBikes';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { Badge } from '../../components/ui/Badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Badge } from '../../components/ui/badge';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday, parseISO } from 'date-fns';
 import { Bike, Calendar, User, Phone, Clock, IndianRupee, Globe, CheckCircle2, AlertCircle, Timer, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/util';

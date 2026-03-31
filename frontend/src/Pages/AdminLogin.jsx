@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Input } from "../components/ui/Input";
-import { Label } from "../components/ui/Label";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
 import { Bike, Lock, Mail, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthProvider";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
