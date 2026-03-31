@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import axios from "axios";
 
-const API_BASE = "http://localhost:5000/api/areas"; // your backend endpoint
+const API_BASE = "https://pipip-backend-eid3.onrender.com/api/areas"; // your backend endpoint
 
 // Fetch all areas
 export function useAreas() {

@@ -15,7 +15,7 @@ export function useBikeAvailability() {
     setChecking(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/availability", {
+      const res = await axios.post("https://pipip-backend-eid3.onrender.com/api/availability", {
         bikeId,
         start_datetime: startDate.toISOString(),
         end_datetime: endDate.toISOString(),

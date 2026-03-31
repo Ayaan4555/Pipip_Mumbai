@@ -7,7 +7,7 @@ import NotFound from "./Pages/NotFound";
 import Catalog from "./Pages/Catalog";
 import Bikes from "./Pages/admin/Bikes";
 import BookBike from "./Pages/BookBike";
-import ScrollToTop from "./components/scrollToTop";
+import ScrollToTop from "./components/ScrollToTop";
 import Bookings from "./Pages/admin/Booking";
 import AdminLayout from "./components/admin/adminLayout";
 import Areas from "./Pages/admin/Areas";

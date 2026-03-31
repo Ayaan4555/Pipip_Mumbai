@@ -29,7 +29,7 @@ const Admin = () => {
   const fetchSubmissions = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/rentals/admin"
+        "https://pipip-backend-eid3.onrender.com/api/rentals/admin"
       );
       setSubmissions(res.data);
     } catch (error) {
@@ -52,7 +52,7 @@ const Admin = () => {
   const updateStatus = async (id, status) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/rentals/${id}/status`,
+        `https://pipip-backend-eid3.onrender.com/api/rentals/${id}/status`,
         { status }
       );
       fetchSubmissions(); // refresh list

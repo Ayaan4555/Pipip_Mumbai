@@ -40,7 +40,7 @@ export default function Settings() {
  });
 
  // Base URL for your Node.js backend
- const API_URL = "http://localhost:5000/api/auth";
+ const API_URL = "https://pipip-backend-eid3.onrender.com/api/auth";
 
  useEffect(() => {
    fetchStaff();
