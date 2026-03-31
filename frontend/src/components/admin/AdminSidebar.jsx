@@ -19,7 +19,7 @@ import {
 
 
 
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { cn } from "../../lib/util";
 import { useAuth } from "../../lib/AuthProvider";
 
