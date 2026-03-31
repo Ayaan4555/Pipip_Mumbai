@@ -156,6 +156,34 @@
 //   };
 
 
+// const {
+//   Cashfree,
+//   CFEnvironment,
+// } = require("cashfree-pg");
+
+// const Booking = require("../models/Booking");
+
+
+// // 🔥 DEBUG LOG
+// console.log(
+//   "ENVIRONMENT VALUE:",
+//   process.env.CASHFREE_ENV
+// );
+
+
+// // ✅ Correct Initialization
+
+// const cashfree = new Cashfree({
+//   XClientId: process.env.CASHFREE_APP_ID,
+//   XClientSecret: process.env.CASHFREE_SECRET_KEY,
+
+//   XEnvironment:
+//     process.env.CASHFREE_ENV === "production"
+//       ? CFEnvironment.PRODUCTION
+//       : CFEnvironment.SANDBOX,
+// });
+
+
 const {
   Cashfree,
   CFEnvironment,
@@ -164,25 +192,16 @@ const {
 const Booking = require("../models/Booking");
 
 
-// 🔥 DEBUG LOG
-console.log(
-  "ENVIRONMENT VALUE:",
-  process.env.CASHFREE_ENV
-);
-
-
-// ✅ Correct Initialization
+// 🔥 FORCE PRODUCTION (temporary test)
 
 const cashfree = new Cashfree({
   XClientId: process.env.CASHFREE_APP_ID,
   XClientSecret: process.env.CASHFREE_SECRET_KEY,
 
-  XEnvironment:
-    process.env.CASHFREE_ENV === "production"
-      ? CFEnvironment.PRODUCTION
-      : CFEnvironment.SANDBOX,
+  XEnvironment: CFEnvironment.PRODUCTION,
 });
 
+console.log("🚀 FORCED PRODUCTION MODE");
 
 // CREATE ORDER
 exports.createOrder =
