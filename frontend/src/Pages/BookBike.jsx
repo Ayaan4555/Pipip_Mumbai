@@ -218,35 +218,92 @@ export default function BookBike() {
 
 //online payment
 
+// const handleOnlinePayment =
+//   async (bookingId) => {
+//     try {
+//       const res = await fetch(
+//         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+//         {
+//           method: "POST",
+
+//           headers: {
+//             "Content-Type":
+//               "application/json",
+//           },
+
+//           body: JSON.stringify({
+//             amount:
+//               calculatePrice(),
+
+//             customerName:
+//               customerData.name,
+
+//             customerEmail:
+//               customerData.email ||
+//               "test@email.com",
+
+//             customerPhone:
+//               customerData.phone,
+
+//             bookingId:
+//               bookingId,
+//           }),
+//         }
+//       );
+
+//       const data =
+//         await res.json();
+
+        
+
+// if (!data.paymentSessionId) {
+//   console.error("Payment Error:", data);
+//   toast.error("Payment session failed");
+//   return;
+// }
+
+//       const cashfree =
+//         new window.Cashfree({
+//           mode: "production",
+//         });
+
+//       cashfree.checkout({
+//         paymentSessionId:
+//           data.paymentSessionId,
+
+//         redirectTarget:
+//           "_modal",
+//       });
+
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+
 const handleOnlinePayment =
   async (bookingId) => {
     try {
+
+      console.log("Creating payment order...");
+
       const res = await fetch(
-        "/api/payment/create-order",
+        "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
         {
           method: "POST",
-
           headers: {
             "Content-Type":
               "application/json",
           },
 
           body: JSON.stringify({
-            amount:
-              calculatePrice(),
-
-            customerName:
-              customerData.name,
-
+            amount: calculatePrice(),
+            customerName: customerData.name,
             customerEmail:
               customerData.email ||
               "test@email.com",
-
             customerPhone:
               customerData.phone,
-
-            bookingId:
-              bookingId,
+            bookingId,
           }),
         }
       );
@@ -254,13 +311,13 @@ const handleOnlinePayment =
       const data =
         await res.json();
 
-        
+      console.log("Payment response:", data);
 
-if (!data.paymentSessionId) {
-  console.error("Payment Error:", data);
-  toast.error("Payment session failed");
-  return;
-}
+      if (!data.paymentSessionId) {
+        console.error("Payment failed:", data);
+        toast.error("Payment failed");
+        return;
+      }
 
       const cashfree =
         new window.Cashfree({
@@ -270,13 +327,19 @@ if (!data.paymentSessionId) {
       cashfree.checkout({
         paymentSessionId:
           data.paymentSessionId,
-
-        redirectTarget:
-          "_modal",
+        redirectTarget: "_modal",
       });
 
     } catch (error) {
-      console.error(error);
+
+      console.error(
+        "PAYMENT ERROR:",
+        error
+      );
+
+      toast.error(
+        "Payment initialization failed"
+      );
     }
   };
 
@@ -330,6 +393,8 @@ if (!data.paymentSessionId) {
   setIsSubmitting(true);
 
   try {
+    console.log("STEP 1: Creating customer");
+
     const formData = new FormData();
 
     Object.entries(customerData).forEach(([key, value]) => {
@@ -338,11 +403,13 @@ if (!data.paymentSessionId) {
       }
     });
 
-    // Create Customer
     const customer =
       await createCustomer.mutateAsync(formData);
 
-    // Create Booking (IMPORTANT: store result)
+    console.log("Customer created:", customer);
+
+    console.log("STEP 2: Creating booking");
+
     const booking =
       await createBooking.mutateAsync({
         bike_id: bike._id,
@@ -355,7 +422,10 @@ if (!data.paymentSessionId) {
         status: "pending",
       });
 
-    // Call Payment using booking ID
+    console.log("Booking created:", booking);
+
+    console.log("STEP 3: Starting payment");
+
     await handleOnlinePayment(
       booking._id
     );
@@ -363,8 +433,13 @@ if (!data.paymentSessionId) {
     toast.success("Booking created!");
 
   } catch (err) {
-    console.error(err);
-    toast.error("Failed to create booking");
+    console.error("BOOKING ERROR:", err);
+
+    toast.error(
+      err?.response?.data?.message ||
+      "Failed to create booking"
+    );
+
   } finally {
     setIsSubmitting(false);
   }
