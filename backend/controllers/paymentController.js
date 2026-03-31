@@ -156,7 +156,6 @@
 //   };
 
 
-
 const {
   Cashfree,
   CFEnvironment,
@@ -166,7 +165,7 @@ const Booking =
   require("../models/Booking");
 
 
-// DEBUG (temporary — keep this)
+// 🔥 DEBUG (keep this)
 console.log(
   "ENV VALUE:",
   process.env.CASHFREE_ENV
