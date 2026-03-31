@@ -166,7 +166,14 @@ const Booking =
   require("../models/Booking");
 
 
-// Initialize Cashfree (correct v5 style)
+// DEBUG (temporary — keep this)
+console.log(
+  "ENV VALUE:",
+  process.env.CASHFREE_ENV
+);
+
+
+// ✅ Correct initialization
 
 const cashfree =
   new Cashfree({
@@ -177,8 +184,7 @@ const cashfree =
       process.env.CASHFREE_SECRET_KEY,
 
     XEnvironment:
-      process.env.CASHFREE_ENV ===
-      "production"
+      process.env.CASHFREE_ENV === "production"
         ? CFEnvironment.PRODUCTION
         : CFEnvironment.SANDBOX,
   });
