@@ -8,8 +8,8 @@ import {
   MapPin,
   Shield,
 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Badge } from "./ui/Badge";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
 import { useBikes } from "../hooks/useBikes";
 

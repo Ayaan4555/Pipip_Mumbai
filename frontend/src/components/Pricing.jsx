@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Check, IndianRupee, Clock, Calendar, Truck } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 import { NavLink } from "react-router-dom";
 
 

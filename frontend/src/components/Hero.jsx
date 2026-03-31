@@ -164,7 +164,7 @@ import { motion } from "framer-motion";
 import { MapPin, Calendar, Clock, ChevronDown, Sparkles } from "lucide-react";
 import { Check, IndianRupee } from "lucide-react";
 import heroImage from "../assets/hero-scooter.jpg";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
