@@ -1,7 +1,17 @@
-const { Cashfree, CFEnvironment } = require("cashfree-pg");
-const Booking = require("../models/Booking");
 
-Cashfree.XClientId = process.env.CASHFREE_APP_ID;
+const {
+  Cashfree,
+  CFEnvironment,
+  OrdersApi,
+} = require("cashfree-pg");
+
+const Booking =
+  require("../models/Booking");
+
+// Setup Cashfree
+
+Cashfree.XClientId =
+  process.env.CASHFREE_APP_ID;
 
 Cashfree.XClientSecret =
   process.env.CASHFREE_SECRET_KEY;
@@ -11,65 +21,93 @@ Cashfree.XEnvironment =
     ? CFEnvironment.PRODUCTION
     : CFEnvironment.SANDBOX;
 
-// CREATE ORDER
-exports.createOrder = async (req, res) => {
-  try {
-    const {
-      amount,
-      customerName,
-      customerEmail,
-      customerPhone,
-      bookingId,
-    } = req.body;
 
-    const orderId =
-      `bike_${Date.now()}`;
+// Create Order API
+exports.createOrder =
+  async (req, res) => {
 
-    const request = {
-      order_amount: amount,
-      order_currency: "INR",
-      order_id: orderId,
+    try {
 
-      customer_details: {
-        customer_id: bookingId,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
-      },
+      const {
+        amount,
+        customerName,
+        customerEmail,
+        customerPhone,
+        bookingId,
+      } = req.body;
 
-      order_meta: {
-        return_url:
-          `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
-      },
-    };
+      console.log(
+        "Payment Request:",
+        req.body
+      );
 
-    const response =
-      await Cashfree.PGCreateOrder(request);
+      const orderId =
+        `bike_${Date.now()}`;
 
-    // Save orderId in booking
-    await Booking.findByIdAndUpdate(
-      bookingId,
-      {
-        payment_order_id: orderId,
-      }
-    );
+      const request = {
+        order_amount: amount,
+        order_currency: "INR",
+        order_id: orderId,
 
-    res.json({
-      success: true,
-      paymentSessionId:
-        response.data.payment_session_id,
-      orderId,
-    });
+        customer_details: {
+          customer_id: bookingId,
+          customer_name:
+            customerName,
+          customer_email:
+            customerEmail,
+          customer_phone:
+            customerPhone,
+        },
 
-  } catch (error) {
-    console.error(error);
+        order_meta: {
+          return_url:
+            `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+        },
+      };
 
-    res.status(500).json({
-      success: false,
-      message:
-        "Payment order creation failed",
-    });
-  }
+      // NEW SDK CALL
+      const response =
+        await OrdersApi.createOrder(
+          request
+        );
+
+      console.log(
+        "Cashfree Response:",
+        response.data
+      );
+
+      // Save order ID
+      await Booking.findByIdAndUpdate(
+        bookingId,
+        {
+          payment_order_id:
+            orderId,
+        }
+      );
+
+      res.json({
+        success: true,
+        paymentSessionId:
+          response.data
+            .payment_session_id,
+        orderId,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "CREATE ORDER ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Payment order creation failed",
+        error:
+          error.message,
+      });
+    }
 };
 
 // WEBHOOK
