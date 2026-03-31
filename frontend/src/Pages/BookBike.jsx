@@ -216,6 +216,65 @@ export default function BookBike() {
     setStep(2);
   };
 
+//online payment
+
+const handleOnlinePayment =
+  async (bookingId) => {
+    try {
+      const res = await fetch(
+        "/api/payment/create-order",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            amount:
+              calculatePrice(),
+
+            customerName:
+              customerData.name,
+
+            customerEmail:
+              customerData.email ||
+              "test@email.com",
+
+            customerPhone:
+              customerData.phone,
+
+            bookingId:
+              bookingId,
+          }),
+        }
+      );
+
+      const data =
+        await res.json();
+
+      const cashfree =
+        new window.Cashfree({
+          mode: "production",
+        });
+
+      cashfree.checkout({
+        paymentSessionId:
+          data.paymentSessionId,
+
+        redirectTarget:
+          "_modal",
+      });
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
+
+
   /* =========================
      BOOKING SUBMIT
   ========================= */
@@ -245,6 +304,9 @@ export default function BookBike() {
         status: "pending",
       });
 
+      handleOnlinePayment(
+  booking._id);
+
       setBookingComplete(true);
       toast.success("Booking request submitted!");
     } catch (err) {
@@ -253,6 +315,8 @@ export default function BookBike() {
       setIsSubmitting(false);
     }
   };
+
+  
 
 
   if (bikeLoading) {

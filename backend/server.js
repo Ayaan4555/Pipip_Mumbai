@@ -45,6 +45,8 @@ const connectDB = require("./config/db");
 const areaRoutes = require("./routes/areaRoutes");
 const bikeRoutes = require("./routes/bikeRoutes");
 const rentalRoutes = require("./routes/rentalRoutes");
+const paymentRoutes =
+  require("./routes/paymentRoutes");
 
 // Connect to MongoDB
 connectDB();
@@ -57,6 +59,7 @@ app.use(express.json());
 
 
 
+
 // Routes
 app.use("/api/areas", areaRoutes);
 app.use("/api/bikes", bikeRoutes);
@@ -66,6 +69,10 @@ app.use("/api/bookings", require("./routes/BookingRoutes"));
 app.use("/api/availability", require("./routes/AvailabilityRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use(
+  "/api/payment",
+  paymentRoutes
+);
 
 // Global error handler (IMPORTANT)
 app.use((err, req, res, next) => {
