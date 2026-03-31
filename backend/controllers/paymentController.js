@@ -161,33 +161,27 @@ const {
   CFEnvironment,
 } = require("cashfree-pg");
 
-const Booking =
-  require("../models/Booking");
+const Booking = require("../models/Booking");
 
 
-// 🔥 DEBUG (keep this)
+// 🔥 DEBUG LOG
 console.log(
-  "ENV VALUE:",
+  "ENVIRONMENT VALUE:",
   process.env.CASHFREE_ENV
 );
 
 
-// ✅ Correct initialization
+// ✅ Correct Initialization
 
-const cashfree =
-  new Cashfree({
-    XClientId:
-      process.env.CASHFREE_APP_ID,
+const cashfree = new Cashfree({
+  XClientId: process.env.CASHFREE_APP_ID,
+  XClientSecret: process.env.CASHFREE_SECRET_KEY,
 
-    XClientSecret:
-      process.env.CASHFREE_SECRET_KEY,
-
-    XEnvironment:
-      process.env.CASHFREE_ENV === "production"
-        ? CFEnvironment.PRODUCTION
-        : CFEnvironment.SANDBOX,
-  });
-
+  XEnvironment:
+    process.env.CASHFREE_ENV === "production"
+      ? CFEnvironment.PRODUCTION
+      : CFEnvironment.SANDBOX,
+});
 
 
 // CREATE ORDER
