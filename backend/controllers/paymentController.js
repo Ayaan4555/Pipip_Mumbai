@@ -1,28 +1,26 @@
-
 const {
   Cashfree,
   CFEnvironment,
-  OrdersApi,
 } = require("cashfree-pg");
 
 const Booking =
   require("../models/Booking");
 
-// Setup Cashfree
+// Initialize Cashfree
 
-Cashfree.XClientId =
-  process.env.CASHFREE_APP_ID;
+const cashfree =
+  new Cashfree(
+    process.env.CASHFREE_APP_ID,
+    process.env.CASHFREE_SECRET_KEY,
+    process.env.CASHFREE_ENV ===
+      "production"
+      ? CFEnvironment.PRODUCTION
+      : CFEnvironment.SANDBOX
+  );
 
-Cashfree.XClientSecret =
-  process.env.CASHFREE_SECRET_KEY;
-
-Cashfree.XEnvironment =
-  process.env.CASHFREE_ENV === "production"
-    ? CFEnvironment.PRODUCTION
-    : CFEnvironment.SANDBOX;
 
 
-// Create Order API
+// CREATE ORDER
 exports.createOrder =
   async (req, res) => {
 
@@ -45,6 +43,7 @@ exports.createOrder =
         `bike_${Date.now()}`;
 
       const request = {
+
         order_amount: amount,
         order_currency: "INR",
         order_id: orderId,
@@ -63,20 +62,22 @@ exports.createOrder =
           return_url:
             `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
         },
+
       };
 
-      // NEW SDK CALL
+
+      // ✅ CORRECT METHOD
       const response =
-        await OrdersApi.createOrder(
+        await cashfree.orders.create(
           request
         );
 
       console.log(
         "Cashfree Response:",
-        response.data
+        response
       );
 
-      // Save order ID
+      // Save orderId in booking
       await Booking.findByIdAndUpdate(
         bookingId,
         {
@@ -88,8 +89,7 @@ exports.createOrder =
       res.json({
         success: true,
         paymentSessionId:
-          response.data
-            .payment_session_id,
+          response.payment_session_id,
         orderId,
       });
 
@@ -107,8 +107,9 @@ exports.createOrder =
         error:
           error.message,
       });
+
     }
-};
+  };
 
 // WEBHOOK
 exports.verifyWebhook =
