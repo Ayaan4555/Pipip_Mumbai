@@ -254,6 +254,14 @@ const handleOnlinePayment =
       const data =
         await res.json();
 
+        
+
+if (!data.paymentSessionId) {
+  console.error("Payment Error:", data);
+  toast.error("Payment session failed");
+  return;
+}
+
       const cashfree =
         new window.Cashfree({
           mode: "production",
@@ -278,11 +286,50 @@ const handleOnlinePayment =
   /* =========================
      BOOKING SUBMIT
   ========================= */
-  const handleBookingSubmit = async () => {
-    if (!bike || !startDate || !endDate) return;
+  // const handleBookingSubmit = async () => {
+  //   if (!bike || !startDate || !endDate) return;
 
-    setIsSubmitting(true);
-    try {
+  //   setIsSubmitting(true);
+  //   try {
+  //   const formData = new FormData();
+
+  //   Object.entries(customerData).forEach(([key, value]) => {
+  //     if (value !== null) {
+  //       formData.append(key, value);
+  //     }
+  //   });
+
+  //   const customer = await createCustomer.mutateAsync(formData);
+
+  //     await createBooking.mutateAsync({
+  //       bike_id: bike._id,
+  //       customer_id: customer._id,
+  //       start_datetime: new Date(startDate).toISOString(),
+  //       end_datetime: new Date(endDate).toISOString(),
+  //       total_amount: calculatePrice(),
+  //       notes: notes || undefined,
+  //       booking_source: "online",
+  //       status: "pending",
+  //     });
+
+  //     handleOnlinePayment(
+  // booking._id);
+
+  //     setBookingComplete(true);
+  //     toast.success("Booking request submitted!");
+  //   } catch (err) {
+  //     toast.error("Failed to create booking");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const handleBookingSubmit = async () => {
+  if (!bike || !startDate || !endDate) return;
+
+  setIsSubmitting(true);
+
+  try {
     const formData = new FormData();
 
     Object.entries(customerData).forEach(([key, value]) => {
@@ -291,8 +338,12 @@ const handleOnlinePayment =
       }
     });
 
-    const customer = await createCustomer.mutateAsync(formData);
+    // Create Customer
+    const customer =
+      await createCustomer.mutateAsync(formData);
 
+    // Create Booking (IMPORTANT: store result)
+    const booking =
       await createBooking.mutateAsync({
         bike_id: bike._id,
         customer_id: customer._id,
@@ -304,17 +355,20 @@ const handleOnlinePayment =
         status: "pending",
       });
 
-      handleOnlinePayment(
-  booking._id);
+    // Call Payment using booking ID
+    await handleOnlinePayment(
+      booking._id
+    );
 
-      setBookingComplete(true);
-      toast.success("Booking request submitted!");
-    } catch (err) {
-      toast.error("Failed to create booking");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    toast.success("Booking created!");
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to create booking");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   
 
