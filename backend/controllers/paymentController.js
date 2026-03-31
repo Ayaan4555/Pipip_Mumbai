@@ -1,14 +1,15 @@
-const Cashfree = require("cashfree-pg");
+const { Cashfree, CFEnvironment } = require("cashfree-pg");
 const Booking = require("../models/Booking");
 
 Cashfree.XClientId = process.env.CASHFREE_APP_ID;
+
 Cashfree.XClientSecret =
   process.env.CASHFREE_SECRET_KEY;
 
 Cashfree.XEnvironment =
   process.env.CASHFREE_ENV === "production"
-    ? Cashfree.Environment.PRODUCTION
-    : Cashfree.Environment.SANDBOX;
+    ? CFEnvironment.PRODUCTION
+    : CFEnvironment.SANDBOX;
 
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
