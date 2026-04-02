@@ -302,34 +302,92 @@ exports.createOrder =
 
 // WEBHOOK (your webhook is mostly correct)
 
+// exports.verifyWebhook = async (req, res) => {
+//   try {
+
+//     console.log(
+//       "Webhook received:",
+//       JSON.stringify(req.body)
+//     );
+
+//     console.log("Webhook received:", req.body);
+
+//     const data = req.body?.data;
+
+//     if (!data) {
+//       return res.status(400).json({
+//         message: "Invalid webhook data",
+//       });
+//     }
+
+//     const orderId =
+//       data.order.order_id;
+
+//     const orderStatus =
+//       data.order.order_status;
+
+//     const booking =
+//       await Booking.findOne({
+//         payment_order_id: orderId,
+//       });
+
+//     if (!booking) {
+//       return res.status(404).json({
+//         message: "Booking not found",
+//       });
+//     }
+
+//     if (orderStatus === "PAID") {
+
+//       booking.payment_status = "paid";
+//       booking.status = "confirmed";
+
+//     } else {
+
+//       booking.payment_status = "failed";
+
+//     }
+
+//     await booking.save();
+
+//     res.status(200).json({
+//       success: true,
+//     });
+
+//   } catch (error) {
+
+//     console.error(
+//       "Webhook Error:",
+//       error
+//     );
+
+//     res.status(500).json({
+//       success: false,
+//     });
+
+//   }
+// };
+
 exports.verifyWebhook = async (req, res) => {
   try {
-
-    console.log(
-      "Webhook received:",
-      JSON.stringify(req.body)
-    );
-
     console.log("Webhook received:", req.body);
 
-    const data = req.body?.data;
-
-    if (!data) {
-      return res.status(400).json({
-        message: "Invalid webhook data",
+    // Handle test webhook
+    if (!req.body.data?.order) {
+      return res.status(200).json({
+        success: true,
+        message: "Webhook test received",
       });
     }
 
-    const orderId =
-      data.order.order_id;
+    const data = req.body.data;
 
-    const orderStatus =
-      data.order.order_status;
+    const orderId = data.order.order_id;
+    const orderStatus = data.order.order_status;
 
-    const booking =
-      await Booking.findOne({
-        payment_order_id: orderId,
-      });
+    const booking = await Booking.findOne({
+      payment_order_id: orderId,
+    });
 
     if (!booking) {
       return res.status(404).json({
@@ -338,14 +396,10 @@ exports.verifyWebhook = async (req, res) => {
     }
 
     if (orderStatus === "PAID") {
-
       booking.payment_status = "paid";
       booking.status = "confirmed";
-
     } else {
-
       booking.payment_status = "failed";
-
     }
 
     await booking.save();
@@ -355,15 +409,10 @@ exports.verifyWebhook = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Webhook Error:", error);
 
-    console.error(
-      "Webhook Error:",
-      error
-    );
-
-    res.status(500).json({
+    res.status(200).json({
       success: false,
     });
-
   }
 };
