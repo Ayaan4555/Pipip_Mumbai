@@ -58,14 +58,14 @@ const app = express();
 // Middlewares
 app.use(cors());
 
-app.use(
-  "/api/payment",
-  paymentRoutes
-);
 
 
 app.use(express.json());
 
+app.use(
+  "/api/payment",
+  paymentRoutes
+);
 
 
 
