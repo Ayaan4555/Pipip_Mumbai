@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bike, Clock, Shield, MapPin, CreditCard, Headphones } from "lucide-react";
+import { Bike, Clock, Shield, MapPin, CreditCard, Headphones , Building2 } from "lucide-react";
 
 const About = () => {
   const features = [
