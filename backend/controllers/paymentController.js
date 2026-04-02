@@ -302,66 +302,68 @@ exports.createOrder =
 
 // WEBHOOK (your webhook is mostly correct)
 
-exports.verifyWebhook =
-  async (req, res) => {
+exports.verifyWebhook = async (req, res) => {
+  try {
 
-    try {
+    console.log(
+      "Webhook received:",
+      JSON.stringify(req.body)
+    );
 
-      const data =
-        req.body.data;
+    console.log("Webhook received:", req.body);
 
-      const orderId =
-        data.order.order_id;
+    const data = req.body?.data;
 
-      const orderStatus =
-        data.order.order_status;
+    if (!data) {
+      return res.status(400).json({
+        message: "Invalid webhook data",
+      });
+    }
 
-      const booking =
-        await Booking.findOne({
-          payment_order_id:
-            orderId,
-        });
+    const orderId =
+      data.order.order_id;
 
-      if (!booking) {
+    const orderStatus =
+      data.order.order_status;
 
-        return res
-          .status(404)
-          .json({
-            message:
-              "Booking not found",
-          });
-
-      }
-
-
-      if (orderStatus === "PAID") {
-
-        booking.payment_status =
-          "paid";
-
-        booking.status =
-          "confirmed";
-
-      } else {
-
-        booking.payment_status =
-          "failed";
-
-      }
-
-      await booking.save();
-
-      res.status(200).json({
-        success: true,
+    const booking =
+      await Booking.findOne({
+        payment_order_id: orderId,
       });
 
-    } catch (error) {
-
-      console.error(error);
-
-      res.status(500).json({
-        success: false,
+    if (!booking) {
+      return res.status(404).json({
+        message: "Booking not found",
       });
+    }
+
+    if (orderStatus === "PAID") {
+
+      booking.payment_status = "paid";
+      booking.status = "confirmed";
+
+    } else {
+
+      booking.payment_status = "failed";
 
     }
-  };
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Webhook Error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+    });
+
+  }
+};
