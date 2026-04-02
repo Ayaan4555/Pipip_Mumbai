@@ -58,7 +58,7 @@ const app = express();
 // Middlewares
 app.use(cors());
 
-
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json());
 

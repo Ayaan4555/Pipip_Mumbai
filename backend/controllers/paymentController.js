@@ -508,51 +508,109 @@ exports.createOrder = async (req, res) => {
 //   }
 // };
 
+// exports.verifyWebhook = async (req, res) => {
+//   try {
+//     const signature = req.headers["x-webhook-signature"];
+//     const timestamp = req.headers["x-webhook-timestamp"];
+    
+//     // req.body is a Buffer because of express.raw() in the router
+//     const rawBody = req.body.toString();
+
+//     // 1. Verify that the request actually came from Cashfree
+//     Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+
+//     const webhookData = JSON.parse(rawBody);
+//     const data = webhookData.data;
+
+//     // Handle test/empty webhooks
+//     if (!data || !data.order) {
+//       return res.status(200).send("OK");
+//     }
+
+//     const orderId = data.order.order_id;
+//     const orderStatus = data.order.order_status;
+
+//     // 2. Find and Update the booking
+//     const booking = await Booking.findOne({ payment_order_id: orderId });
+
+//     if (!booking) {
+//       console.error("Booking not found for order:", orderId);
+//       return res.status(404).send("Booking not found");
+//     }
+
+//     if (orderStatus === "PAID") {
+//       booking.payment_status = "paid";
+//       booking.status = "confirmed";
+//     } else if (["FAILED", "CANCELLED"].includes(orderStatus)) {
+//       booking.payment_status = "failed";
+//     }
+
+//     await booking.save();
+    
+//     // 3. Return 200 to Cashfree
+//     res.status(200).send("OK");
+
+//   } catch (error) {
+//     console.error("Webhook Verification Failed:", error.message);
+//     // Return 400 so Cashfree knows it failed
+//     res.status(400).send("Invalid Signature");
+//   }
+// };
+
+
 exports.verifyWebhook = async (req, res) => {
   try {
     const signature = req.headers["x-webhook-signature"];
     const timestamp = req.headers["x-webhook-timestamp"];
     
-    // req.body is a Buffer because of express.raw() in the router
+    // Ensure we are working with the raw string
     const rawBody = req.body.toString();
 
-    // 1. Verify that the request actually came from Cashfree
+    // 1. Verify Signature
+    // If you've already called Cashfree.XConfig, this works. 
+    // If not, you may need to pass the secret key as a 4th argument.
     Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
 
     const webhookData = JSON.parse(rawBody);
-    const data = webhookData.data;
+    const { data, type } = webhookData;
 
-    // Handle test/empty webhooks
-    if (!data || !data.order) {
+    console.log(`Received Webhook Type: ${type} for Order: ${data?.order_id}`);
+
+    // Handle initial test pings from Cashfree dashboard
+    if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
       return res.status(200).send("OK");
     }
 
-    const orderId = data.order.order_id;
-    const orderStatus = data.order.order_status;
+    const orderId = data.order_id;
+    const paymentStatus = data.payment_status; // Note: 'payment_status' instead of 'order.order_status'
 
     // 2. Find and Update the booking
+    // Using order_id (e.g., bike_1775134220570) as stored in your DB
     const booking = await Booking.findOne({ payment_order_id: orderId });
 
     if (!booking) {
-      console.error("Booking not found for order:", orderId);
-      return res.status(404).send("Booking not found");
+      console.error("Booking not found in DB for order_id:", orderId);
+      // We still return 200 so Cashfree stops retrying, or 404 if you want to keep retrying
+      return res.status(200).send("Booking not found but webhook received");
     }
 
-    if (orderStatus === "PAID") {
+    // 3. Logic based on payment_status
+    if (paymentStatus === "SUCCESS") {
       booking.payment_status = "paid";
       booking.status = "confirmed";
-    } else if (["FAILED", "CANCELLED"].includes(orderStatus)) {
+    } else if (["FAILED", "CANCELLED", "USER_DROPPED"].includes(paymentStatus)) {
       booking.payment_status = "failed";
+      booking.status = "cancelled";
     }
 
     await booking.save();
+    console.log(`Booking ${orderId} updated to ${paymentStatus}`);
     
-    // 3. Return 200 to Cashfree
     res.status(200).send("OK");
 
   } catch (error) {
-    console.error("Webhook Verification Failed:", error.message);
-    // Return 400 so Cashfree knows it failed
-    res.status(400).send("Invalid Signature");
+    console.error("Webhook Logic Failed:", error.message);
+    // 400 tells Cashfree the signature was wrong or the server crashed
+    res.status(400).send("Verification Failed");
   }
 };

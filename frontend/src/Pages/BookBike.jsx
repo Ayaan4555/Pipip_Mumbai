@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect  } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInHours } from "date-fns";
@@ -12,6 +12,8 @@ import {
   Check,
   AlertCircle,
   CheckCircle2,
+  XCircle,
+  Banknote
 } from "lucide-react";
 
 
@@ -70,6 +72,11 @@ export default function BookBike() {
   const [bookingComplete, setBookingComplete] = useState(false);
   const [availabilityMessage, setAvailabilityMessage] = useState(null);
   const [isAvailable, setIsAvailable] = useState(null);
+
+  
+  const [paymentFailed, setPaymentFailed] = useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("online");
 
   const { data: bike, isLoading: bikeLoading } = useBike(bikeId || "");
   const { data: areas } = useActiveAreas();
@@ -280,66 +287,130 @@ export default function BookBike() {
 //     }
 //   };
 
-const handleOnlinePayment =
-  async (bookingId) => {
+// const handleOnlinePayment =
+//   async (bookingId) => {
+//     try {
+
+//       console.log("Creating payment order...");
+
+//       const res = await fetch(
+//         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+//         {
+//           method: "POST",
+//           headers: {
+//             "Content-Type":
+//               "application/json",
+//           },
+
+//           body: JSON.stringify({
+//             amount: calculatePrice(),
+//             customerName: customerData.name,
+//             customerEmail:
+//               customerData.email ||
+//               "test@email.com",
+//             customerPhone:
+//               customerData.phone,
+//             bookingId,
+//           }),
+//         }
+//       );
+
+//       const data =
+//         await res.json();
+
+//       console.log("Payment response:", data);
+
+//       if (!data.paymentSessionId) {
+//         console.error("Payment failed:", data);
+//         toast.error("Payment failed");
+//         return;
+//       }
+
+//       const cashfree =
+//         new window.Cashfree({
+//           mode: "production",
+//         });
+
+//       cashfree.checkout({
+//         paymentSessionId:
+//           data.paymentSessionId,
+//         redirectTarget: "_modal",
+//       });
+
+//     } catch (error) {
+
+//       console.error(
+//         "PAYMENT ERROR:",
+//         error
+//       );
+
+//       toast.error(
+//         "Payment initialization failed"
+//       );
+//     }
+//   };
+
+// --- PAYMENT LOGIC ---
+  const handleOnlinePayment = async (bookingId) => {
     try {
+      const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: calculatePrice(),
+          customerName: customerData.name,
+          customerEmail: customerData.email || "customer@pipip.com",
+          customerPhone: customerData.phone,
+          bookingId,
+        }),
+      });
 
-      console.log("Creating payment order...");
+      const data = await res.json();
+      if (!data.paymentSessionId) throw new Error("Session creation failed");
 
-      const res = await fetch(
-        "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            amount: calculatePrice(),
-            customerName: customerData.name,
-            customerEmail:
-              customerData.email ||
-              "test@email.com",
-            customerPhone:
-              customerData.phone,
-            bookingId,
-          }),
-        }
-      );
-
-      const data =
-        await res.json();
-
-      console.log("Payment response:", data);
-
-      if (!data.paymentSessionId) {
-        console.error("Payment failed:", data);
-        toast.error("Payment failed");
-        return;
-      }
-
-      const cashfree =
-        new window.Cashfree({
-          mode: "production",
-        });
-
+      const cashfree = new window.Cashfree({ mode: "production" });
+      
       cashfree.checkout({
-        paymentSessionId:
-          data.paymentSessionId,
+        paymentSessionId: data.paymentSessionId,
         redirectTarget: "_modal",
+      }).then((result) => {
+          // You can check status here or wait for webhook
+          setConfirmedBookingId(bookingId);
+          setBookingComplete(true);
       });
 
     } catch (error) {
+      console.error("PAYMENT ERROR:", error);
+      setPaymentFailed(true);
+    }
+  };
 
-      console.error(
-        "PAYMENT ERROR:",
-        error
-      );
+  const handleBookingSubmit = async () => {
+    if (!bike || !startDate || !endDate) return;
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      Object.entries(customerData).forEach(([key, value]) => {
+        if (value !== null) formData.append(key, value);
+      });
 
-      toast.error(
-        "Payment initialization failed"
-      );
+      const customer = await createCustomer.mutateAsync(formData);
+      const booking = await createBooking.mutateAsync({
+        bike_id: bike._id,
+        customer_id: customer._id,
+        start_datetime: new Date(startDate).toISOString(),
+        end_datetime: new Date(endDate).toISOString(),
+        total_amount: calculatePrice(),
+        notes: notes || undefined,
+        booking_source: "online",
+        status: "pending",
+      });
+
+      await handleOnlinePayment(booking._id);
+    } catch (err) {
+      toast.error("Failed to create booking");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -387,63 +458,63 @@ const handleOnlinePayment =
   //   }
   // };
 
-  const handleBookingSubmit = async () => {
-  if (!bike || !startDate || !endDate) return;
+//   const handleBookingSubmit = async () => {
+//   if (!bike || !startDate || !endDate) return;
 
-  setIsSubmitting(true);
+//   setIsSubmitting(true);
 
-  try {
-    console.log("STEP 1: Creating customer");
+//   try {
+//     console.log("STEP 1: Creating customer");
 
-    const formData = new FormData();
+//     const formData = new FormData();
 
-    Object.entries(customerData).forEach(([key, value]) => {
-      if (value !== null) {
-        formData.append(key, value);
-      }
-    });
+//     Object.entries(customerData).forEach(([key, value]) => {
+//       if (value !== null) {
+//         formData.append(key, value);
+//       }
+//     });
 
-    const customer =
-      await createCustomer.mutateAsync(formData);
+//     const customer =
+//       await createCustomer.mutateAsync(formData);
 
-    console.log("Customer created:", customer);
+//     console.log("Customer created:", customer);
 
-    console.log("STEP 2: Creating booking");
+//     console.log("STEP 2: Creating booking");
 
-    const booking =
-      await createBooking.mutateAsync({
-        bike_id: bike._id,
-        customer_id: customer._id,
-        start_datetime: new Date(startDate).toISOString(),
-        end_datetime: new Date(endDate).toISOString(),
-        total_amount: calculatePrice(),
-        notes: notes || undefined,
-        booking_source: "online",
-        status: "pending",
-      });
+//     const booking =
+//       await createBooking.mutateAsync({
+//         bike_id: bike._id,
+//         customer_id: customer._id,
+//         start_datetime: new Date(startDate).toISOString(),
+//         end_datetime: new Date(endDate).toISOString(),
+//         total_amount: calculatePrice(),
+//         notes: notes || undefined,
+//         booking_source: "online",
+//         status: "pending",
+//       });
 
-    console.log("Booking created:", booking);
+//     console.log("Booking created:", booking);
 
-    console.log("STEP 3: Starting payment");
+//     console.log("STEP 3: Starting payment");
 
-    await handleOnlinePayment(
-      booking._id
-    );
+//     await handleOnlinePayment(
+//       booking._id
+//     );
 
-    toast.success("Booking created!");
+//     toast.success("Booking created!");
 
-  } catch (err) {
-    console.error("BOOKING ERROR:", err);
+//   } catch (err) {
+//     console.error("BOOKING ERROR:", err);
 
-    toast.error(
-      err?.response?.data?.message ||
-      "Failed to create booking"
-    );
+//     toast.error(
+//       err?.response?.data?.message ||
+//       "Failed to create booking"
+//     );
 
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
 
   
 
@@ -465,57 +536,402 @@ const handleOnlinePayment =
     );
   }
 
+  // if (bookingComplete) {
+  //   return (
+  //     <>
+  //       <Header />
+  //       <main className="min-h-screen bg-background pt-24 pb-12">
+  //         <div className="container mx-auto px-4 max-w-lg">
+  //           <motion.div
+  //             initial={{ opacity: 0, scale: 0.9 }}
+  //             animate={{ opacity: 1, scale: 1 }}
+  //             className="bg-card border border-border rounded-2xl p-8 text-center"
+  //           >
+  //             <motion.div
+  //               initial={{ scale: 0 }}
+  //               animate={{ scale: 1 }}
+  //               transition={{ delay: 0.2, type: "spring" }}
+  //               className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6"
+  //             >
+  //               <Check className="w-10 h-10 text-green-500" />
+  //             </motion.div>
+  //             <h1 className="text-2xl font-bold text-foreground mb-2">
+  //               Booking Submitted!
+  //             </h1>
+  //             <p className="text-muted-foreground mb-6">
+  //               Your booking request for{" "}
+  //               <span className="text-primary">{bike.model}</span> has been
+  //               received. Our team will contact you shortly to confirm.
+  //             </p>
+  //             <div className="space-y-2 text-sm text-muted-foreground mb-6">
+  //               <p>
+  //                 📞 We'll call you at:{" "}
+  //                 <span className="text-foreground">{customerData.phone}</span>
+  //               </p>
+  //               <p>
+  //                 📅 Pickup:{" "}
+  //                 <span className="text-foreground">
+  //                   {format(new Date(startDate), "PPp")}
+  //                 </span>
+  //               </p>
+  //               <p>
+  //                 📅 Return:{" "}
+  //                 <span className="text-foreground">
+  //                   {format(new Date(endDate), "PPp")}
+  //                 </span>
+  //               </p>
+  //             </div>
+  //             <Button
+  //               onClick={() => navigate("/")}
+  //               className="gradient-sunset text-primary-foreground"
+  //             >
+  //               Back to Home
+  //             </Button>
+  //           </motion.div>
+  //         </div>
+  //       </main>
+  //       <Footer />
+  //     </>
+  //   );
+  // }
+
+  if (paymentFailed) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="max-w-md w-full text-center p-10 bg-card/50 backdrop-blur-xl border border-red-500/20 rounded-[2.5rem] shadow-2xl shadow-red-500/10"
+        >
+          {/* Animated Icon Container */}
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", damping: 12, delay: 0.2 }}
+              className="absolute inset-0 bg-red-500/10 rounded-full blur-xl"
+            />
+            <div className="relative bg-gradient-to-br from-red-500 to-orange-600 w-24 h-24 rounded-full flex items-center justify-center shadow-lg shadow-red-500/40">
+              <XCircle className="w-12 h-12 text-white stroke-[2.5px]" />
+            </div>
+          </div>
+
+          {/* Text Content */}
+          <h2 className="text-3xl font-extrabold tracking-tight text-foreground mb-3">
+            Payment Declined
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-8 px-4">
+            We couldn't process your transaction. Don't worry, if any amount was
+            debited, it will be
+            <span className="text-foreground font-medium underline decoration-red-500/30">
+              refunded automatically
+            </span>
+            within 3-5 days.
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => setPaymentFailed(false)}
+              size="lg"
+              className="w-full h-14 text-lg font-bold gradient-sunset text-primary-foreground rounded-2xl shadow-xl shadow-orange-500/20 hover:scale-[1.02] transition-transform active:scale-95"
+            >
+              Try Another Way
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="w-full h-12 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel & Go Home
+            </Button>
+          </div>
+
+          {/* Footer Note */}
+          <div className="mt-8 pt-8 border-t border-border/50">
+            <p className="text-xs text-muted-foreground/60 uppercase tracking-widest font-semibold">
+              Secure Payment Gateway
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+
   if (bookingComplete) {
+    // 1. Make sure you have installed: npm install html2canvas
+
+    const handleDownload = async () => {
+      const element = document.getElementById("receipt-content");
+
+      try {
+        const { default: html2canvas } = await import("html2canvas");
+
+        const canvas = await html2canvas(element, {
+          scale: 3, // Higher scale for professional "Print" quality
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff", // Forces white background for the whole image
+          onclone: (clonedDoc) => {
+            const receipt = clonedDoc.getElementById("receipt-content");
+
+            // 1. Force the main container to look like paper
+            receipt.style.backgroundColor = "white";
+            receipt.style.color = "black";
+            receipt.style.borderRadius = "0px";
+            receipt.style.border = "none";
+            receipt.style.boxShadow = "none";
+
+            // 2. Hide the Sunset Gradient Header (Web only)
+            const webHeader = clonedDoc.querySelector(".gradient-sunset");
+            if (webHeader) webHeader.style.display = "none";
+
+            // 3. Show the Formal Header (Print only)
+            const printHeader = clonedDoc.querySelector(".print\\:flex");
+            if (printHeader) {
+              printHeader.style.display = "flex";
+              printHeader.style.flexDirection = "row";
+              printHeader.style.justifyContent = "space-between";
+              printHeader.style.padding = "2rem";
+              printHeader.style.borderBottom = "4px solid black";
+              // Force black text for the header items
+              printHeader
+                .querySelectorAll("h1, h2, p")
+                .forEach((el) => (el.style.color = "black"));
+            }
+
+            // 4. Clean up the Content Area
+            const content = clonedDoc.querySelector(".space-y-8"); // Your CardContent
+            if (content) {
+              content.style.backgroundColor = "white";
+              content.style.padding = "2rem";
+            }
+
+            // 5. Force ALL text in the document to be Black
+            const allText = clonedDoc.querySelectorAll(
+              "p, span, h1, h2, h4, div",
+            );
+            allText.forEach((text) => {
+              text.style.color = "black";
+              text.style.borderColor = "black"; // For dashed lines
+            });
+
+            // 6. Style the Amount Box to be a simple black outline box
+            const amountBox = clonedDoc.querySelector(".bg-primary\\/5");
+            if (amountBox) {
+              amountBox.style.backgroundColor = "white";
+              amountBox.style.border = "2px solid black";
+              amountBox.style.borderRadius = "0px";
+              amountBox.style.padding = "2rem";
+            }
+
+            // 7. Style the Instructions box
+            const instructions = clonedDoc.querySelector(".bg-muted");
+            if (instructions) {
+              instructions.style.backgroundColor = "white";
+              instructions.style.border = "1px solid black";
+              instructions.style.color = "black";
+            }
+
+            const buttonRow = clonedDoc.querySelector(".print\\:hidden");
+            if (buttonRow) {
+              buttonRow.style.setProperty("display", "none", "important");
+            }
+
+            const buttonRow1 = clonedDoc.querySelector(".receipt-buttons");
+            if (buttonRow1) {
+              buttonRow1.style.display = "none";
+            }
+
+            // 2. FIX THE "PAY ON PICKUP" BADGE COLOR
+            // This finds the badge and forces it to be white background with black text
+            const badge = clonedDoc.querySelector(".rounded-full.uppercase");
+            if (badge) {
+              badge.style.setProperty("background-color", "white", "important");
+              badge.style.setProperty("background-image", "none", "important");
+              badge.style.setProperty("color", "black", "important");
+              badge.style.setProperty("border", "1px solid black", "important");
+            }
+          },
+        });
+
+        // Create download link
+        const image = canvas.toDataURL("image/png", 1.0);
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = `Receipt-${confirmedBookingId}.png`;
+        link.click();
+      } catch (err) {
+        console.error("Download failed", err);
+      }
+    };
+
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-background pt-24 pb-12">
+        <main className="min-h-screen pt-32 pb-20 bg-background/50">
           <div className="container mx-auto px-4 max-w-lg">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-2xl p-8 text-center"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative bg-card rounded-[3rem] shadow-golden overflow-hidden print:shadow-none print:border-none print:rounded-none"
+              id="receipt-content"
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6"
-              >
-                <Check className="w-10 h-10 text-green-500" />
-              </motion.div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">
-                Booking Submitted!
-              </h1>
-              <p className="text-muted-foreground mb-6">
-                Your booking request for{" "}
-                <span className="text-primary">{bike.model}</span> has been
-                received. Our team will contact you shortly to confirm.
-              </p>
-              <div className="space-y-2 text-sm text-muted-foreground mb-6">
-                <p>
-                  📞 We'll call you at:{" "}
-                  <span className="text-foreground">{customerData.phone}</span>
-                </p>
-                <p>
-                  📅 Pickup:{" "}
-                  <span className="text-foreground">
-                    {format(new Date(startDate), "PPp")}
-                  </span>
-                </p>
-                <p>
-                  📅 Return:{" "}
-                  <span className="text-foreground">
-                    {format(new Date(endDate), "PPp")}
-                  </span>
-                </p>
+              {/* WEB ONLY HEADER */}
+              <div className="gradient-sunset p-10 text-center text-white relative overflow-hidden print:hidden">
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/30">
+                    <CheckCircle2 className="w-8 h-8 text-white drop-shadow-md" />
+                  </div>
+                  <h2 className="text-2xl font-display font-black tracking-tight uppercase">
+                    Booking Confirmed
+                  </h2>
+                  <p className="text-white/80 text-[10px] font-medium mt-1 tracking-[0.3em] uppercase">
+                    Official Receipt
+                  </p>
+                </div>
               </div>
-              <Button
-                onClick={() => navigate("/")}
-                className="gradient-sunset text-primary-foreground"
-              >
-                Back to Home
-              </Button>
+
+              {/* PRINT ONLY HEADER */}
+              <div className="hidden print:flex justify-between items-start p-8 border-b-4 border-black mb-6">
+                <div>
+                  <h1 className="text-3xl font-black tracking-tighter text-black">
+                    PIPIP RENTALS
+                  </h1>
+                  <p className="text-xs text-black italic">
+                    Premium Bike Rental Service
+                  </p>
+                </div>
+                <div className="text-right">
+                  <h2 className="text-xl font-bold text-black uppercase">
+                    Tax Invoice
+                  </h2>
+                  <p className="text-xs text-black font-mono">
+                    #{confirmedBookingId}
+                  </p>
+                </div>
+              </div>
+
+              <CardContent className="p-8 md:p-12 space-y-8 bg-card print:bg-white">
+                {/* RESPONSIVE FIX: Changed grid to flex to prevent overlap */}
+                <div className="flex flex-col xs:flex-row justify-between gap-4 border-b border-dashed border-border pb-6 print:border-black">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest print:text-black">
+                      Order ID
+                    </span>
+                    <p className="text-sm font-mono font-bold text-primary print:text-black">
+                      #{confirmedBookingId}
+                    </p>
+                  </div>
+                  <div className="flex flex-col xs:items-end">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest print:text-black">
+                      Issue Date
+                    </span>
+                    <p className="text-sm font-bold text-foreground print:text-black">
+                      {format(new Date(), "dd MMM yyyy")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Summary Details - ALL preserved exactly */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 print:text-black">
+                    Summary Details
+                  </h4>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground print:text-black">
+                      Customer Name
+                    </span>
+                    <span className="font-bold print:text-black">
+                      {customerData.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground print:text-black">
+                      Contact Number
+                    </span>
+                    <span className="font-bold print:text-black">
+                      +91 {customerData.phone}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground print:text-black">
+                      Bike Model
+                    </span>
+                    <span className="font-bold print:text-black">
+                      {bike?.model}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-start text-sm">
+                    <span className="text-muted-foreground print:text-black">
+                      Rental Period
+                    </span>
+                    <div className="text-right">
+                      <p className="font-bold print:text-black">
+                        {format(new Date(startDate), "MMM dd, hh:mm a")}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground print:text-black">
+                        to {format(new Date(endDate), "MMM dd, hh:mm a")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount Box */}
+                <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 print:bg-white print:border-2 print:border-black print:rounded-none">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-primary print:text-black tracking-widest">
+                        Total Amount Paid
+                      </span>
+                      <p className="text-5xl font-display font-black text-foreground print:text-black">
+                        ₹{calculatePrice()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${paymentMethod === "online" ? "bg-green-500 text-white border-none" : "bg-orange-500 text-white border-none"} print:bg-white print:text-black print:border-black print:border`}
+                      >
+                        {paymentMethod === "online"
+                          ? "Verified PAID"
+                          : "Pay on Pickup"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fine Print */}
+                <div className="bg-muted p-4 rounded-xl text-[10px] text-muted-foreground leading-relaxed border border-border print:border-black print:text-black print:bg-white">
+                  <p className="font-bold mb-1 text-foreground print:text-black uppercase tracking-tighter">
+                    Instructions:
+                  </p>
+                  <p>• Carry original Aadhar & DL. No digital copies.</p>
+                  <p>• Helmets provided based on availability.</p>
+                  <p>
+                    • Vehicle should be returned at{" "}
+                    {customerData.area || "the pickup point"}.
+                  </p>
+                </div>
+
+                {/* Web Only Buttons */}
+                <div className="receipt-buttons flex flex-col sm:flex-row gap-4 pt-4 print:hidden">
+                  <Button
+                    variant="outline"
+                    onClick={handleDownload}
+                    className="flex-1 h-14 rounded-2xl border-2 border-border font-bold hover:bg-muted"
+                  >
+                    <FileText className="w-5 h-5 mr-2" /> Download Bill
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/")}
+                    className="flex-1 h-14 rounded-2xl gradient-sunset text-white shadow-golden font-bold"
+                  >
+                    Done
+                  </Button>
+                </div>
+              </CardContent>
             </motion.div>
           </div>
         </main>

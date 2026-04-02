@@ -222,3 +222,53 @@ input[type="date"]::-webkit-datetime-edit-year-field {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@media print {
+  /* Remove all colors and backgrounds */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Hide the web-only header and buttons */
+  .print\:hidden, header, footer, .gradient-sunset {
+    display: none !important;
+  }
+
+  /* Target the receipt card specifically */
+  #receipt-content {
+    border: 2px solid black !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Make text deep black for clarity */
+  .print\:text-black {
+    color: black !important;
+  }
+
+  /* Force display the print-only header */
+  .hidden.print\:block {
+    display: block !important;
+  }
+}
+
+/* Mirror your print styles for the image download capture */
+#receipt-content.is-downloading {
+  background: white !important;
+  color: black !important;
+  border: 2px solid black !important;
+  border-radius: 0 !important;
+}
+
+#receipt-content.is-downloading .gradient-sunset,
+#receipt-content.is-downloading .is-downloading\:hidden {
+  display: none !important;
+}
+
+#receipt-content.is-downloading .hidden.is-downloading\:flex {
+  display: flex !important;
+}
