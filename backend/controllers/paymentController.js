@@ -184,132 +184,210 @@
 // });
 
 
-const {
-  Cashfree,
-  CFEnvironment,
-} = require("cashfree-pg");
+// const {
+//   Cashfree,
+//   CFEnvironment,
+// } = require("cashfree-pg");
 
+// const Booking = require("../models/Booking");
+
+// // 1. ADD THE LOGS HERE (Right after the imports)
+// console.log("--- CASHFREE CONFIG CHECK ---");
+// console.log("App ID exists:", !!process.env.CASHFREE_APP_ID);
+// console.log("Secret exists:", !!process.env.CASHFREE_SECRET_KEY);
+// // Check if you're in production or dev
+// console.log("-----------------------------");
+
+// // 🔥 FORCE PRODUCTION (temporary test)
+
+// const cashfree = new Cashfree({
+//   XClientId: process.env.CASHFREE_APP_ID,
+//   XClientSecret: process.env.CASHFREE_SECRET_KEY,
+//   XEnvironment: CFEnvironment.PRODUCTION,
+//   XApiVersion: "2023-08-01"
+// });
+
+// console.log("🚀 FORCED PRODUCTION MODE");
+
+// // CREATE ORDER
+// exports.createOrder =
+//   async (req, res) => {
+
+//     try {
+
+//         if (!req.body || Object.keys(req.body).length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Request body is empty. Ensure Content-Type is application/json"
+//       });
+//     }
+
+//       const {
+//         amount,
+//         customerName,
+//         customerEmail,
+//         customerPhone,
+//         bookingId,
+//       } = req.body;
+
+//       console.log(
+//         "Payment Request:",
+//         req.body
+//       );
+
+//       const orderId =
+//         `bike_${Date.now()}`;
+
+//       const request = {
+
+//         order_amount: amount,
+//         order_currency: "INR",
+//         order_id: orderId,
+
+//         customer_details: {
+//           customer_id: bookingId,
+//           customer_name:
+//             customerName,
+//           customer_email:
+//             customerEmail,
+//           customer_phone:
+//             customerPhone,
+//         },
+
+//         order_meta: {
+//           return_url:
+//             `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+//         },
+
+//       };
+
+
+//       // ✅ CORRECT FUNCTION FOR v5
+//       const response =
+//         await cashfree.PGCreateOrder(
+//           request
+//         );
+
+//       console.log(
+//         "Cashfree Response:",
+//         response.data
+//       );
+
+
+//       // Save orderId in DB
+//       await Booking.findByIdAndUpdate(
+//         bookingId,
+//         {
+//           payment_order_id:
+//             orderId,
+//         }
+//       );
+
+
+//       res.json({
+//         success: true,
+//         paymentSessionId:
+//           response.data
+//             .payment_session_id,
+//         orderId,
+//       });
+
+//     } catch (error) {
+
+//       console.error(
+//         "CREATE ORDER ERROR:",
+//         error
+//       );
+
+//       res.status(500).json({
+//         success: false,
+//         message:
+//           "Payment order creation failed",
+//         error:
+//           error.message,
+//       });
+
+//     }
+//   };
+
+
+
+const { Cashfree, CFEnvironment } = require("cashfree-pg");
 const Booking = require("../models/Booking");
 
-// 1. ADD THE LOGS HERE (Right after the imports)
+// 1. Logs to verify environment on Render
 console.log("--- CASHFREE CONFIG CHECK ---");
 console.log("App ID exists:", !!process.env.CASHFREE_APP_ID);
 console.log("Secret exists:", !!process.env.CASHFREE_SECRET_KEY);
-// Check if you're in production or dev
 console.log("-----------------------------");
 
-// 🔥 FORCE PRODUCTION (temporary test)
-
-const cashfree = new Cashfree({
-  XClientId: process.env.CASHFREE_APP_ID,
-  XClientSecret: process.env.CASHFREE_SECRET_KEY,
-  XEnvironment: CFEnvironment.PRODUCTION,
-  XApiVersion: "2023-08-01"
-});
-
-console.log("🚀 FORCED PRODUCTION MODE");
+// 2. Global Configuration (Static)
+Cashfree.XClientId = process.env.CASHFREE_APP_ID;
+Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
+Cashfree.XEnvironment = CFEnvironment.PRODUCTION; // 🚀 PRODUCTION MODE
 
 // CREATE ORDER
-exports.createOrder =
-  async (req, res) => {
-
-    try {
-
-        if (!req.body || Object.keys(req.body).length === 0) {
+exports.createOrder = async (req, res) => {
+  try {
+    // Safety check for empty body
+    if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Request body is empty. Ensure Content-Type is application/json"
+        message: "Request body is empty.",
       });
     }
 
-      const {
-        amount,
-        customerName,
-        customerEmail,
-        customerPhone,
-        bookingId,
-      } = req.body;
+    const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
 
-      console.log(
-        "Payment Request:",
-        req.body
-      );
+    console.log("Payment Request for Booking ID:", bookingId);
 
-      const orderId =
-        `bike_${Date.now()}`;
+    const orderId = `bike_${Date.now()}`;
 
-      const request = {
+    const request = {
+      order_amount: amount,
+      order_currency: "INR",
+      order_id: orderId,
+      customer_details: {
+        customer_id: bookingId,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+      },
+      order_meta: {
+        return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+      },
+    };
 
-        order_amount: amount,
-        order_currency: "INR",
-        order_id: orderId,
+    // ✅ FIX: Use the static method PGCreateOrder directly from Cashfree class
+    // In v5.x, you must pass the API version as the first argument
+    const response = await Cashfree.PGCreateOrder("2023-08-01", request);
 
-        customer_details: {
-          customer_id: bookingId,
-          customer_name:
-            customerName,
-          customer_email:
-            customerEmail,
-          customer_phone:
-            customerPhone,
-        },
+    console.log("Cashfree Response:", response.data);
 
-        order_meta: {
-          return_url:
-            `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
-        },
+    // Save orderId in DB
+    await Booking.findByIdAndUpdate(bookingId, {
+      payment_order_id: orderId,
+    });
 
-      };
+    res.json({
+      success: true,
+      paymentSessionId: response.data.payment_session_id,
+      orderId,
+    });
 
+  } catch (error) {
+    // ✅ Improved logging to see exactly why it fails in production
+    console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
 
-      // ✅ CORRECT FUNCTION FOR v5
-      const response =
-        await cashfree.PGCreateOrder(
-          request
-        );
+    res.status(500).json({
+      success: false,
+      message: "Payment order creation failed",
+      error: error.response?.data?.message || error.message,
+    });
+  }
+};
 
-      console.log(
-        "Cashfree Response:",
-        response.data
-      );
-
-
-      // Save orderId in DB
-      await Booking.findByIdAndUpdate(
-        bookingId,
-        {
-          payment_order_id:
-            orderId,
-        }
-      );
-
-
-      res.json({
-        success: true,
-        paymentSessionId:
-          response.data
-            .payment_session_id,
-        orderId,
-      });
-
-    } catch (error) {
-
-      console.error(
-        "CREATE ORDER ERROR:",
-        error
-      );
-
-      res.status(500).json({
-        success: false,
-        message:
-          "Payment order creation failed",
-        error:
-          error.message,
-      });
-
-    }
-  };
-
+// ... keep your verifyWebhook as it is, it looks correct for v5
 
 
 
