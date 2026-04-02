@@ -954,7 +954,7 @@ const handleOnlinePayment =
                         </p>
                       </div>
 
-                      <div className="flex gap-4">
+                      {/* <div className="flex gap-4">
                         <Button
                           variant="outline"
                           onClick={() => setStep(1)}
@@ -969,7 +969,31 @@ const handleOnlinePayment =
                         >
                           {isSubmitting ? "Submitting..." : "Confirm Booking"}
                         </Button>
-                      </div>
+                      </div> */}
+                      <div className="flex gap-4">
+    <Button
+      variant="outline"
+      onClick={() => setStep(1)}
+      className="flex-1"
+      disabled={isSubmitting}
+    >
+      Back
+    </Button>
+    <Button
+      onClick={handleBookingSubmit}
+      className="flex-1 gradient-sunset text-primary-foreground"
+      disabled={isSubmitting}
+    >
+      {isSubmitting ? (
+        <div className="flex items-center gap-2">
+          <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+          Processing...
+        </div>
+      ) : (
+        `Pay ₹${calculatePrice()}`
+      )}
+    </Button>
+  </div>
                     </CardContent>
                   </Card>
                 </motion.div>
