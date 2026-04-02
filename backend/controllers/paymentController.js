@@ -197,8 +197,8 @@ const Booking = require("../models/Booking");
 const cashfree = new Cashfree({
   XClientId: process.env.CASHFREE_APP_ID,
   XClientSecret: process.env.CASHFREE_SECRET_KEY,
-
   XEnvironment: CFEnvironment.PRODUCTION,
+  XApiVersion: "2023-08-01"
 });
 
 console.log("🚀 FORCED PRODUCTION MODE");
@@ -368,51 +368,100 @@ exports.createOrder =
 //   }
 // };
 
+// exports.verifyWebhook = async (req, res) => {
+//   try {
+//     console.log("Webhook received:", req.body);
+
+//     // Handle test webhook
+//     if (!req.body.data?.order) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "Webhook test received",
+//       });
+//     }
+
+//     const data = req.body.data;
+
+//     const orderId = data.order.order_id;
+//     const orderStatus = data.order.order_status;
+
+//     const booking = await Booking.findOne({
+//       payment_order_id: orderId,
+//     });
+
+//     if (!booking) {
+//       return res.status(404).json({
+//         message: "Booking not found",
+//       });
+//     }
+
+//     if (orderStatus === "PAID") {
+//       booking.payment_status = "paid";
+//       booking.status = "confirmed";
+//     } else {
+//       booking.payment_status = "failed";
+//     }
+
+//     await booking.save();
+
+//     res.status(200).json({
+//       success: true,
+//     });
+
+//   } catch (error) {
+//     console.error("Webhook Error:", error);
+
+//     res.status(200).json({
+//       success: false,
+//     });
+//   }
+// };
+
 exports.verifyWebhook = async (req, res) => {
   try {
-    console.log("Webhook received:", req.body);
+    const signature = req.headers["x-webhook-signature"];
+    const timestamp = req.headers["x-webhook-timestamp"];
+    
+    // req.body is a Buffer because of express.raw() in the router
+    const rawBody = req.body.toString();
 
-    // Handle test webhook
-    if (!req.body.data?.order) {
-      return res.status(200).json({
-        success: true,
-        message: "Webhook test received",
-      });
+    // 1. Verify that the request actually came from Cashfree
+    Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+
+    const webhookData = JSON.parse(rawBody);
+    const data = webhookData.data;
+
+    // Handle test/empty webhooks
+    if (!data || !data.order) {
+      return res.status(200).send("OK");
     }
-
-    const data = req.body.data;
 
     const orderId = data.order.order_id;
     const orderStatus = data.order.order_status;
 
-    const booking = await Booking.findOne({
-      payment_order_id: orderId,
-    });
+    // 2. Find and Update the booking
+    const booking = await Booking.findOne({ payment_order_id: orderId });
 
     if (!booking) {
-      return res.status(404).json({
-        message: "Booking not found",
-      });
+      console.error("Booking not found for order:", orderId);
+      return res.status(404).send("Booking not found");
     }
 
     if (orderStatus === "PAID") {
       booking.payment_status = "paid";
       booking.status = "confirmed";
-    } else {
+    } else if (["FAILED", "CANCELLED"].includes(orderStatus)) {
       booking.payment_status = "failed";
     }
 
     await booking.save();
-
-    res.status(200).json({
-      success: true,
-    });
+    
+    // 3. Return 200 to Cashfree
+    res.status(200).send("OK");
 
   } catch (error) {
-    console.error("Webhook Error:", error);
-
-    res.status(200).json({
-      success: false,
-    });
+    console.error("Webhook Verification Failed:", error.message);
+    // Return 400 so Cashfree knows it failed
+    res.status(400).send("Invalid Signature");
   }
 };

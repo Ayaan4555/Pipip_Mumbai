@@ -53,8 +53,17 @@ connectDB();
 
 const app = express();
 
+
+
 // Middlewares
 app.use(cors());
+
+app.use(
+  "/api/payment",
+  paymentRoutes
+);
+
+
 app.use(express.json());
 
 
@@ -69,10 +78,6 @@ app.use("/api/bookings", require("./routes/BookingRoutes"));
 app.use("/api/availability", require("./routes/AvailabilityRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
-app.use(
-  "/api/payment",
-  paymentRoutes
-);
 
 // Global error handler (IMPORTANT)
 app.use((err, req, res, next) => {
