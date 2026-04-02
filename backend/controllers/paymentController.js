@@ -191,6 +191,12 @@ const {
 
 const Booking = require("../models/Booking");
 
+// 1. ADD THE LOGS HERE (Right after the imports)
+console.log("--- CASHFREE CONFIG CHECK ---");
+console.log("App ID exists:", !!process.env.CASHFREE_APP_ID);
+console.log("Secret exists:", !!process.env.CASHFREE_SECRET_KEY);
+// Check if you're in production or dev
+console.log("-----------------------------");
 
 // 🔥 FORCE PRODUCTION (temporary test)
 
