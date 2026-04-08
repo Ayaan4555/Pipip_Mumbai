@@ -84,6 +84,24 @@ export default function BookBike() {
   const createBooking = useCreateBooking();
   const { checkAvailability, checking } = useBikeAvailability();
 
+
+
+  // 1. Helper to get ISO string rounded to the top of the hour
+  const getRoundedISO = (date) => {
+    const d = new Date(date);
+    d.setMinutes(0, 0, 0); // Force minutes and seconds to 00:00
+    // Adjust for timezone offset to get local 'YYYY-MM-DDTHH:mm'
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d - tzOffset).toISOString().slice(0, 16);
+  };
+
+  const now = new Date();
+  const minDateTime = getRoundedISO(now);
+
+  const sevenDaysLater = new Date();
+  sevenDaysLater.setDate(now.getDate() + 7);
+  const maxDateTime = getRoundedISO(sevenDaysLater);
+
   /* =========================
      AVAILABILITY CHECK
   ========================= */
@@ -1207,6 +1225,9 @@ export default function BookBike() {
                                 id="startDate"
                                 type="datetime-local"
                                 value={startDate}
+                                min={minDateTime} // Now ends in :00
+                                max={maxDateTime} // Now ends in :00
+
                                 onChange={(e) =>
                                   handleStartDateChange(e.target.value)
                                 }

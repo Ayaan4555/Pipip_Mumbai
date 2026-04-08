@@ -60,7 +60,8 @@ exports.getCustomer= async (req, res) => {
       { name: { $regex: search, $options: "i" } },
       { phone: { $regex: search, $options: "i" } },
     ],
-  });
+
+  }).sort({ createdAt: -1 });
 
   res.json(customers);
 }
