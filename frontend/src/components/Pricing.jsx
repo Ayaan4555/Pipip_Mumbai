@@ -6,20 +6,20 @@ import { NavLink } from "react-router-dom";
 
 const Pricing = () => {
   const plans = [
-    {
-      name: "Hourly",
-      icon: Clock,
-      price: "100",
-      unit: "/hour",
-      description: "Perfect for quick trips and errands",
-      features: [
-        "Minimum 1 hour rental",
-        "Helmet included",
-        "Basic insurance",
-        "24/7 support",
-      ],
-      popular: false,
-    },
+    // {
+    //   name: "Hourly",
+    //   icon: Clock,
+    //   price: "100",
+    //   unit: "/hour",
+    //   description: "Perfect for quick trips and errands",
+    //   features: [
+    //     "Minimum 1 hour rental",
+    //     "Helmet included",
+    //     "Basic insurance",
+    //     "24/7 support",
+    //   ],
+    //   popular: false,
+    // },
     {
       name: "Daily",
       icon: Calendar,
@@ -35,20 +35,20 @@ const Pricing = () => {
       ],
       popular: true,
     },
-    {
-      name: "Pickup & Drop",
-      icon: Truck,
-      price: "100",
-      unit: "flat / within 5km",
-      description: "We deliver the scooter to your doorstep",
-      features: [
-        "Anywhere in Mumbai",
-        "Quick delivery",
-        "Doorstep service",
-        "Flexible timing",
-      ],
-      popular: false,
-    },
+    // {
+    //   name: "Pickup & Drop",
+    //   icon: Truck,
+    //   price: "100",
+    //   unit: "flat / within 5km",
+    //   description: "We deliver the scooter to your doorstep",
+    //   features: [
+    //     "Anywhere in Mumbai",
+    //     "Quick delivery",
+    //     "Doorstep service",
+    //     "Flexible timing",
+    //   ],
+    //   popular: false,
+    // },
     {
       name: "Weekly",
       icon: Calendar,
@@ -191,7 +191,7 @@ const Pricing = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-center text-muted-foreground mt-12"
         >
-          💳 Cash on delivery available • No hidden charges • Instant booking
+           No hidden charges • Instant booking
           confirmation
         </motion.p>
       </div>
