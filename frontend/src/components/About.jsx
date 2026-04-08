@@ -18,15 +18,11 @@ const About = () => {
       title: "Fully Insured",
       description: "All our scooters come with comprehensive insurance for your peace of mind.",
     },
-    {
-      icon: MapPin,
-      title: "Convenient Pickup",
-      description: "Pickup and drop service available across Mumbai for just Rs. 100.",
-    },
+    
     {
       icon: CreditCard,
       title: "Easy Payment",
-      description: "Pay at delivery. We accept cash, UPI, and all major payment methods.",
+      description: "We accept UPI, and all major payment methods.",
     },
     {
       icon: Headphones,
