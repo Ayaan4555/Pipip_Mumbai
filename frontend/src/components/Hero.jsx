@@ -356,7 +356,7 @@ useEffect(() => {
               <div>
                 <p className="text-foreground font-semibold">
                   Scooters from{" "}
-                  <span className="text-primary">Rs. 600/day</span> &{" "}
+                  <span className="text-primary">Rs. 600/day</span> {" "}
                   {/* <span className="text-primary">Rs. 100/hour</span> */}
                 </p>
                 {/* <p className="text-sm text-muted-foreground">
