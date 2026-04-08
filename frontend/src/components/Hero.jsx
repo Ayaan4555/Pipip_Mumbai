@@ -181,6 +181,24 @@ const [endDate, setEndDate] = useState("");
 const [endTime, setEndTime] = useState("12:00"); // Added Time State
 const [isAreaOpen, setIsAreaOpen] = useState(false);
 
+
+// --- MIN/MAX DATE LOGIC START ---
+  // Helper to get local YYYY-MM-DD string
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = new Date();
+  const minDate = getLocalDateString(today); // "2023-10-27"
+
+  const sevenDaysLater = new Date();
+  sevenDaysLater.setDate(today.getDate() + 7);
+  const maxDate = getLocalDateString(sevenDaysLater); // 7 days from now
+  // --- MIN/MAX DATE LOGIC END ---
+
 const handleSearch = () => {
   if (!selectedArea) {
     toast.error("Please select a pickup location");
@@ -452,8 +470,8 @@ useEffect(() => {
               </div>
 
               {/* Date/Time Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                {/* Apply these classes to ALL 4 inputs below */}
+              {/* <div className="grid grid-cols-2 gap-4 mb-6">
+               
                 {[
                   {
                     label: "Start Date",
@@ -492,6 +510,55 @@ useEffect(() => {
                         onChange={(e) => field.set(e.target.value)}
                         className="w-full bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-primary 
                          [&::-webkit-calendar-picker-indicator]:invert" // This makes the icon white!
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div> */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {[
+                  {
+                    label: "Start Date",
+                    val: startDate,
+                    set: setStartDate,
+                    type: "date",
+                    min: minDate, // Applied Min Date
+                    max: maxDate, // Applied Max Date
+                  },
+                  {
+                    label: "End Date",
+                    val: endDate,
+                    set: setEndDate,
+                    type: "date",
+                    
+                  },
+                  {
+                    label: "Start Time",
+                    val: startTime,
+                    set: setStartTime,
+                    type: "time",
+                  },
+                  {
+                    label: "End Time",
+                    val: endTime,
+                    set: setEndTime,
+                    type: "time",
+                  },
+                ].map((field, i) => (
+                  <div key={i}>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      {field.label}
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                      <input
+                        type={field.type}
+                        value={field.val}
+                        min={field.min} // Standard HTML attribute
+                        max={field.max} // Standard HTML attribute
+                        onChange={(e) => field.set(e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:border-primary 
+                          [&::-webkit-calendar-picker-indicator]:invert"
                       />
                     </div>
                   </div>
