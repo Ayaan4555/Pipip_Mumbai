@@ -357,11 +357,11 @@ useEffect(() => {
                 <p className="text-foreground font-semibold">
                   Scooters from{" "}
                   <span className="text-primary">Rs. 600/day</span> &{" "}
-                  <span className="text-primary">Rs. 100/hour</span>
+                  {/* <span className="text-primary">Rs. 100/hour</span> */}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                {/* <p className="text-sm text-muted-foreground">
                   Pick up and drop available @ Rs. 100
-                </p>
+                </p> */}
               </div>
             </motion.div>
 
@@ -385,14 +385,14 @@ useEffect(() => {
             </motion.div>
 
             {/* Payment info */}
-            <motion.p
+            {/* <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mt-6 text-secondary font-medium"
             >
               💳 Payment at delivery available
-            </motion.p>
+            </motion.p> */}
           </div>
 
           {/* Right Side - Search Card (Boongg Style) */}
@@ -574,10 +574,10 @@ useEffect(() => {
 
               <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-400">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Min 1 hour
+                  {/* <Clock className="w-3 h-3" /> Min 1 hour */}
                 </span>
                 <span>•</span>
-                <span>💳 Pay at delivery</span>
+                {/* <span>💳 Pay at delivery</span> */}
               </div>
             </div>
           </motion.div>
