@@ -195,7 +195,7 @@ const [isAreaOpen, setIsAreaOpen] = useState(false);
   const minDate = getLocalDateString(today); // "2023-10-27"
 
   const sevenDaysLater = new Date();
-  sevenDaysLater.setDate(today.getDate() + 7);
+  sevenDaysLater.setDate(today.getDate() + 2);
   const maxDate = getLocalDateString(sevenDaysLater); // 7 days from now
   // --- MIN/MAX DATE LOGIC END ---
 

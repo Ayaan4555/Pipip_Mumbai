@@ -99,7 +99,7 @@ export default function BookBike() {
   const minDateTime = getRoundedISO(now);
 
   const sevenDaysLater = new Date();
-  sevenDaysLater.setDate(now.getDate() + 7);
+  sevenDaysLater.setDate(now.getDate() + 2);
   const maxDateTime = getRoundedISO(sevenDaysLater);
 
   /* =========================
