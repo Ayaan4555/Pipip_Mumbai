@@ -22,7 +22,7 @@ const Contact = () => {
       title: "Call Us",
       description: "Speak directly with our team",
       value: "9967406205",
-      href: "tel:9967406205",
+      href: "tel:9967406205/9137858573",
       action: "Call Now",
       gradient: "gradient-sunset",
     },
@@ -30,7 +30,7 @@ const Contact = () => {
       icon: MessageCircle,
       title: "WhatsApp",
       description: "Quick responses, easy booking",
-      value: "9967406205",
+      value: "9967406205/9137858573",
       href: "https://wa.me/919967406205?text=Hi%2C%20I%20want%20to%20rent%20a%20scooter",
       action: "Chat Now",
       gradient: "bg-gradient-to-br from-green-500 to-green-600",
@@ -205,12 +205,33 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-2">
-                          Our Address
+                          Office Address
                         </h3>
                         <p className="text-muted-foreground leading-relaxed">
-                          Bhendi Bazar
+                          1st Floor , Plot No. 88/89 , Building No. 108 , Surat Sadan 
                           <br />
-                          Mumbai - 400003
+                          Surat Street , Masjid Bunder East , Mumbai - 400009.
+                          <br />
+                          Maharashtra, India
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hub Address */}
+                  <div className="bg-card border border-border rounded-2xl p-6 hover:border-primary/30 transition-colors">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl gradient-teal flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-6 h-6 text-secondary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          Hub Address
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          Rahat Tower , Nishanpada Road , Near City Heights
+                          <br />
+                          Khadak St , Dongri , Mandvi , Mumbai - 400009.
                           <br />
                           Maharashtra, India
                         </p>
