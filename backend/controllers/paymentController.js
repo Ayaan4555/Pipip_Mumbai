@@ -489,7 +489,8 @@ exports.createOrder = async (req, res) => {
 
     // ✅ FIX: In some v4 sub-versions, you access it via Cashfree.PG.orders.create
     // or just ensure the global config is set. Let's use the most stable v4 call:
-    const response = await Cashfree.orders.create(request);
+   
+    const response = await Cashfree.PGCreateOrder("2023-08-01", request);
 
     res.json({
       success: true,
@@ -502,6 +503,8 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
 
 // ... keep your verifyWebhook as it is, it looks correct for v5
 
@@ -582,6 +585,49 @@ exports.createOrder = async (req, res) => {
 //   }
 // };
 
+// exports.verifyWebhook = async (req, res) => {
+//   try {
+//     const signature = req.headers["x-webhook-signature"];
+//     const timestamp = req.headers["x-webhook-timestamp"];
+//     const rawBody = req.body.toString();
+
+//     // 1. Verify Signature
+//     Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+
+//     const webhookData = JSON.parse(rawBody);
+//     const { data, type } = webhookData;
+
+//     if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
+//       return res.status(200).send("OK");
+//     }
+
+//     const orderId = data.order?.order_id;
+//     const paymentStatus = data.payment?.payment_status; // SUCCESS, FAILED, etc.
+
+//     const booking = await Booking.findOne({ payment_order_id: orderId });
+//     if (!booking) {
+//       return res.status(200).send("OK"); 
+//     }
+
+//     // 2. Clear logic: Only "SUCCESS" confirms the booking
+//     if (paymentStatus === "SUCCESS") {
+//       booking.payment_status = "paid";
+//       booking.status = "confirmed";
+//     } else {
+//       // 3. Any other status (FAILED, CANCELLED) marks it as failed
+//       booking.payment_status = "failed";
+//       booking.status = "cancelled";
+//     }
+
+//     await booking.save();
+//     res.status(200).send("OK");
+
+//   } catch (error) {
+//     console.error("Webhook Error:", error.message);
+//     res.status(400).send("Invalid Signature");
+//   }
+// };
+
 exports.verifyWebhook = async (req, res) => {
   try {
     const signature = req.headers["x-webhook-signature"];
@@ -599,19 +645,18 @@ exports.verifyWebhook = async (req, res) => {
     }
 
     const orderId = data.order?.order_id;
-    const paymentStatus = data.payment?.payment_status; // SUCCESS, FAILED, etc.
+    const paymentStatus = data.payment?.payment_status;
+
+    if (!orderId) return res.status(200).send("OK");
 
     const booking = await Booking.findOne({ payment_order_id: orderId });
-    if (!booking) {
-      return res.status(200).send("OK"); 
-    }
+    if (!booking) return res.status(200).send("OK");
 
-    // 2. Clear logic: Only "SUCCESS" confirms the booking
+    // ✅ Match the payment status from the webhook data
     if (paymentStatus === "SUCCESS") {
       booking.payment_status = "paid";
       booking.status = "confirmed";
-    } else {
-      // 3. Any other status (FAILED, CANCELLED) marks it as failed
+    } else if (["FAILED", "CANCELLED"].includes(paymentStatus)) {
       booking.payment_status = "failed";
       booking.status = "cancelled";
     }
@@ -620,8 +665,8 @@ exports.verifyWebhook = async (req, res) => {
     res.status(200).send("OK");
 
   } catch (error) {
-    console.error("Webhook Error:", error.message);
-    res.status(400).send("Invalid Signature");
+    console.error("Webhook Logic Failed:", error.message);
+    res.status(400).send("Verification Failed");
   }
 };
 
@@ -778,23 +823,72 @@ exports.verifyWebhook = async (req, res) => {
 //   }
 // };
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+
+//     // ✅ v4 Syntax
+//     const response = await Cashfree.orders.fetch(orderId);
+
+//     if (response && response.order_status === "PAID") {
+//       return res.status(200).json({ success: true, status: "PAID" });
+//     } else {
+//       return res.status(400).json({ 
+//         success: false, 
+//         status: response ? response.order_status : "FAILED" 
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Verification Error:", error.message);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { customerId, bikeId, startDate, endDate, amount } = req.query;
 
-    // ✅ v4 Syntax
-    const response = await Cashfree.orders.fetch(orderId);
+    // ✅ FIX: Use PGFetchOrder with the API version (matches your createOrder logic)
+    const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
+    const data = response.data;
 
-    if (response && response.order_status === "PAID") {
-      return res.status(200).json({ success: true, status: "PAID" });
+    if (data.order_status === "PAID") {
+      // 2. Check if booking already exists
+      let booking = await Booking.findOne({ payment_order_id: orderId });
+
+      if (!booking) {
+        // 3. Create the booking record
+        booking = await Booking.create({
+          customer_id: customerId,
+          bike_id: bikeId,
+          start_datetime: startDate,
+          end_datetime: endDate,
+          total_amount: amount,
+          payment_status: "paid",
+          payment_method: "online",
+          payment_order_id: orderId,
+          status: "confirmed",
+          booking_source: "online",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        status: "PAID",
+        booking
+      });
     } else {
-      return res.status(400).json({ 
-        success: false, 
-        status: response ? response.order_status : "FAILED" 
+      return res.status(400).json({
+        success: false,
+        status: data.order_status,
+        message: "Payment not completed"
       });
     }
   } catch (error) {
-    console.error("Verification Error:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    // Improved error logging to catch SDK issues
+    console.error("Verification error:", error.response?.data || error.message);
+    res.status(500).json({ success: false, message: "Verification failed" });
   }
 };
