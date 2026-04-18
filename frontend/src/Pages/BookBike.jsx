@@ -372,13 +372,8 @@ export default function BookBike() {
   const handleOnlinePayment = async () => {
     try {
 
-      setPaymentFailed(false);
-      const formData = new FormData();
-      Object.entries(customerData).forEach(([key, value]) => {
-        if (value !== null) formData.append(key, value);
-      });
-
-      const customer = await createCustomer.mutateAsync(formData);
+      
+     
 
       const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
         method: "POST",
@@ -456,34 +451,110 @@ export default function BookBike() {
 
 
 
+  // const handleBookingSubmit = async () => {
+  //   if (!bike || !startDate || !endDate) return;
+  //   setIsSubmitting(true);
+  //   try {
+  //     // const formData = new FormData();
+  //     // Object.entries(customerData).forEach(([key, value]) => {
+  //     //   if (value !== null) formData.append(key, value);
+  //     // });
+
+  //     // const customer = await createCustomer.mutateAsync(formData);
+  //     // const booking = await createBooking.mutateAsync({
+  //     //   bike_id: bike._id,
+  //     //   customer_id: customer._id,
+  //     //   start_datetime: new Date(startDate).toISOString(),
+  //     //   end_datetime: new Date(endDate).toISOString(),
+  //     //   total_amount: calculatePrice(),
+  //     //   notes: notes || undefined,
+  //     //   booking_source: "online",
+  //     //   status: "pending",
+  //     // });
+
+  //     await handleOnlinePayment();
+  //   } catch (err) {
+  //     toast.error("Failed to create booking");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleBookingSubmit = async () => {
-    if (!bike || !startDate || !endDate) return;
-    setIsSubmitting(true);
-    try {
-      // const formData = new FormData();
-      // Object.entries(customerData).forEach(([key, value]) => {
-      //   if (value !== null) formData.append(key, value);
-      // });
+  if (!bike || !startDate || !endDate) return;
+  setIsSubmitting(true);
 
-      // const customer = await createCustomer.mutateAsync(formData);
-      // const booking = await createBooking.mutateAsync({
-      //   bike_id: bike._id,
-      //   customer_id: customer._id,
-      //   start_datetime: new Date(startDate).toISOString(),
-      //   end_datetime: new Date(endDate).toISOString(),
-      //   total_amount: calculatePrice(),
-      //   notes: notes || undefined,
-      //   booking_source: "online",
-      //   status: "pending",
-      // });
+  try {
+    // 1. START PAYMENT FIRST (Create the Cashfree Order)
+    const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: calculatePrice(),
+        customerName: customerData.name,
+        customerEmail: customerData.email || "customer@pipip.com",
+        customerPhone: customerData.phone,
+        // Notice: We do NOT pass a bookingId here because it doesn't exist yet
+      }),
+    });
 
-      await handleOnlinePayment();
-    } catch (err) {
-      toast.error("Failed to create booking");
-    } finally {
-      setIsSubmitting(false);
+    const paymentOrder = await res.json();
+    if (!paymentOrder.paymentSessionId) {
+      throw new Error("Failed to create payment session");
     }
-  };
+
+    // 2. OPEN THE PAYMENT MODAL
+    const cashfree = new window.Cashfree({ mode: "production" });
+    const result = await cashfree.checkout({
+      paymentSessionId: paymentOrder.paymentSessionId,
+      redirectTarget: "_modal",
+    });
+
+    // 3. CHECK IF PAYMENT WAS SUCCESSFUL
+    // We call your backend to verify the actual status from Cashfree
+    const verifyRes = await fetch(
+      `https://pipip-backend-eid3.onrender.com/api/payment/verify/${paymentOrder.orderId}`
+    );
+    const verifyData = await verifyRes.json();
+
+    if (verifyData.status === "PAID") {
+      // 4. ONLY NOW CREATE THE DATABASE RECORDS
+      const formData = new FormData();
+      Object.entries(customerData).forEach(([key, value]) => {
+        if (value !== null) formData.append(key, value);
+      });
+
+      // Create Customer
+      const customer = await createCustomer.mutateAsync(formData);
+
+      // Create Booking (Set status to 'confirmed' immediately since we know they paid)
+      const booking = await createBooking.mutateAsync({
+        bike_id: bike._id,
+        customer_id: customer._id,
+        start_datetime: new Date(startDate).toISOString(),
+        end_datetime: new Date(endDate).toISOString(),
+        total_amount: calculatePrice(),
+        notes: notes || undefined,
+        booking_source: "online",
+        status: "confirmed", // Mark as confirmed immediately
+        payment_status: "paid",
+        payment_order_id: paymentOrder.orderId,
+      });
+
+      setConfirmedBookingId(booking._id);
+      setBookingComplete(true);
+      toast.success("Payment Successful & Booking Confirmed!");
+    } else {
+      setPaymentFailed(true);
+      toast.error("Payment was not successful");
+    }
+  } catch (err) {
+    console.error("BOOKING ERROR:", err);
+    toast.error(err.message || "An error occurred during booking");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
 
