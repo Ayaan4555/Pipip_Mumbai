@@ -447,34 +447,34 @@ export default function BookBike() {
 
 
 
-  // const handleBookingSubmit = async () => {
-  //   if (!bike || !startDate || !endDate) return;
-  //   setIsSubmitting(true);
-  //   try {
-  //     const formData = new FormData();
-  //     Object.entries(customerData).forEach(([key, value]) => {
-  //       if (value !== null) formData.append(key, value);
-  //     });
+  const handleBookingSubmit = async () => {
+    if (!bike || !startDate || !endDate) return;
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      Object.entries(customerData).forEach(([key, value]) => {
+        if (value !== null) formData.append(key, value);
+      });
 
-  //     const customer = await createCustomer.mutateAsync(formData);
-  //     const booking = await createBooking.mutateAsync({
-  //       bike_id: bike._id,
-  //       customer_id: customer._id,
-  //       start_datetime: new Date(startDate).toISOString(),
-  //       end_datetime: new Date(endDate).toISOString(),
-  //       total_amount: calculatePrice(),
-  //       notes: notes || undefined,
-  //       booking_source: "online",
-  //       status: "pending",
-  //     });
+      const customerData = await createCustomer.mutateAsync(formData);
+      // const booking = await createBooking.mutateAsync({
+      //   bike_id: bike._id,
+      //   customer_id: customer._id,
+      //   start_datetime: new Date(startDate).toISOString(),
+      //   end_datetime: new Date(endDate).toISOString(),
+      //   total_amount: calculatePrice(),
+      //   notes: notes || undefined,
+      //   booking_source: "online",
+      //   status: "pending",
+      // });
 
-  //     await handleOnlinePayment(booking._id);
-  //   } catch (err) {
-  //     toast.error("Failed to create booking");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+      await handleOnlinePayment(customerData);
+    } catch (err) {
+      toast.error("Failed to create booking");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
 
