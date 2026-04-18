@@ -371,6 +371,14 @@ export default function BookBike() {
 // --- PAYMENT LOGIC ---
   const handleOnlinePayment = async () => {
     try {
+
+      const formData = new FormData();
+      Object.entries(customerData).forEach(([key, value]) => {
+        if (value !== null) formData.append(key, value);
+      });
+
+      const customer = await createCustomer.mutateAsync(formData);
+
       const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -451,12 +459,12 @@ export default function BookBike() {
     if (!bike || !startDate || !endDate) return;
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      Object.entries(customerData).forEach(([key, value]) => {
-        if (value !== null) formData.append(key, value);
-      });
+      // const formData = new FormData();
+      // Object.entries(customerData).forEach(([key, value]) => {
+      //   if (value !== null) formData.append(key, value);
+      // });
 
-      const customerData = await createCustomer.mutateAsync(formData);
+      // const customer = await createCustomer.mutateAsync(formData);
       // const booking = await createBooking.mutateAsync({
       //   bike_id: bike._id,
       //   customer_id: customer._id,
@@ -468,7 +476,7 @@ export default function BookBike() {
       //   status: "pending",
       // });
 
-      await handleOnlinePayment(customerData);
+      await handleOnlinePayment();
     } catch (err) {
       toast.error("Failed to create booking");
     } finally {
