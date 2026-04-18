@@ -2229,6 +2229,7 @@ export default function Bookings() {
           <Label>Start Date/Time *</Label>
           <Input
             type="datetime-local"
+            className="[color-scheme:dark]"
             value={data.start_datetime}
             onChange={(e) =>
               setData({ ...data, start_datetime: e.target.value })
@@ -2239,6 +2240,7 @@ export default function Bookings() {
           <Label>End Date/Time *</Label>
           <Input
             type="datetime-local"
+            className="[color-scheme:dark]"
             value={data.end_datetime}
             onChange={(e) => setData({ ...data, end_datetime: e.target.value })}
           />

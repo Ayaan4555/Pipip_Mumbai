@@ -585,16 +585,20 @@ exports.verifyWebhook = async (req, res) => {
       return res.status(200).send("No order ID found in webhook");
     }
 
-    // 3. Find and Update the booking
-    const booking = await Booking.findOne({ payment_order_id: orderId });
+    const {order_status} = req.body.data;
+     if (order_status === "PAID") {
+    // 🔥 Here you can:
+    // 1. Mark booking as PAID
+    // 2. Lock bike
+    // 3. Send confirmation SMS / Email
 
-    if (!booking) {
+    const booking = await Booking.findOne({ payment_order_id: orderId });
+     if (!booking) {
       console.error("Booking not found in DB for order_id:", orderId);
       return res.status(200).send("OK"); // Still 200 so they stop sending
     }
-
-    // 4. Update Logic
-    if (paymentStatus === "SUCCESS") {
+    
+     if (paymentStatus === "SUCCESS") {
       booking.payment_status = "paid";
       booking.status = "confirmed";
     } else if (["FAILED", "CANCELLED", "USER_DROPPED"].includes(paymentStatus)) {
@@ -604,6 +608,17 @@ exports.verifyWebhook = async (req, res) => {
 
     await booking.save();
     console.log(`Success: Booking ${orderId} updated to ${paymentStatus}`);
+
+    
+  }
+
+    // 3. Find and Update the booking
+    
+
+   
+
+    // 4. Update Logic
+   
     
     res.status(200).send("OK");
 
