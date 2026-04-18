@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createOrder,
   verifyWebhook,
+  verifyPayment
 } = require("../controllers/paymentController");
 
 router.post(
@@ -17,5 +18,7 @@ router.post(
  
   verifyWebhook
 );
+
+router.get("/verify/:orderId", verifyPayment);
 
 module.exports = router;

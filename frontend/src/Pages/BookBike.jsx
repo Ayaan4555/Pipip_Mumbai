@@ -388,20 +388,64 @@ export default function BookBike() {
 
       const cashfree = new window.Cashfree({ mode: "production" });
       
-      cashfree.checkout({
+      const result = await cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
         redirectTarget: "_modal",
-      }).then((result) => {
-          // You can check status here or wait for webhook
-          setConfirmedBookingId(bookingId);
-          setBookingComplete(true);
-      });
+
+      })
+         if (result.error) {
+        // If user cancels or payment fails at gateway
+        setPaymentFailed(true);
+        setIsSubmitting(false);
+      } else {
+        // Modal closed successfully, verify with your backend
+        await checkStatusAndConfirm(data.orderId, customerData._Id);
+      }
+
+      //.then((result) => {
+      //     // You can check status here or wait for webhook
+      //     setConfirmedBookingId(bookingId);
+      //     setBookingComplete(true);
+      // });
 
     } catch (error) {
       console.error("PAYMENT ERROR:", error);
       setPaymentFailed(true);
     }
   };
+
+ const checkStatusAndConfirm = async (orderId, customerId) => {
+    try {
+      // Pass booking details in query params so backend can save them
+      const queryParams = new URLSearchParams({
+        customerId: customerId,
+        bikeId: bike._id,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        amount: calculatePrice(),
+      }).toString();
+
+      const verifyRes = await fetch(
+        `https://pipip-backend-eid3.onrender.com/api/payment/verify/${orderId}?${queryParams}`,
+        
+      );
+      const verifyData = await verifyRes.json();
+
+      if (verifyData.status === "PAID") {
+        setConfirmedBookingId(orderId);
+        setBookingComplete(true);
+        toast.success("Booking Confirmed!");
+      } else {
+        setPaymentFailed(true);
+      }
+    } catch (error) {
+      setPaymentFailed(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
 
   const handleBookingSubmit = async () => {
     if (!bike || !startDate || !endDate) return;
@@ -1384,12 +1428,12 @@ export default function BookBike() {
                       </div>
 
                       {/* Payment Info */}
-                      <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                      {/* <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
                         <p className="text-sm text-foreground">
                           💳 <strong>Payment at Pickup:</strong> Pay when you
                           collect the bike. We accept Cash, UPI, and Cards.
                         </p>
-                      </div>
+                      </div> */}
 
                       {/* <div className="flex gap-4">
                         <Button

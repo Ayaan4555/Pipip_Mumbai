@@ -139,6 +139,12 @@ const Catalog = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Browse our complete collection of scooters and bikes available for rent
             </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              For Visual Representation Only.
+            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              The Images of Bike may or may not match the actual Product.
+            </p>
           </motion.div>
 
           {/* Filters Bar */}

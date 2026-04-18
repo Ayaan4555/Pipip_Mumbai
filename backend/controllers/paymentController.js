@@ -612,3 +612,50 @@ exports.verifyWebhook = async (req, res) => {
     res.status(400).send("Verification Failed");
   }
 };
+
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { customerId, bikeId, startDate, endDate, amount } = req.query;
+
+    // 1. Fetch order status from Cashfree
+    const response = await Cashfree.get(`/orders/${orderId}`);
+    const data = response.data;
+
+    if (data.order_status === "PAID") {
+      // 2. Check if booking already exists to prevent duplicates
+      let booking = await Booking.findOne({ payment_order_id: orderId });
+
+      if (!booking) {
+        // 3. Create the booking record in the database
+        booking = await Booking.create({
+          customer_id: customerId,
+          bike_id: bikeId,
+          start_datetime: startDate,
+          end_datetime: endDate,
+          total_amount: amount,
+          payment_status: "paid",
+          payment_method: "online",
+          payment_order_id: orderId,
+          status: "confirmed",
+          booking_source: "online", // <--- ADDED THIS LINE
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        status: "PAID",
+        booking
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        status: data.order_status,
+        message: "Payment not completed"
+      });
+    }
+  } catch (error) {
+    console.error("Verification error:", error.response?.data || error.message);
+    res.status(500).json({ success: false, message: "Verification failed" });
+  }
+};
