@@ -372,6 +372,7 @@ export default function BookBike() {
   const handleOnlinePayment = async () => {
     try {
 
+      setPaymentFailed(false);
       const formData = new FormData();
       Object.entries(customerData).forEach(([key, value]) => {
         if (value !== null) formData.append(key, value);
