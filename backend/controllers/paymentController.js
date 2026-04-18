@@ -431,6 +431,41 @@ Cashfree.XEnvironment = CFEnvironment.PRODUCTION; // 🚀 PRODUCTION MODE
 //   }
 // };
 
+// exports.createOrder = async (req, res) => {
+//   try {
+//     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
+//     const orderId = `bike_${Date.now()}`;
+
+//     const request = {
+//       order_amount: amount,
+//       order_currency: "INR",
+//       order_id: orderId,
+//       customer_details: {
+//         // Use phone number as customer_id since booking isn't created yet
+//         customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
+//         customer_name: customerName,
+//         customer_email: customerEmail || "customer@pipip.com",
+//         customer_phone: customerPhone,
+//       },
+//       order_meta: {
+//         return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+//       },
+//     };
+
+//     // ✅ v4 uses .orders.create (NOT PGCreateOrder)
+//     const response = await Cashfree.orders.create(request);
+
+//     res.json({
+//       success: true,
+//       paymentSessionId: response.payment_session_id, 
+//       orderId,
+//     });
+//   } catch (error) {
+//     console.error("Order Creation Error:", error.message);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// };
+
 exports.createOrder = async (req, res) => {
   try {
     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
@@ -441,7 +476,7 @@ exports.createOrder = async (req, res) => {
       order_currency: "INR",
       order_id: orderId,
       customer_details: {
-        // Use phone number as customer_id since booking isn't created yet
+        // Fallback to phone if bookingId is missing
         customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
         customer_name: customerName,
         customer_email: customerEmail || "customer@pipip.com",
@@ -452,7 +487,8 @@ exports.createOrder = async (req, res) => {
       },
     };
 
-    // ✅ v4 uses .orders.create (NOT PGCreateOrder)
+    // ✅ FIX: In some v4 sub-versions, you access it via Cashfree.PG.orders.create
+    // or just ensure the global config is set. Let's use the most stable v4 call:
     const response = await Cashfree.orders.create(request);
 
     res.json({
@@ -461,7 +497,8 @@ exports.createOrder = async (req, res) => {
       orderId,
     });
   } catch (error) {
-    console.error("Order Creation Error:", error.message);
+    // This will help us see if 'orders' is still undefined
+    console.error("Order Creation Error:", error); 
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -716,19 +753,40 @@ exports.verifyWebhook = async (req, res) => {
 //   }
 // };
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+
+//     // ✅ v4 uses .orders.fetch (NOT PGOrderFetch)
+//     const response = await Cashfree.orders.fetch(orderId);
+
+//     // In v4, the response is the order object itself
+//     if (response && response.order_status === "PAID") {
+//       return res.status(200).json({ 
+//         success: true, 
+//         status: "PAID" 
+//       });
+//     } else {
+//       return res.status(400).json({ 
+//         success: false, 
+//         status: response ? response.order_status : "FAILED" 
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Verification Error:", error.message);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // ✅ v4 uses .orders.fetch (NOT PGOrderFetch)
+    // ✅ v4 Syntax
     const response = await Cashfree.orders.fetch(orderId);
 
-    // In v4, the response is the order object itself
     if (response && response.order_status === "PAID") {
-      return res.status(200).json({ 
-        success: true, 
-        status: "PAID" 
-      });
+      return res.status(200).json({ success: true, status: "PAID" });
     } else {
       return res.status(400).json({ 
         success: false, 
