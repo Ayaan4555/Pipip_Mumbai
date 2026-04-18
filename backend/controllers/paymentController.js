@@ -564,32 +564,81 @@ exports.verifyWebhook = async (req, res) => {
 //   }
 // };
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+//     const response = await Cashfree.get(`/orders/${orderId}`);
+//     const data = response.data;
+
+//     // ONLY proceed if Cashfree confirms the order is PAID
+//     if (data.order_status === "PAID") {
+//       let booking = await Booking.findOne({ payment_order_id: orderId });
+      
+//       if (booking) {
+//         booking.payment_status = "paid";
+//         booking.status = "confirmed";
+//         await booking.save();
+//       }
+
+//       return res.status(200).json({ success: true, status: "PAID", booking });
+//     } else {
+//       // If NOT paid, do not confirm anything
+//       return res.status(400).json({ 
+//         success: false, 
+//         status: data.order_status, 
+//         message: "Payment failed or pending" 
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: "Verification failed" });
+//   }
+// };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const response = await Cashfree.get(`/orders/${orderId}`);
+
+    // ✅ FIX: You must use PGOrderFetch instead of Cashfree.get
+    const response = await Cashfree.PGOrderFetch("2023-08-01", orderId);
     const data = response.data;
+
+    console.log(`Verifying Order: ${orderId}, Status: ${data.order_status}`);
 
     // ONLY proceed if Cashfree confirms the order is PAID
     if (data.order_status === "PAID") {
       let booking = await Booking.findOne({ payment_order_id: orderId });
       
       if (booking) {
+        // Update the existing pending booking to confirmed
         booking.payment_status = "paid";
         booking.status = "confirmed";
         await booking.save();
+        
+        return res.status(200).json({ 
+          success: true, 
+          status: "PAID", 
+          booking 
+        });
+      } else {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Booking record not found" 
+        });
       }
-
-      return res.status(200).json({ success: true, status: "PAID", booking });
     } else {
-      // If NOT paid, do not confirm anything
       return res.status(400).json({ 
         success: false, 
         status: data.order_status, 
-        message: "Payment failed or pending" 
+        message: "Payment not completed" 
       });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: "Verification failed" });
+    // Log the actual error from Cashfree SDK
+    console.error("Verification error:", error.response?.data || error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Verification failed",
+      error: error.message 
+    });
   }
 };
