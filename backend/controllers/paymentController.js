@@ -393,10 +393,47 @@ Cashfree.XEnvironment = CFEnvironment.PRODUCTION; // 🚀 PRODUCTION MODE
 //   }
 // };
 
+// exports.createOrder = async (req, res) => {
+//   try {
+//     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
+
+//     const orderId = `bike_${Date.now()}`;
+
+//     const request = {
+//       order_amount: amount,
+//       order_currency: "INR",
+//       order_id: orderId,
+//       customer_details: {
+//         // ✅ FIX: Use phone number if bookingId is undefined
+//         customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
+//         customer_name: customerName,
+//         customer_email: customerEmail || "customer@pipip.com",
+//         customer_phone: customerPhone,
+//       },
+//       order_meta: {
+//         return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+//       },
+//     };
+
+//     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+
+//     // ✅ IMPORTANT: Remove the "Booking.findByIdAndUpdate" part here 
+//     // because the booking does not exist yet!
+
+//     res.json({
+//       success: true,
+//       paymentSessionId: response.data.payment_session_id,
+//       orderId,
+//     });
+//   } catch (error) {
+//     console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// };
+
 exports.createOrder = async (req, res) => {
   try {
     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
-
     const orderId = `bike_${Date.now()}`;
 
     const request = {
@@ -404,7 +441,7 @@ exports.createOrder = async (req, res) => {
       order_currency: "INR",
       order_id: orderId,
       customer_details: {
-        // ✅ FIX: Use phone number if bookingId is undefined
+        // Use phone number as customer_id since booking isn't created yet
         customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
         customer_name: customerName,
         customer_email: customerEmail || "customer@pipip.com",
@@ -415,18 +452,16 @@ exports.createOrder = async (req, res) => {
       },
     };
 
-    const response = await Cashfree.PGCreateOrder("2023-08-01", request);
-
-    // ✅ IMPORTANT: Remove the "Booking.findByIdAndUpdate" part here 
-    // because the booking does not exist yet!
+    // ✅ v4 uses .orders.create (NOT PGCreateOrder)
+    const response = await Cashfree.orders.create(request);
 
     res.json({
       success: true,
-      paymentSessionId: response.data.payment_session_id,
+      paymentSessionId: response.payment_session_id, 
       orderId,
     });
   } catch (error) {
-    console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
+    console.error("Order Creation Error:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -632,51 +667,76 @@ exports.verifyWebhook = async (req, res) => {
 //   }
 // };
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+
+//     // ✅ FIX: You must use PGOrderFetch instead of Cashfree.get
+//     const response = await Cashfree.PGOrderFetch("2023-08-01", orderId);
+//     const data = response.data;
+
+//     console.log(`Verifying Order: ${orderId}, Status: ${data.order_status}`);
+
+//     // ONLY proceed if Cashfree confirms the order is PAID
+//     if (data.order_status === "PAID") {
+//       let booking = await Booking.findOne({ payment_order_id: orderId });
+      
+//       if (booking) {
+//         // Update the existing pending booking to confirmed
+//         booking.payment_status = "paid";
+//         booking.status = "confirmed";
+//         await booking.save();
+        
+//         return res.status(200).json({ 
+//           success: true, 
+//           status: "PAID", 
+//           booking 
+//         });
+//       } else {
+//         return res.status(404).json({ 
+//           success: false, 
+//           message: "Booking record not found" 
+//         });
+//       }
+//     } else {
+//       return res.status(400).json({ 
+//         success: false, 
+//         status: data.order_status, 
+//         message: "Payment not completed" 
+//       });
+//     }
+//   } catch (error) {
+//     // Log the actual error from Cashfree SDK
+//     console.error("Verification error:", error.response?.data || error.message);
+//     res.status(500).json({ 
+//       success: false, 
+//       message: "Verification failed",
+//       error: error.message 
+//     });
+//   }
+// };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // ✅ FIX: You must use PGOrderFetch instead of Cashfree.get
-    const response = await Cashfree.PGOrderFetch("2023-08-01", orderId);
-    const data = response.data;
+    // ✅ v4 uses .orders.fetch (NOT PGOrderFetch)
+    const response = await Cashfree.orders.fetch(orderId);
 
-    console.log(`Verifying Order: ${orderId}, Status: ${data.order_status}`);
-
-    // ONLY proceed if Cashfree confirms the order is PAID
-    if (data.order_status === "PAID") {
-      let booking = await Booking.findOne({ payment_order_id: orderId });
-      
-      if (booking) {
-        // Update the existing pending booking to confirmed
-        booking.payment_status = "paid";
-        booking.status = "confirmed";
-        await booking.save();
-        
-        return res.status(200).json({ 
-          success: true, 
-          status: "PAID", 
-          booking 
-        });
-      } else {
-        return res.status(404).json({ 
-          success: false, 
-          message: "Booking record not found" 
-        });
-      }
+    // In v4, the response is the order object itself
+    if (response && response.order_status === "PAID") {
+      return res.status(200).json({ 
+        success: true, 
+        status: "PAID" 
+      });
     } else {
       return res.status(400).json({ 
         success: false, 
-        status: data.order_status, 
-        message: "Payment not completed" 
+        status: response ? response.order_status : "FAILED" 
       });
     }
   } catch (error) {
-    // Log the actual error from Cashfree SDK
-    console.error("Verification error:", error.response?.data || error.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Verification failed",
-      error: error.message 
-    });
+    console.error("Verification Error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
