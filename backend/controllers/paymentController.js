@@ -365,9 +365,15 @@ exports.createOrder = async (req, res) => {
     console.log("Cashfree Response:", response.data);
 
     // Save orderId in DB
+    // await Booking.findByIdAndUpdate(bookingId, {
+    //   payment_order_id: orderId,
+    // });
+
     await Booking.findByIdAndUpdate(bookingId, {
-      payment_order_id: orderId,
-    });
+  payment_order_id: orderId,
+  status: "pending",         // 👈 Ensure it stays pending here
+  payment_status: "pending"  // 👈 Ensure it stays pending here
+});
 
     res.json({
       success: true,
@@ -393,170 +399,78 @@ exports.createOrder = async (req, res) => {
 
 // WEBHOOK (your webhook is mostly correct)
 
-// exports.verifyWebhook = async (req, res) => {
-//   try {
 
-//     console.log(
-//       "Webhook received:",
-//       JSON.stringify(req.body)
-//     );
 
-//     console.log("Webhook received:", req.body);
-
-//     const data = req.body?.data;
-
-//     if (!data) {
-//       return res.status(400).json({
-//         message: "Invalid webhook data",
-//       });
-//     }
-
-//     const orderId =
-//       data.order.order_id;
-
-//     const orderStatus =
-//       data.order.order_status;
-
-//     const booking =
-//       await Booking.findOne({
-//         payment_order_id: orderId,
-//       });
-
-//     if (!booking) {
-//       return res.status(404).json({
-//         message: "Booking not found",
-//       });
-//     }
-
-//     if (orderStatus === "PAID") {
-
-//       booking.payment_status = "paid";
-//       booking.status = "confirmed";
-
-//     } else {
-
-//       booking.payment_status = "failed";
-
-//     }
-
-//     await booking.save();
-
-//     res.status(200).json({
-//       success: true,
-//     });
-
-//   } catch (error) {
-
-//     console.error(
-//       "Webhook Error:",
-//       error
-//     );
-
-//     res.status(500).json({
-//       success: false,
-//     });
-
-//   }
-// };
-
-// exports.verifyWebhook = async (req, res) => {
-//   try {
-//     console.log("Webhook received:", req.body);
-
-//     // Handle test webhook
-//     if (!req.body.data?.order) {
-//       return res.status(200).json({
-//         success: true,
-//         message: "Webhook test received",
-//       });
-//     }
-
-//     const data = req.body.data;
-
-//     const orderId = data.order.order_id;
-//     const orderStatus = data.order.order_status;
-
-//     const booking = await Booking.findOne({
-//       payment_order_id: orderId,
-//     });
-
-//     if (!booking) {
-//       return res.status(404).json({
-//         message: "Booking not found",
-//       });
-//     }
-
-//     if (orderStatus === "PAID") {
-//       booking.payment_status = "paid";
-//       booking.status = "confirmed";
-//     } else {
-//       booking.payment_status = "failed";
-//     }
-
-//     await booking.save();
-
-//     res.status(200).json({
-//       success: true,
-//     });
-
-//   } catch (error) {
-//     console.error("Webhook Error:", error);
-
-//     res.status(200).json({
-//       success: false,
-//     });
-//   }
-// };
 
 // exports.verifyWebhook = async (req, res) => {
 //   try {
 //     const signature = req.headers["x-webhook-signature"];
 //     const timestamp = req.headers["x-webhook-timestamp"];
-    
-//     // req.body is a Buffer because of express.raw() in the router
 //     const rawBody = req.body.toString();
 
-//     // 1. Verify that the request actually came from Cashfree
+//     // 1. Verify Signature
 //     Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
 
 //     const webhookData = JSON.parse(rawBody);
-//     const data = webhookData.data;
+//     const { data, type } = webhookData;
 
-//     // Handle test/empty webhooks
-//     if (!data || !data.order) {
+//     // Handle initial test pings
+//     if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
 //       return res.status(200).send("OK");
 //     }
 
-//     const orderId = data.order.order_id;
-//     const orderStatus = data.order.order_status;
+//     // 2. Extract Data (Correct Nesting)
+//     const orderId = data.order?.order_id;
+//     const paymentStatus = data.payment?.payment_status;
 
-//     // 2. Find and Update the booking
-//     const booking = await Booking.findOne({ payment_order_id: orderId });
+//     console.log(`Received Webhook Type: ${type} for Order: ${orderId} Status: ${paymentStatus}`);
 
-//     if (!booking) {
-//       console.error("Booking not found for order:", orderId);
-//       return res.status(404).send("Booking not found");
+//     if (!orderId) {
+//       return res.status(200).send("No order ID found in webhook");
 //     }
 
-//     if (orderStatus === "PAID") {
+//     const {order_status} = req.body.data;
+//      if (order_status === "PAID") {
+//     // 🔥 Here you can:
+//     // 1. Mark booking as PAID
+//     // 2. Lock bike
+//     // 3. Send confirmation SMS / Email
+
+//     const booking = await Booking.findOne({ payment_order_id: orderId });
+//      if (!booking) {
+//       console.error("Booking not found in DB for order_id:", orderId);
+//       return res.status(200).send("OK"); // Still 200 so they stop sending
+//     }
+    
+//      if (paymentStatus === "SUCCESS") {
 //       booking.payment_status = "paid";
 //       booking.status = "confirmed";
-//     } else if (["FAILED", "CANCELLED"].includes(orderStatus)) {
+//     } else if (["FAILED", "CANCELLED", "USER_DROPPED"].includes(paymentStatus)) {
 //       booking.payment_status = "failed";
+//       booking.status = "cancelled";
 //     }
 
 //     await booking.save();
+//     console.log(`Success: Booking ${orderId} updated to ${paymentStatus}`);
+
     
-//     // 3. Return 200 to Cashfree
+//   }
+
+//     // 3. Find and Update the booking
+    
+
+   
+
+//     // 4. Update Logic
+   
+    
 //     res.status(200).send("OK");
 
 //   } catch (error) {
-//     console.error("Webhook Verification Failed:", error.message);
-//     // Return 400 so Cashfree knows it failed
-//     res.status(400).send("Invalid Signature");
+//     console.error("Webhook Logic Failed:", error.message);
+//     res.status(400).send("Verification Failed");
 //   }
 // };
-
 
 exports.verifyWebhook = async (req, res) => {
   try {
@@ -570,107 +484,112 @@ exports.verifyWebhook = async (req, res) => {
     const webhookData = JSON.parse(rawBody);
     const { data, type } = webhookData;
 
-    // Handle initial test pings
     if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
       return res.status(200).send("OK");
     }
 
-    // 2. Extract Data (Correct Nesting)
     const orderId = data.order?.order_id;
-    const paymentStatus = data.payment?.payment_status;
-
-    console.log(`Received Webhook Type: ${type} for Order: ${orderId} Status: ${paymentStatus}`);
-
-    if (!orderId) {
-      return res.status(200).send("No order ID found in webhook");
-    }
-
-    const {order_status} = req.body.data;
-     if (order_status === "PAID") {
-    // 🔥 Here you can:
-    // 1. Mark booking as PAID
-    // 2. Lock bike
-    // 3. Send confirmation SMS / Email
+    const paymentStatus = data.payment?.payment_status; // SUCCESS, FAILED, etc.
 
     const booking = await Booking.findOne({ payment_order_id: orderId });
-     if (!booking) {
-      console.error("Booking not found in DB for order_id:", orderId);
-      return res.status(200).send("OK"); // Still 200 so they stop sending
+    if (!booking) {
+      return res.status(200).send("OK"); 
     }
-    
-     if (paymentStatus === "SUCCESS") {
+
+    // 2. Clear logic: Only "SUCCESS" confirms the booking
+    if (paymentStatus === "SUCCESS") {
       booking.payment_status = "paid";
       booking.status = "confirmed";
-    } else if (["FAILED", "CANCELLED", "USER_DROPPED"].includes(paymentStatus)) {
+    } else {
+      // 3. Any other status (FAILED, CANCELLED) marks it as failed
       booking.payment_status = "failed";
       booking.status = "cancelled";
     }
 
     await booking.save();
-    console.log(`Success: Booking ${orderId} updated to ${paymentStatus}`);
-
-    
-  }
-
-    // 3. Find and Update the booking
-    
-
-   
-
-    // 4. Update Logic
-   
-    
     res.status(200).send("OK");
 
   } catch (error) {
-    console.error("Webhook Logic Failed:", error.message);
-    res.status(400).send("Verification Failed");
+    console.error("Webhook Error:", error.message);
+    res.status(400).send("Invalid Signature");
   }
 };
+
+
+// exports.verifyPayment = async (req, res) => {
+
+//   try {
+//     const { orderId } = req.params;
+//     const { customerId, bikeId, startDate, endDate, amount } = req.query;
+
+//     // 1. Fetch order status from Cashfree
+//     const response = await Cashfree.get(`/orders/${orderId}`);
+//     const data = response.data;
+
+//     if (data.order_status === "PAID") {
+//       // 2. Check if booking already exists to prevent duplicates
+//       let booking = await Booking.findOne({ payment_order_id: orderId });
+
+//       if (!booking) {
+//         // 3. Create the booking record in the database
+//         booking = await Booking.create({
+//           customer_id: customerId,
+//           bike_id: bikeId,
+//           start_datetime: startDate,
+//           end_datetime: endDate,
+//           total_amount: amount,
+//           payment_status: "paid",
+//           payment_method: "online",
+//           payment_order_id: orderId,
+//           status: "confirmed",
+//           booking_source: "online", // <--- ADDED THIS LINE
+//         });
+//       }
+
+//       return res.status(200).json({
+//         success: true,
+//         status: "PAID",
+//         booking
+//       });
+//     } else {
+//       return res.status(400).json({
+//         success: false,
+//         status: data.order_status,
+//         message: "Payment not completed"
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Verification error:", error.response?.data || error.message);
+//     res.status(500).json({ success: false, message: "Verification failed" });
+//   }
+// };
 
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { customerId, bikeId, startDate, endDate, amount } = req.query;
-
-    // 1. Fetch order status from Cashfree
     const response = await Cashfree.get(`/orders/${orderId}`);
     const data = response.data;
 
+    // ONLY proceed if Cashfree confirms the order is PAID
     if (data.order_status === "PAID") {
-      // 2. Check if booking already exists to prevent duplicates
       let booking = await Booking.findOne({ payment_order_id: orderId });
-
-      if (!booking) {
-        // 3. Create the booking record in the database
-        booking = await Booking.create({
-          customer_id: customerId,
-          bike_id: bikeId,
-          start_datetime: startDate,
-          end_datetime: endDate,
-          total_amount: amount,
-          payment_status: "paid",
-          payment_method: "online",
-          payment_order_id: orderId,
-          status: "confirmed",
-          booking_source: "online", // <--- ADDED THIS LINE
-        });
+      
+      if (booking) {
+        booking.payment_status = "paid";
+        booking.status = "confirmed";
+        await booking.save();
       }
 
-      return res.status(200).json({
-        success: true,
-        status: "PAID",
-        booking
-      });
+      return res.status(200).json({ success: true, status: "PAID", booking });
     } else {
-      return res.status(400).json({
-        success: false,
-        status: data.order_status,
-        message: "Payment not completed"
+      // If NOT paid, do not confirm anything
+      return res.status(400).json({ 
+        success: false, 
+        status: data.order_status, 
+        message: "Payment failed or pending" 
       });
     }
   } catch (error) {
-    console.error("Verification error:", error.response?.data || error.message);
     res.status(500).json({ success: false, message: "Verification failed" });
   }
 };
