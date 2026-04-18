@@ -327,19 +327,75 @@ Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
 Cashfree.XEnvironment = CFEnvironment.PRODUCTION; // 🚀 PRODUCTION MODE
 
 // CREATE ORDER
+// exports.createOrder = async (req, res) => {
+//   try {
+//     // Safety check for empty body
+//     if (!req.body || Object.keys(req.body).length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Request body is empty.",
+//       });
+//     }
+
+//     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
+
+//     console.log("Payment Request for Booking ID:", bookingId);
+
+//     const orderId = `bike_${Date.now()}`;
+
+//     const request = {
+//       order_amount: amount,
+//       order_currency: "INR",
+//       order_id: orderId,
+//       customer_details: {
+//         customer_id: bookingId,
+//         customer_name: customerName,
+//         customer_email: customerEmail,
+//         customer_phone: customerPhone,
+//       },
+//       order_meta: {
+//         return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+//       },
+//     };
+
+//     // ✅ FIX: Use the static method PGCreateOrder directly from Cashfree class
+//     // In v5.x, you must pass the API version as the first argument
+//     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+
+//     console.log("Cashfree Response:", response.data);
+
+//     // Save orderId in DB
+//     // await Booking.findByIdAndUpdate(bookingId, {
+//     //   payment_order_id: orderId,
+//     // });
+
+//     await Booking.findByIdAndUpdate(bookingId, {
+//   payment_order_id: orderId,
+//   status: "pending",         // 👈 Ensure it stays pending here
+//   payment_status: "pending"  // 👈 Ensure it stays pending here
+// });
+
+//     res.json({
+//       success: true,
+//       paymentSessionId: response.data.payment_session_id,
+//       orderId,
+//     });
+
+//   } catch (error) {
+//     // ✅ Improved logging to see exactly why it fails in production
+//     console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
+
+//     res.status(500).json({
+//       success: false,
+//       message: "Payment order creation failed",
+//       error: error.response?.data?.message || error.message,
+//     });
+//   }
+// };
+
 exports.createOrder = async (req, res) => {
   try {
-    // Safety check for empty body
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Request body is empty.",
-      });
-    }
-
     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
-
-    console.log("Payment Request for Booking ID:", bookingId);
 
     const orderId = `bike_${Date.now()}`;
 
@@ -348,9 +404,10 @@ exports.createOrder = async (req, res) => {
       order_currency: "INR",
       order_id: orderId,
       customer_details: {
-        customer_id: bookingId,
+        // ✅ FIX: Use phone number if bookingId is undefined
+        customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
         customer_name: customerName,
-        customer_email: customerEmail,
+        customer_email: customerEmail || "customer@pipip.com",
         customer_phone: customerPhone,
       },
       order_meta: {
@@ -358,38 +415,19 @@ exports.createOrder = async (req, res) => {
       },
     };
 
-    // ✅ FIX: Use the static method PGCreateOrder directly from Cashfree class
-    // In v5.x, you must pass the API version as the first argument
     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
 
-    console.log("Cashfree Response:", response.data);
-
-    // Save orderId in DB
-    // await Booking.findByIdAndUpdate(bookingId, {
-    //   payment_order_id: orderId,
-    // });
-
-    await Booking.findByIdAndUpdate(bookingId, {
-  payment_order_id: orderId,
-  status: "pending",         // 👈 Ensure it stays pending here
-  payment_status: "pending"  // 👈 Ensure it stays pending here
-});
+    // ✅ IMPORTANT: Remove the "Booking.findByIdAndUpdate" part here 
+    // because the booking does not exist yet!
 
     res.json({
       success: true,
       paymentSessionId: response.data.payment_session_id,
       orderId,
     });
-
   } catch (error) {
-    // ✅ Improved logging to see exactly why it fails in production
     console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Payment order creation failed",
-      error: error.response?.data?.message || error.message,
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
