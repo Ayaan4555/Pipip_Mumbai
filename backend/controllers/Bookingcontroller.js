@@ -498,8 +498,20 @@ exports.adminCreateBooking = async (req, res) => {
       return res.status(404).json({ message: "Bike not found" });
     }
 
-    const start = new Date(start_datetime);
-    const end = new Date(end_datetime);
+    // const start = new Date(start_datetime);
+    // const end = new Date(end_datetime);
+
+    let start_datetime_ist = start_datetime;
+    if (!start_datetime.includes("Z") && !start_datetime.includes("+")) {
+      start_datetime_ist = `${start_datetime}+05:30`;
+    }
+    const start = new Date(start_datetime_ist);
+
+    let end_datetime_ist = end_datetime;
+    if (!end_datetime.includes("Z") && !end_datetime.includes("+")) {
+      end_datetime_ist = `${end_datetime}+05:30`;
+    }
+    const end = new Date(end_datetime_ist);
 
     // ✅ Safety check
     if (end <= start) {
@@ -640,6 +652,25 @@ exports.adminCreateBooking = async (req, res) => {
 /**
  * GET ALL BOOKINGS (ADMIN)
  */
+// exports.getAllBookings = async (req, res) => {
+//   try {
+//     const bookings = await Booking.find()
+//       .populate("customer_id", "name phone email")
+//       .populate("bike_id", "model number_plate")
+//       .sort({ createdAt: -1 });
+
+//     const formatted = bookings.map((b) => ({
+//       ...b.toObject(),
+//       customers: b.customer_id,
+//       bikes: b.bike_id,
+//     }));
+
+//     res.json(formatted);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
@@ -647,11 +678,25 @@ exports.getAllBookings = async (req, res) => {
       .populate("bike_id", "model number_plate")
       .sort({ createdAt: -1 });
 
-    const formatted = bookings.map((b) => ({
-      ...b.toObject(),
-      customers: b.customer_id,
-      bikes: b.bike_id,
-    }));
+    const formatted = bookings.map((b) => {
+      const bookingObj = b.toObject();
+
+      // ✅ Add formatted IST strings for the frontend to display easily
+      return {
+        ...bookingObj,
+        customers: b.customer_id,
+        bikes: b.bike_id,
+        // Format for display: "21/04/2026, 7:00:00 pm"
+        start_datetime_display: b.start_datetime.toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour12: true,
+        }),
+        end_datetime_display: b.end_datetime.toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour12: true,
+        }),
+      };
+    });
 
     res.json(formatted);
   } catch (err) {

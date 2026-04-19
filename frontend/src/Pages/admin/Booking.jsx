@@ -1239,23 +1239,52 @@ const emptyCompletionData = {
   remarks: "",
 };
 
+// const roundToHour = (dateTimeStr) => {
+//   if (!dateTimeStr) return "";
+//   const date = new Date(dateTimeStr);
+//   const minutes = date.getMinutes();
+
+//   // If there are any minutes, round up to the next full hour
+//   if (minutes > 0) {
+//     date.setMinutes(0);
+//     date.setHours(date.getHours() + 1);
+//   }
+
+//   const year = date.getFullYear();
+//   const month = String(date.getMonth() + 1).padStart(2, "0");
+//   const day = String(date.getDate()).padStart(2, "0");
+//   const hours = String(date.getHours()).padStart(2, "0");
+
+//   return `${year}-${month}-${day}T${hours}:00`;
+// };
+
 const roundToHour = (dateTimeStr) => {
   if (!dateTimeStr) return "";
   const date = new Date(dateTimeStr);
-  const minutes = date.getMinutes();
 
-  // If there are any minutes, round up to the next full hour
+  // Convert to IST context if necessary before rounding
+  const minutes = date.getMinutes();
   if (minutes > 0) {
     date.setMinutes(0);
     date.setHours(date.getHours() + 1);
   }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
+  // Format specifically for the datetime-local input which expects YYYY-MM-DDTHH:mm
+  const options = {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
 
-  return `${year}-${month}-${day}T${hours}:00`;
+  const formatter = new Intl.DateTimeFormat("en-IN", options);
+  const parts = formatter.formatToParts(date);
+  const f = (type) => parts.find((p) => p.type === type).value;
+
+  return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:00`;
 };
 
 export default function Bookings() {
@@ -1998,8 +2027,18 @@ export default function Bookings() {
       bookingData.append("customer_name", finalCustomerName);
       bookingData.append("contact_number", finalCustomerPhone);
 
-      bookingData.append("start_datetime", formData.start_datetime);
-      bookingData.append("end_datetime", formData.end_datetime);
+      // bookingData.append("start_datetime", formData.start_datetime);
+      // bookingData.append("end_datetime", formData.end_datetime);
+
+      bookingData.append(
+        "start_datetime",
+        new Date(formData.start_datetime).toISOString(),
+      );
+      bookingData.append(
+        "end_datetime",
+        new Date(formData.end_datetime).toISOString(),
+      );
+
       bookingData.append(
         "vehicle_make_model",
         selectedBike ? `${selectedBike.brand} ${selectedBike.model}` : "Bike",
@@ -2048,87 +2087,125 @@ export default function Bookings() {
   //   return local.toISOString().slice(0, 16);
   // };
 
-  const formatToLocalInput = (utcDate) => {
-    if (!utcDate) return "";
-
-    try {
-      const date = new Date(utcDate);
-
-      // Convert UTC → Local (IST etc.)
-      const localDate = new Date(
-        date.getTime() - date.getTimezoneOffset() * 60000,
-      );
-
-      // Format to datetime-local required format
-      return localDate.toISOString().slice(0, 16);
-    } catch (error) {
-      console.error("Date conversion error:", error);
-      return "";
-    }
+const toLocalISO = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  
+  // Use Intl to format the date specifically for India
+  // This produces a string like "2026-04-21 19:30"
+  const options = {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
   };
+  
+  const formatter = new Intl.DateTimeFormat('en-IN', options);
+  const parts = formatter.formatToParts(date);
+  const f = (type) => parts.find(p => p.type === type).value;
+  
+  // Return in YYYY-MM-DDTHH:mm format required by <input type="datetime-local">
+  return `${f('year')}-${f('month')}-${f('day')}T${f('hour')}:${f('minute')}`;
+};
 
-  const handleEditBooking = (booking) => {
-     console.log("DB:", booking.start_datetime);
-  console.log(
-    "Formatted:",
-    formatToLocalInput(booking.start_datetime)
-  );
+  
 
+const handleEditBooking = (booking) => {
     setEditingBooking(booking._id);
 
     setEditFormData({
       bike_id: booking.bike_id,
       customer_id: booking.customer_id,
+      // start_datetime: booking.start_datetime.slice(0, 16),
+      // end_datetime: booking.end_datetime.slice(0, 16),
 
-      // ✅ FIXED TIMEZONE ISSUE HERE
-      // start_datetime: formatToLocalInput(booking.start_datetime),
-
-      // end_datetime: formatToLocalInput(booking.end_datetime),
-
-      start_datetime: formatToLocalInput(
-  booking.start_datetime
-),
-
-end_datetime: formatToLocalInput(
-  booking.end_datetime
-),
-
+      start_datetime: toLocalISO(booking.start_datetime),
+      end_datetime: toLocalISO(booking.end_datetime),
       notes: booking.notes || "",
-
       customer_name: booking.customer_name || booking.customers?.name || "",
-
       customer_phone: booking.contact_number || booking.customers?.phone || "",
-
       customer_email: booking.customer_email || booking.customers?.email || "",
-
       customer_location: booking.customer_location || "",
-
       is_new_customer: false,
       aadhaar_file: null,
       license_file: null,
-
       partner_name: booking.source_name || "",
       lead_source: booking.lead_source || "other",
       source_name: booking.source_name || "",
       rental_type: booking.rental_type || "daily",
-
       total_amount: String(booking.total_amount || ""),
-
       deposit_amount: String(booking.deposit_amount || ""),
-
       reference_partner_share: String(booking.reference_partner_share || ""),
-
       provider_partner_share: String(booking.provider_partner_share || ""),
-
       fuel_quantity: String(booking.fuel_quantity || ""),
-
       account_manager: booking.account_manager || "",
-
       remarks: booking.remarks || "",
-
       payment_method: booking.payment_method || "cash",
     });
   };
+
+
+//   const handleEditBooking = (booking) => {
+//      console.log("DB:", booking.start_datetime);
+//   console.log(
+//     "Formatted:",
+//     formatToLocalInput(booking.start_datetime)
+//   );
+
+//     setEditingBooking(booking._id);
+
+//     setEditFormData({
+//       bike_id: booking.bike_id,
+//       customer_id: booking.customer_id,
+
+//       // ✅ FIXED TIMEZONE ISSUE HERE
+//       // start_datetime: formatToLocalInput(booking.start_datetime),
+
+//       // end_datetime: formatToLocalInput(booking.end_datetime),
+
+//       start_datetime: formatToLocalInput(
+//   booking.start_datetime
+// ),
+
+// end_datetime: formatToLocalInput(
+//   booking.end_datetime
+// ),
+
+//       notes: booking.notes || "",
+
+//       customer_name: booking.customer_name || booking.customers?.name || "",
+
+//       customer_phone: booking.contact_number || booking.customers?.phone || "",
+
+//       customer_email: booking.customer_email || booking.customers?.email || "",
+
+//       customer_location: booking.customer_location || "",
+
+//       is_new_customer: false,
+//       aadhaar_file: null,
+//       license_file: null,
+
+//       partner_name: booking.source_name || "",
+//       lead_source: booking.lead_source || "other",
+//       source_name: booking.source_name || "",
+//       rental_type: booking.rental_type || "daily",
+
+//       total_amount: String(booking.total_amount || ""),
+
+//       deposit_amount: String(booking.deposit_amount || ""),
+
+//       reference_partner_share: String(booking.reference_partner_share || ""),
+
+//       provider_partner_share: String(booking.provider_partner_share || ""),
+
+//       fuel_quantity: String(booking.fuel_quantity || ""),
+
+//       account_manager: booking.account_manager || "",
+
+//       remarks: booking.remarks || "",
+
+//       payment_method: booking.payment_method || "cash",
+//     });
+//   };
 
   // Edit booking (full form)
   // const handleEditBooking = (booking) => {
@@ -2423,66 +2500,31 @@ end_datetime: formatToLocalInput(
 
       <div className="space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-         
-          {/* <div className="space-y-2">
+          <div className="space-y-2">
             <Label>Start Date/Time *</Label>
             <Input
               type="datetime-local"
               className="[color-scheme:dark]"
-              value={editFormData.start_datetime}
+              value={data.start_datetime}
               onChange={(e) =>
                 setData({
                   ...data,
-                  start_datetime: e.target.value,
+                  start_datetime: roundToHour(e.target.value),
                 })
               }
             />
           </div>
-
           <div className="space-y-2">
             <Label>End Date/Time *</Label>
             <Input
               type="datetime-local"
               className="[color-scheme:dark]"
-              value={editFormData.start_datetime}
+              value={data.end_datetime}
               onChange={(e) =>
-                setData({
-                  ...data,
-                  end_datetime: e.target.value,
-                })
+                setData({ ...data, end_datetime: roundToHour(e.target.value) })
               }
             />
-          </div> */}
-
-          <div className="space-y-2">
-  <Label>Start Date/Time *</Label>
-  <Input
-    type="datetime-local"
-    className="[color-scheme:dark]"
-    value={editFormData.start_datetime}
-    onChange={(e) =>
-      setEditFormData({
-        ...editFormData,
-        start_datetime: e.target.value,
-      })
-    }
-  />
-</div>
-
-<div className="space-y-2">
-  <Label>End Date/Time *</Label>
-  <Input
-    type="datetime-local"
-    className="[color-scheme:dark]"
-    value={editFormData.end_datetime}
-    onChange={(e) =>
-      setEditFormData({
-        ...editFormData,
-        end_datetime: e.target.value,
-      })
-    }
-  />
-</div>
+          </div>
         </div>
 
         {!isEdit && availabilityMessage && (
@@ -3416,7 +3458,7 @@ end_datetime: formatToLocalInput(
                             </p>
                           </div>
 
-                          {/* <div className="space-y-0.5">
+                          <div className="space-y-0.5">
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                               Duration
                             </p>
@@ -3439,9 +3481,9 @@ end_datetime: formatToLocalInput(
                                 )}
                               </span>
                             </div>
-                          </div> */}
+                          </div>
 
-                          <div className="space-y-0.5">
+                          {/* <div className="space-y-0.5">
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                               Duration
                             </p>
@@ -3477,7 +3519,9 @@ end_datetime: formatToLocalInput(
                                 )}
                               </span>
                             </div>
-                          </div>
+                          </div> */}
+
+
 
                           {/* {availabilityMessage && (
                             <div
