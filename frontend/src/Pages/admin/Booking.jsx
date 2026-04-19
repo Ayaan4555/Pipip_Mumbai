@@ -1369,7 +1369,7 @@ export default function Bookings() {
     }
   }, [isOpen]);
 
-useEffect(() => {
+  useEffect(() => {
     const checkDates = async () => {
       // Determine which data to use (Edit form or Create form)
       const activeData = editingBooking ? editFormData : formData;
@@ -2326,7 +2326,6 @@ useEffect(() => {
           />
         </div>
       </div> */}
-
 
       <div className="space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3288,7 +3287,7 @@ useEffect(() => {
                             </p>
                           </div>
 
-                          <div className="space-y-0.5">
+                          {/* <div className="space-y-0.5">
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                               Duration
                             </p>
@@ -3308,6 +3307,44 @@ useEffect(() => {
                                 {format(
                                   new Date(booking.end_datetime),
                                   "dd MMM, h:mm a",
+                                )}
+                              </span>
+                            </div>
+                          </div> */}
+
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                              Duration
+                            </p>
+                            <div className="flex items-center gap-1.5 text-xs text-foreground">
+                              <Calendar className="w-3 h-3 shrink-0 text-primary" />
+                              <span>
+                                {new Date(
+                                  booking.start_datetime,
+                                ).toLocaleString("en-IN", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                  timeZone: "UTC", // This is the magic line
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3 shrink-0" />
+                              <span>
+                                to{" "}
+                                {new Date(booking.end_datetime).toLocaleString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                    timeZone: "UTC",
+                                  },
                                 )}
                               </span>
                             </div>
