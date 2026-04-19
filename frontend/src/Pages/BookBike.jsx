@@ -84,6 +84,7 @@ export default function BookBike() {
   const createBooking = useCreateBooking();
   const { checkAvailability, checking } = useBikeAvailability();
 
+  const SECURITY_DEPOSIT = 2000;
 
 
   // 1. Helper to get ISO string rounded to the top of the hour
@@ -177,21 +178,36 @@ export default function BookBike() {
     return areas.find((a) => a._id === areaId)?.name || "Mumbai";
   };
 
-  const calculatePrice = () => {
-    if (!bike || !startDate || !endDate) return 0;
+  // const calculatePrice = () => {
+  //   if (!bike || !startDate || !endDate) return 0;
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalHours = Math.max(1, differenceInHours(end, start));
+  //   const start = new Date(startDate);
+  //   const end = new Date(endDate);
+  //   const totalHours = Math.max(1, differenceInHours(end, start));
 
-    const days = Math.floor(totalHours / 24);
-    const remainingHours = totalHours % 24;
+  //   const days = Math.floor(totalHours / 24);
+  //   const remainingHours = totalHours % 24;
 
-    return (
-      days * Number(bike.price_per_day) +
-      remainingHours * Number(bike.price_per_hour)
-    );
-  };
+  //   return (
+  //     days * Number(bike.price_per_day) +
+  //     remainingHours * Number(bike.price_per_hour)
+  //   );
+  // };
+
+const calculatePrice = (includeDeposit = false) => {
+  if (!bike || !startDate || !endDate) return 0;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const totalHours = Math.max(1, differenceInHours(end, start));
+
+  const days = Math.floor(totalHours / 24);
+  const remainingHours = totalHours % 24;
+
+  const rentalPrice = (days * Number(bike.price_per_day)) + (remainingHours * Number(bike.price_per_hour));
+  
+  return includeDeposit ? rentalPrice + SECURITY_DEPOSIT : rentalPrice;
+};
 
   const roundToHour = (dateTimeStr) => {
     if (!dateTimeStr) return "";
@@ -426,7 +442,7 @@ export default function BookBike() {
         bikeId: bike._id,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
-        amount: calculatePrice(),
+        amount: calculatePrice(true),
       }).toString();
 
       const verifyRes = await fetch(
@@ -490,7 +506,7 @@ export default function BookBike() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: calculatePrice(),
+        amount: calculatePrice(true),
         customerName: customerData.name,
         customerEmail: customerData.email || "customer@pipip.com",
         customerPhone: customerData.phone,
@@ -533,7 +549,7 @@ export default function BookBike() {
         customer_id: customer._id,
         start_datetime: new Date(startDate).toISOString(),
         end_datetime: new Date(endDate).toISOString(),
-        total_amount: calculatePrice(),
+        total_amount: calculatePrice(true),
         notes: notes || undefined,
         booking_source: "online",
         status: "confirmed", // Mark as confirmed immediately
@@ -1029,7 +1045,7 @@ export default function BookBike() {
                         Total Amount Paid
                       </span>
                       <p className="text-5xl font-display font-black text-foreground print:text-black">
-                        ₹{calculatePrice()}
+                        ₹{calculatePrice(true)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -1149,7 +1165,7 @@ export default function BookBike() {
                             Estimated Total
                           </span>
                           <span className="text-primary">
-                            ₹{calculatePrice()}
+                            ₹{calculatePrice(true)}
                           </span>
                         </div>
                       </>
@@ -1480,7 +1496,7 @@ export default function BookBike() {
                             {format(new Date(endDate), "PPp")}
                           </span>
                         </div>
-                        <div className="border-t border-border pt-2">
+                        {/* <div className="border-t border-border pt-2">
                           <div className="flex justify-between font-semibold">
                             <span className="text-foreground">
                               Total Amount
@@ -1489,7 +1505,68 @@ export default function BookBike() {
                               ₹{calculatePrice()}
                             </span>
                           </div>
+                        </div> */}
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Duration
+                          </span>
+                          <span className="text-foreground">
+                            {differenceInHours(
+                              new Date(endDate),
+                              new Date(startDate),
+                            )}{" "}
+                            Hours
+                          </span>
                         </div>
+                        {/* Pricing Breakdown */}
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Rental Amount
+                          </span>
+                          <span className="text-foreground font-medium">
+                            ₹{calculatePrice(false)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Security Deposit (Refundable)
+                          </span>
+                          <span className="text-foreground font-medium">
+                            ₹{SECURITY_DEPOSIT}
+                          </span>
+                        </div>
+
+                        <div className="border-t border-border pt-2">
+                        
+
+                         
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-foreground">
+                                Total Payable
+                              </span>
+                              <span className="text-primary text-xl font-black">
+                                ₹{calculatePrice(true)}
+                              </span>
+                            </div>
+                          </div>
+
+                      </div>
+
+                      <div className="border-t border-border/50 my-2" />
+
+                     
+
+                      {/* Deposit Note */}
+                      <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex gap-3">
+                        <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
+                        <p className="text-xs text-orange-200 leading-relaxed">
+                          <strong>Security Deposit Note:</strong> The ₹
+                          {SECURITY_DEPOSIT} deposit is fully refundable upon
+                          rental completion. In case of damages, traffic
+                          violations, or late returns, the corresponding costs
+                          will be deducted from this deposit.
+                        </p>
                       </div>
 
                       {/* Notes */}
@@ -1551,7 +1628,7 @@ export default function BookBike() {
           Processing...
         </div>
       ) : (
-        `Pay ₹${calculatePrice()}`
+        `Pay ₹${calculatePrice(true)}`
       )}
     </Button>
   </div>
