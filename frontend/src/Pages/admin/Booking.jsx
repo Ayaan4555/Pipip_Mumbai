@@ -2423,38 +2423,13 @@ end_datetime: formatToLocalInput(
 
       <div className="space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+         
           {/* <div className="space-y-2">
             <Label>Start Date/Time *</Label>
             <Input
               type="datetime-local"
               className="[color-scheme:dark]"
-              value={data.start_datetime}
-              onChange={(e) =>
-                setData({
-                  ...data,
-                  start_datetime: roundToHour(e.target.value),
-                })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>End Date/Time *</Label>
-            <Input
-              type="datetime-local"
-              className="[color-scheme:dark]"
-              value={data.end_datetime}
-              onChange={(e) =>
-                setData({ ...data, end_datetime: roundToHour(e.target.value) })
-              }
-            />
-          </div> */}
-
-          <div className="space-y-2">
-            <Label>Start Date/Time *</Label>
-            <Input
-              type="datetime-local"
-              className="[color-scheme:dark]"
-              value={data.start_datetime}
+              value={editFormData.start_datetime}
               onChange={(e) =>
                 setData({
                   ...data,
@@ -2469,7 +2444,7 @@ end_datetime: formatToLocalInput(
             <Input
               type="datetime-local"
               className="[color-scheme:dark]"
-              value={data.end_datetime}
+              value={editFormData.start_datetime}
               onChange={(e) =>
                 setData({
                   ...data,
@@ -2477,7 +2452,37 @@ end_datetime: formatToLocalInput(
                 })
               }
             />
-          </div>
+          </div> */}
+
+          <div className="space-y-2">
+  <Label>Start Date/Time *</Label>
+  <Input
+    type="datetime-local"
+    className="[color-scheme:dark]"
+    value={editFormData.start_datetime}
+    onChange={(e) =>
+      setEditFormData({
+        ...editFormData,
+        start_datetime: e.target.value,
+      })
+    }
+  />
+</div>
+
+<div className="space-y-2">
+  <Label>End Date/Time *</Label>
+  <Input
+    type="datetime-local"
+    className="[color-scheme:dark]"
+    value={editFormData.end_datetime}
+    onChange={(e) =>
+      setEditFormData({
+        ...editFormData,
+        end_datetime: e.target.value,
+      })
+    }
+  />
+</div>
         </div>
 
         {!isEdit && availabilityMessage && (
