@@ -1,4 +1,4 @@
-import { useState, useEffect  } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInHours } from "date-fns";
@@ -13,9 +13,8 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  Banknote
+  Banknote,
 } from "lucide-react";
-
 
 import {
   Card,
@@ -23,9 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-
-
-
 
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
@@ -52,10 +48,8 @@ const initialCustomerData = {
   license_image: null, // 👈 FILE
 };
 export default function BookBike() {
- 
-    const { bikeId } = useParams();
-  
-    
+  const { bikeId } = useParams();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -73,7 +67,6 @@ export default function BookBike() {
   const [availabilityMessage, setAvailabilityMessage] = useState(null);
   const [isAvailable, setIsAvailable] = useState(null);
 
-  
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [confirmedBookingId, setConfirmedBookingId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("online");
@@ -85,7 +78,6 @@ export default function BookBike() {
   const { checkAvailability, checking } = useBikeAvailability();
 
   const SECURITY_DEPOSIT = 1;
-
 
   // 1. Helper to get ISO string rounded to the top of the hour
   const getRoundedISO = (date) => {
@@ -110,8 +102,8 @@ export default function BookBike() {
     const checkDates = async () => {
       if (!bikeId || !startDate || !endDate) {
         setAvailabilityMessage(null);
-          setIsAvailable(null);
-          
+        setIsAvailable(null);
+
         return;
       }
 
@@ -124,46 +116,43 @@ export default function BookBike() {
         return;
       }
 
-        const result = await checkAvailability(bikeId, start, end);
-        
-     if (!result.isAvailable) {
-       const fromDate = new Date(result.bookedFrom).toLocaleDateString(
-         "en-IN",
-         {
-           day: "2-digit",
-           month: "2-digit",
-           year: "numeric",
-         },
-       );
+      const result = await checkAvailability(bikeId, start, end);
 
-       const fromTime = new Date(result.bookedFrom).toLocaleTimeString(
-         "en-IN",
-         {
-           hour: "2-digit",
-           minute: "2-digit",
-         },
-         );
-         
-          const toDate = new Date(result.bookedTo).toLocaleDateString(
-            "en-IN",
-            {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            },
-          );
+      if (!result.isAvailable) {
+        const fromDate = new Date(result.bookedFrom).toLocaleDateString(
+          "en-IN",
+          {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          },
+        );
 
-       const toTime = new Date(result.bookedTo).toLocaleTimeString("en-IN", {
-         hour: "2-digit",
-         minute: "2-digit",
-       });
+        const fromTime = new Date(result.bookedFrom).toLocaleTimeString(
+          "en-IN",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          },
+        );
 
-       setAvailabilityMessage(
-         `Bike is booked from ${fromDate} ${fromTime} to ${toDate} ${toTime}`,
-       );
-     } else {
-       setAvailabilityMessage(result.message);
-     }
+        const toDate = new Date(result.bookedTo).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+
+        const toTime = new Date(result.bookedTo).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        setAvailabilityMessage(
+          `Bike is booked from ${fromDate} ${fromTime} to ${toDate} ${toTime}`,
+        );
+      } else {
+        setAvailabilityMessage(result.message);
+      }
       setIsAvailable(result.isAvailable);
     };
 
@@ -194,20 +183,22 @@ export default function BookBike() {
   //   );
   // };
 
-const calculatePrice = (includeDeposit = false) => {
-  if (!bike || !startDate || !endDate) return 0;
+  const calculatePrice = (includeDeposit = false) => {
+    if (!bike || !startDate || !endDate) return 0;
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const totalHours = Math.max(1, differenceInHours(end, start));
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalHours = Math.max(1, differenceInHours(end, start));
 
-  const days = Math.floor(totalHours / 24);
-  const remainingHours = totalHours % 24;
+    const days = Math.floor(totalHours / 24);
+    const remainingHours = totalHours % 24;
 
-  const rentalPrice = (days * Number(bike.price_per_day)) + (remainingHours * Number(bike.price_per_hour));
-  
-  return includeDeposit ? rentalPrice + SECURITY_DEPOSIT : rentalPrice;
-};
+    const rentalPrice =
+      days * Number(bike.price_per_day) +
+      remainingHours * Number(bike.price_per_hour);
+
+    return includeDeposit ? rentalPrice + SECURITY_DEPOSIT : rentalPrice;
+  };
 
   const roundToHour = (dateTimeStr) => {
     if (!dateTimeStr) return "";
@@ -249,171 +240,167 @@ const calculatePrice = (includeDeposit = false) => {
       return;
     }
 
-  if (!customerData.aadhaar_image && !customerData.license_image) {
-    toast.error("Please upload at least one ID proof");
-    return;
-  }
+    if (!customerData.aadhaar_image && !customerData.license_image) {
+      toast.error("Please upload at least one ID proof");
+      return;
+    }
 
     setStep(2);
   };
 
-//online payment
+  //online payment
 
-// const handleOnlinePayment =
-//   async (bookingId) => {
-//     try {
-//       const res = await fetch(
-//         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
-//         {
-//           method: "POST",
+  // const handleOnlinePayment =
+  //   async (bookingId) => {
+  //     try {
+  //       const res = await fetch(
+  //         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+  //         {
+  //           method: "POST",
 
-//           headers: {
-//             "Content-Type":
-//               "application/json",
-//           },
+  //           headers: {
+  //             "Content-Type":
+  //               "application/json",
+  //           },
 
-//           body: JSON.stringify({
-//             amount:
-//               calculatePrice(),
+  //           body: JSON.stringify({
+  //             amount:
+  //               calculatePrice(),
 
-//             customerName:
-//               customerData.name,
+  //             customerName:
+  //               customerData.name,
 
-//             customerEmail:
-//               customerData.email ||
-//               "test@email.com",
+  //             customerEmail:
+  //               customerData.email ||
+  //               "test@email.com",
 
-//             customerPhone:
-//               customerData.phone,
+  //             customerPhone:
+  //               customerData.phone,
 
-//             bookingId:
-//               bookingId,
-//           }),
-//         }
-//       );
+  //             bookingId:
+  //               bookingId,
+  //           }),
+  //         }
+  //       );
 
-//       const data =
-//         await res.json();
+  //       const data =
+  //         await res.json();
 
-        
+  // if (!data.paymentSessionId) {
+  //   console.error("Payment Error:", data);
+  //   toast.error("Payment session failed");
+  //   return;
+  // }
 
-// if (!data.paymentSessionId) {
-//   console.error("Payment Error:", data);
-//   toast.error("Payment session failed");
-//   return;
-// }
+  //       const cashfree =
+  //         new window.Cashfree({
+  //           mode: "production",
+  //         });
 
-//       const cashfree =
-//         new window.Cashfree({
-//           mode: "production",
-//         });
+  //       cashfree.checkout({
+  //         paymentSessionId:
+  //           data.paymentSessionId,
 
-//       cashfree.checkout({
-//         paymentSessionId:
-//           data.paymentSessionId,
+  //         redirectTarget:
+  //           "_modal",
+  //       });
 
-//         redirectTarget:
-//           "_modal",
-//       });
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
 
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
+  // const handleOnlinePayment =
+  //   async (bookingId) => {
+  //     try {
 
-// const handleOnlinePayment =
-//   async (bookingId) => {
-//     try {
+  //       console.log("Creating payment order...");
 
-//       console.log("Creating payment order...");
+  //       const res = await fetch(
+  //         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type":
+  //               "application/json",
+  //           },
 
-//       const res = await fetch(
-//         "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type":
-//               "application/json",
-//           },
+  //           body: JSON.stringify({
+  //             amount: calculatePrice(),
+  //             customerName: customerData.name,
+  //             customerEmail:
+  //               customerData.email ||
+  //               "test@email.com",
+  //             customerPhone:
+  //               customerData.phone,
+  //             bookingId,
+  //           }),
+  //         }
+  //       );
 
-//           body: JSON.stringify({
-//             amount: calculatePrice(),
-//             customerName: customerData.name,
-//             customerEmail:
-//               customerData.email ||
-//               "test@email.com",
-//             customerPhone:
-//               customerData.phone,
-//             bookingId,
-//           }),
-//         }
-//       );
+  //       const data =
+  //         await res.json();
 
-//       const data =
-//         await res.json();
+  //       console.log("Payment response:", data);
 
-//       console.log("Payment response:", data);
+  //       if (!data.paymentSessionId) {
+  //         console.error("Payment failed:", data);
+  //         toast.error("Payment failed");
+  //         return;
+  //       }
 
-//       if (!data.paymentSessionId) {
-//         console.error("Payment failed:", data);
-//         toast.error("Payment failed");
-//         return;
-//       }
+  //       const cashfree =
+  //         new window.Cashfree({
+  //           mode: "production",
+  //         });
 
-//       const cashfree =
-//         new window.Cashfree({
-//           mode: "production",
-//         });
+  //       cashfree.checkout({
+  //         paymentSessionId:
+  //           data.paymentSessionId,
+  //         redirectTarget: "_modal",
+  //       });
 
-//       cashfree.checkout({
-//         paymentSessionId:
-//           data.paymentSessionId,
-//         redirectTarget: "_modal",
-//       });
+  //     } catch (error) {
 
-//     } catch (error) {
+  //       console.error(
+  //         "PAYMENT ERROR:",
+  //         error
+  //       );
 
-//       console.error(
-//         "PAYMENT ERROR:",
-//         error
-//       );
+  //       toast.error(
+  //         "Payment initialization failed"
+  //       );
+  //     }
+  //   };
 
-//       toast.error(
-//         "Payment initialization failed"
-//       );
-//     }
-//   };
-
-// --- PAYMENT LOGIC ---
+  // --- PAYMENT LOGIC ---
   const handleOnlinePayment = async () => {
     try {
-
-      
-     
-
-      const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: calculatePrice(),
-          customerName: customerData.name,
-          customerEmail: customerData.email || "customer@pipip.com",
-          customerPhone: customerData.phone,
-          // bookingId,
-        }),
-      });
+      const res = await fetch(
+        "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: calculatePrice(),
+            customerName: customerData.name,
+            customerEmail: customerData.email || "customer@pipip.com",
+            customerPhone: customerData.phone,
+            // bookingId,
+          }),
+        },
+      );
 
       const data = await res.json();
       if (!data.paymentSessionId) throw new Error("Session creation failed");
 
       const cashfree = new window.Cashfree({ mode: "production" });
-      
+
       const result = await cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
         redirectTarget: "_modal",
-
-      })
-         if (result.error) {
+      });
+      if (result.error) {
         // If user cancels or payment fails at gateway
         setPaymentFailed(true);
         setIsSubmitting(false);
@@ -427,14 +414,13 @@ const calculatePrice = (includeDeposit = false) => {
       //     setConfirmedBookingId(bookingId);
       //     setBookingComplete(true);
       // });
-
     } catch (error) {
       console.error("PAYMENT ERROR:", error);
       setPaymentFailed(true);
     }
   };
 
- const checkStatusAndConfirm = async (orderId, customerId) => {
+  const checkStatusAndConfirm = async (orderId, customerId) => {
     try {
       // Pass booking details in query params so backend can save them
       const queryParams = new URLSearchParams({
@@ -447,7 +433,6 @@ const calculatePrice = (includeDeposit = false) => {
 
       const verifyRes = await fetch(
         `https://pipip-backend-eid3.onrender.com/api/payment/verify/${orderId}?${queryParams}`,
-        
       );
       const verifyData = await verifyRes.json();
 
@@ -464,8 +449,6 @@ const calculatePrice = (includeDeposit = false) => {
       setIsSubmitting(false);
     }
   };
-
-
 
   // const handleBookingSubmit = async () => {
   //   if (!bike || !startDate || !endDate) return;
@@ -497,83 +480,83 @@ const calculatePrice = (includeDeposit = false) => {
   // };
 
   const handleBookingSubmit = async () => {
-  if (!bike || !startDate || !endDate) return;
-  setIsSubmitting(true);
+    if (!bike || !startDate || !endDate) return;
+    setIsSubmitting(true);
 
-  try {
-    // 1. START PAYMENT FIRST (Create the Cashfree Order)
-    const res = await fetch("https://pipip-backend-eid3.onrender.com/api/payment/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: calculatePrice(true),
-        customerName: customerData.name,
-        customerEmail: customerData.email || "customer@pipip.com",
-        customerPhone: customerData.phone,
-        // Notice: We do NOT pass a bookingId here because it doesn't exist yet
-      }),
-    });
+    try {
+      // 1. START PAYMENT FIRST (Create the Cashfree Order)
+      const res = await fetch(
+        "https://pipip-backend-eid3.onrender.com/api/payment/create-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: calculatePrice(true),
+            customerName: customerData.name,
+            customerEmail: customerData.email || "customer@pipip.com",
+            customerPhone: customerData.phone,
+            // Notice: We do NOT pass a bookingId here because it doesn't exist yet
+          }),
+        },
+      );
 
-    const paymentOrder = await res.json();
-    if (!paymentOrder.paymentSessionId) {
-      throw new Error("Failed to create payment session");
-    }
+      const paymentOrder = await res.json();
+      if (!paymentOrder.paymentSessionId) {
+        throw new Error("Failed to create payment session");
+      }
 
-    // 2. OPEN THE PAYMENT MODAL
-    const cashfree = new window.Cashfree({ mode: "production" });
-    const result = await cashfree.checkout({
-      paymentSessionId: paymentOrder.paymentSessionId,
-      redirectTarget: "_modal",
-    });
-
-    // 3. CHECK IF PAYMENT WAS SUCCESSFUL
-    // We call your backend to verify the actual status from Cashfree
-    const verifyRes = await fetch(
-      `https://pipip-backend-eid3.onrender.com/api/payment/verify/${paymentOrder.orderId}`
-    );
-    const verifyData = await verifyRes.json();
-
-    if (verifyData.status === "PAID") {
-      // 4. ONLY NOW CREATE THE DATABASE RECORDS
-      const formData = new FormData();
-      Object.entries(customerData).forEach(([key, value]) => {
-        if (value !== null) formData.append(key, value);
+      // 2. OPEN THE PAYMENT MODAL
+      const cashfree = new window.Cashfree({ mode: "production" });
+      const result = await cashfree.checkout({
+        paymentSessionId: paymentOrder.paymentSessionId,
+        redirectTarget: "_modal",
       });
 
-      // Create Customer
-      const customer = await createCustomer.mutateAsync(formData);
+      // 3. CHECK IF PAYMENT WAS SUCCESSFUL
+      // We call your backend to verify the actual status from Cashfree
+      const verifyRes = await fetch(
+        `https://pipip-backend-eid3.onrender.com/api/payment/verify/${paymentOrder.orderId}`,
+      );
+      const verifyData = await verifyRes.json();
 
-      // Create Booking (Set status to 'confirmed' immediately since we know they paid)
-      const booking = await createBooking.mutateAsync({
-        bike_id: bike._id,
-        customer_id: customer._id,
-        start_datetime: new Date(startDate).toISOString(),
-        end_datetime: new Date(endDate).toISOString(),
-        total_amount: calculatePrice(true),
-        notes: notes || undefined,
-        booking_source: "online",
-        status: "confirmed", // Mark as confirmed immediately
-        payment_status: "paid",
-        payment_order_id: paymentOrder.orderId,
-      });
+      if (verifyData.status === "PAID") {
+        // 4. ONLY NOW CREATE THE DATABASE RECORDS
+        const formData = new FormData();
+        Object.entries(customerData).forEach(([key, value]) => {
+          if (value !== null) formData.append(key, value);
+        });
 
-      setConfirmedBookingId(booking._id);
-      setBookingComplete(true);
-      toast.success("Payment Successful & Booking Confirmed!");
-    } else {
-      setPaymentFailed(true);
-      toast.error("Payment was not successful");
+        // Create Customer
+        const customer = await createCustomer.mutateAsync(formData);
+
+        // Create Booking (Set status to 'confirmed' immediately since we know they paid)
+        const booking = await createBooking.mutateAsync({
+          bike_id: bike._id,
+          customer_id: customer._id,
+          start_datetime: new Date(startDate).toISOString(),
+          end_datetime: new Date(endDate).toISOString(),
+          total_amount: calculatePrice(true),
+          notes: notes || undefined,
+          booking_source: "online",
+          status: "confirmed", // Mark as confirmed immediately
+          payment_status: "paid",
+          payment_order_id: paymentOrder.orderId,
+        });
+
+        setConfirmedBookingId(booking._id);
+        setBookingComplete(true);
+        toast.success("Payment Successful & Booking Confirmed!");
+      } else {
+        setPaymentFailed(true);
+        toast.error("Payment was not successful");
+      }
+    } catch (err) {
+      console.error("BOOKING ERROR:", err);
+      toast.error(err.message || "An error occurred during booking");
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (err) {
-    console.error("BOOKING ERROR:", err);
-    toast.error(err.message || "An error occurred during booking");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-
-
+  };
 
   /* =========================
      BOOKING SUBMIT
@@ -616,66 +599,63 @@ const calculatePrice = (includeDeposit = false) => {
   //   }
   // };
 
-//   const handleBookingSubmit = async () => {
-//   if (!bike || !startDate || !endDate) return;
+  //   const handleBookingSubmit = async () => {
+  //   if (!bike || !startDate || !endDate) return;
 
-//   setIsSubmitting(true);
+  //   setIsSubmitting(true);
 
-//   try {
-//     console.log("STEP 1: Creating customer");
+  //   try {
+  //     console.log("STEP 1: Creating customer");
 
-//     const formData = new FormData();
+  //     const formData = new FormData();
 
-//     Object.entries(customerData).forEach(([key, value]) => {
-//       if (value !== null) {
-//         formData.append(key, value);
-//       }
-//     });
+  //     Object.entries(customerData).forEach(([key, value]) => {
+  //       if (value !== null) {
+  //         formData.append(key, value);
+  //       }
+  //     });
 
-//     const customer =
-//       await createCustomer.mutateAsync(formData);
+  //     const customer =
+  //       await createCustomer.mutateAsync(formData);
 
-//     console.log("Customer created:", customer);
+  //     console.log("Customer created:", customer);
 
-//     console.log("STEP 2: Creating booking");
+  //     console.log("STEP 2: Creating booking");
 
-//     const booking =
-//       await createBooking.mutateAsync({
-//         bike_id: bike._id,
-//         customer_id: customer._id,
-//         start_datetime: new Date(startDate).toISOString(),
-//         end_datetime: new Date(endDate).toISOString(),
-//         total_amount: calculatePrice(),
-//         notes: notes || undefined,
-//         booking_source: "online",
-//         status: "pending",
-//       });
+  //     const booking =
+  //       await createBooking.mutateAsync({
+  //         bike_id: bike._id,
+  //         customer_id: customer._id,
+  //         start_datetime: new Date(startDate).toISOString(),
+  //         end_datetime: new Date(endDate).toISOString(),
+  //         total_amount: calculatePrice(),
+  //         notes: notes || undefined,
+  //         booking_source: "online",
+  //         status: "pending",
+  //       });
 
-//     console.log("Booking created:", booking);
+  //     console.log("Booking created:", booking);
 
-//     console.log("STEP 3: Starting payment");
+  //     console.log("STEP 3: Starting payment");
 
-//     await handleOnlinePayment(
-//       booking._id
-//     );
+  //     await handleOnlinePayment(
+  //       booking._id
+  //     );
 
-//     toast.success("Booking created!");
+  //     toast.success("Booking created!");
 
-//   } catch (err) {
-//     console.error("BOOKING ERROR:", err);
+  //   } catch (err) {
+  //     console.error("BOOKING ERROR:", err);
 
-//     toast.error(
-//       err?.response?.data?.message ||
-//       "Failed to create booking"
-//     );
+  //     toast.error(
+  //       err?.response?.data?.message ||
+  //       "Failed to create booking"
+  //     );
 
-//   } finally {
-//     setIsSubmitting(false);
-//   }
-// };
-
-  
-
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   if (bikeLoading) {
     return (
@@ -816,7 +796,6 @@ const calculatePrice = (includeDeposit = false) => {
       </div>
     );
   }
-
 
   // if (bookingComplete) {
   //   // 1. Make sure you have installed: npm install html2canvas
@@ -1446,6 +1425,14 @@ const calculatePrice = (includeDeposit = false) => {
                         ₹{bike.price_per_day}
                       </span>
                     </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Security Deposit (Refundable)
+                      </span>
+                      <span className="text-foreground font-medium">
+                        ₹{SECURITY_DEPOSIT}
+                      </span>
+                    </div>
                     {startDate && endDate && (
                       <>
                         <div className="border-t border-border my-2" />
@@ -1602,8 +1589,8 @@ const calculatePrice = (includeDeposit = false) => {
                             ID Proof Documents
                           </h3>
                           <p className="text-sm text-muted-foreground mb-4">
-                            Upload Both ID Proof (Aadhaar Card and
-                            Driving License)
+                            Upload Both ID Proof (Aadhaar Card and Driving
+                            License)
                           </p>
 
                           <div className="grid md:grid-cols-2 gap-4">
@@ -1656,7 +1643,6 @@ const calculatePrice = (includeDeposit = false) => {
                                 value={startDate}
                                 min={minDateTime} // Now ends in :00
                                 max={maxDateTime} // Now ends in :00
-
                                 onChange={(e) =>
                                   handleStartDateChange(e.target.value)
                                 }
@@ -1827,24 +1813,18 @@ const calculatePrice = (includeDeposit = false) => {
                         </div>
 
                         <div className="border-t border-border pt-2">
-                        
-
-                         
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-foreground">
-                                Total Payable
-                              </span>
-                              <span className="text-primary text-xl font-black">
-                                ₹{calculatePrice(true)}
-                              </span>
-                            </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-foreground">
+                              Total Amount
+                            </span>
+                            <span className="text-primary text-xl font-black">
+                              ₹{calculatePrice(true)}
+                            </span>
                           </div>
-
+                        </div>
                       </div>
 
                       <div className="border-t border-border/50 my-2" />
-
-                     
 
                       {/* Deposit Note */}
                       <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex gap-3">
@@ -1898,29 +1878,29 @@ const calculatePrice = (includeDeposit = false) => {
                         </Button>
                       </div> */}
                       <div className="flex gap-4">
-    <Button
-      variant="outline"
-      onClick={() => setStep(1)}
-      className="flex-1"
-      disabled={isSubmitting}
-    >
-      Back
-    </Button>
-    <Button
-      onClick={handleBookingSubmit}
-      className="flex-1 gradient-sunset text-primary-foreground"
-      disabled={isSubmitting}
-    >
-      {isSubmitting ? (
-        <div className="flex items-center gap-2">
-          <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-          Processing...
-        </div>
-      ) : (
-        `Pay ₹${calculatePrice(true)}`
-      )}
-    </Button>
-  </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => setStep(1)}
+                          className="flex-1"
+                          disabled={isSubmitting}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          onClick={handleBookingSubmit}
+                          className="flex-1 gradient-sunset text-primary-foreground"
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                              Processing...
+                            </div>
+                          ) : (
+                            `Pay ₹${calculatePrice(true)}`
+                          )}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
