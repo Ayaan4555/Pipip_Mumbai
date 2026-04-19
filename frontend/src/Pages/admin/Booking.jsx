@@ -1116,6 +1116,7 @@ import {
   AlertTriangle,
   Shield,
   Wrench,
+  CheckCircle2,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 
@@ -1237,6 +1238,25 @@ const emptyCompletionData = {
   remarks: "",
 };
 
+const roundToHour = (dateTimeStr) => {
+  if (!dateTimeStr) return "";
+  const date = new Date(dateTimeStr);
+  const minutes = date.getMinutes();
+
+  // If there are any minutes, round up to the next full hour
+  if (minutes > 0) {
+    date.setMinutes(0);
+    date.setHours(date.getHours() + 1);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:00`;
+};
+
 export default function Bookings() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -1347,6 +1367,65 @@ export default function Bookings() {
       setBikeSearch(""); // Reset bike search when the dialog closes
     }
   }, [isOpen]);
+
+useEffect(() => {
+    const checkDates = async () => {
+      // Determine which data to use (Edit form or Create form)
+      const activeData = editingBooking ? editFormData : formData;
+
+      if (
+        !activeData.bike_id ||
+        !activeData.start_datetime ||
+        !activeData.end_datetime
+      ) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
+
+      const start = new Date(activeData.start_datetime);
+      const end = new Date(activeData.end_datetime);
+
+      if (end <= start) {
+        setAvailabilityMessage("⚠️ Return date must be after pickup date");
+        setIsAvailable(false);
+        return;
+      }
+
+      // Call API
+      const result = await checkAvailability(activeData.bike_id, start, end);
+
+      // If we are editing, we should ignore the "overlap" if it's the current booking itself
+      if (!result.isAvailable && result.bookingId === editingBooking) {
+        setAvailabilityMessage("✅ This is your current slot");
+        setIsAvailable(true);
+        return;
+      }
+
+      if (!result.isAvailable && result.bookedFrom) {
+        const fromDate = format(
+          new Date(result.bookedFrom),
+          "dd/MM/yyyy hh:mm a",
+        );
+        const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+        setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+        setIsAvailable(false);
+      } else {
+        setAvailabilityMessage(
+          result.isAvailable ? "✅ Bike is available" : result.message,
+        );
+        setIsAvailable(result.isAvailable);
+      }
+    };
+
+    checkDates();
+  }, [
+    formData.bike_id,
+    formData.start_datetime,
+    formData.end_datetime,
+    editingBooking,
+    checkAvailability,
+  ]);
 
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
@@ -2224,7 +2303,7 @@ export default function Bookings() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Start Date/Time *</Label>
           <Input
@@ -2245,6 +2324,54 @@ export default function Bookings() {
             onChange={(e) => setData({ ...data, end_datetime: e.target.value })}
           />
         </div>
+      </div> */}
+
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Start Date/Time *</Label>
+            <Input
+              type="datetime-local"
+              className="[color-scheme:dark]"
+              value={data.start_datetime}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  start_datetime: roundToHour(e.target.value),
+                })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date/Time *</Label>
+            <Input
+              type="datetime-local"
+              className="[color-scheme:dark]"
+              value={data.end_datetime}
+              onChange={(e) =>
+                setData({ ...data, end_datetime: roundToHour(e.target.value) })
+              }
+            />
+          </div>
+        </div>
+
+        {!isEdit && availabilityMessage && (
+          <div
+            className={`p-4 rounded-xl flex items-center gap-3 text-sm mt-2 border ${
+              isAvailable
+                ? "bg-green-500/10 text-green-500 border-green-500/20"
+                : "bg-red-500/10 text-red-500 border-red-500/20"
+            }`}
+          >
+            {isAvailable ? (
+              <CheckCircle2 className="w-5 h-5" />
+            ) : (
+              <AlertCircle className="w-5 h-5" />
+            )}
+            <span className="font-medium">{availabilityMessage}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
