@@ -1117,6 +1117,7 @@ import {
   Shield,
   Wrench,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 
