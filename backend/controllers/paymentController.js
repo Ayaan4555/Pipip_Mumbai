@@ -466,44 +466,87 @@ Cashfree.XEnvironment = CFEnvironment.PRODUCTION; // 🚀 PRODUCTION MODE
 //   }
 // };
 
+// exports.createOrder = async (req, res) => {
+//   try {
+//     const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
+//     const orderId = `bike_${Date.now()}`;
+
+//     const request = {
+//       order_amount: amount,
+//       order_currency: "INR",
+//       order_id: orderId,
+//       customer_details: {
+//         // Fallback to phone if bookingId is missing
+//         customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
+//         customer_name: customerName,
+//         customer_email: customerEmail || "customer@pipip.com",
+//         customer_phone: customerPhone,
+//       },
+//       order_meta: {
+//         return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+//       },
+//     };
+
+//     // ✅ FIX: In some v4 sub-versions, you access it via Cashfree.PG.orders.create
+//     // or just ensure the global config is set. Let's use the most stable v4 call:
+   
+//     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+
+//     res.json({
+//       success: true,
+//       paymentSessionId: response.payment_session_id, 
+//       orderId,
+//     });
+//   } catch (error) {
+//     // This will help us see if 'orders' is still undefined
+//     console.error("Order Creation Error:", error); 
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// };
+
 exports.createOrder = async (req, res) => {
   try {
-    const { amount, customerName, customerEmail, customerPhone, bookingId } = req.body;
-    const orderId = `bike_${Date.now()}`;
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ success: false, message: "Request body empty" });
+    }
+
+    const { amount, customerName, customerEmail, customerPhone } = req.body;
+
+    // Create a unique order ID
+    const orderId = `pipip_${Date.now()}`;
 
     const request = {
       order_amount: amount,
       order_currency: "INR",
       order_id: orderId,
       customer_details: {
-        // Fallback to phone if bookingId is missing
-        customer_id: bookingId || customerPhone.replace(/\D/g, ""), 
+        customer_id: customerPhone.toString(), // Use phone as a temp ID since bookingId doesn't exist
         customer_name: customerName,
-        customer_email: customerEmail || "customer@pipip.com",
+        customer_email: customerEmail,
         customer_phone: customerPhone,
       },
       order_meta: {
-        return_url: `${process.env.BASE_URL}/payment-success?order_id={order_id}`,
+        // This is a fallback if the modal fails
+        return_url: `${process.env.FRONTEND_URL}/payment-status?order_id={order_id}`,
       },
     };
 
-    // ✅ FIX: In some v4 sub-versions, you access it via Cashfree.PG.orders.create
-    // or just ensure the global config is set. Let's use the most stable v4 call:
-   
     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
 
     res.json({
       success: true,
-      paymentSessionId: response.payment_session_id, 
+      paymentSessionId: response.data.payment_session_id,
       orderId,
     });
+
   } catch (error) {
-    // This will help us see if 'orders' is still undefined
-    console.error("Order Creation Error:", error); 
-    res.status(500).json({ success: false, error: error.message });
+    console.error("CREATE ORDER ERROR:", error.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      message: "Order creation failed",
+    });
   }
 };
-
 
 
 // ... keep your verifyWebhook as it is, it looks correct for v5
@@ -628,6 +671,49 @@ exports.createOrder = async (req, res) => {
 //   }
 // };
 
+// exports.verifyWebhook = async (req, res) => {
+//   try {
+//     const signature = req.headers["x-webhook-signature"];
+//     const timestamp = req.headers["x-webhook-timestamp"];
+//     const rawBody = req.body.toString();
+
+//     // 1. Verify Signature
+//     Cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
+
+//     const webhookData = JSON.parse(rawBody);
+//     const { data, type } = webhookData;
+
+//     if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
+//       return res.status(200).send("OK");
+//     }
+
+//     const orderId = data.order?.order_id;
+//     const paymentStatus = data.payment?.payment_status;
+
+//     if (!orderId) return res.status(200).send("OK");
+
+//     const booking = await Booking.findOne({ payment_order_id: orderId });
+//     if (!booking) return res.status(200).send("OK");
+
+//     // ✅ Match the payment status from the webhook data
+//     if (paymentStatus === "SUCCESS") {
+//       booking.payment_status = "paid";
+//       booking.status = "confirmed";
+//     } else if (["FAILED", "CANCELLED"].includes(paymentStatus)) {
+//       booking.payment_status = "failed";
+//       booking.status = "cancelled";
+//     }
+
+//     await booking.save();
+//     res.status(200).send("OK");
+
+//   } catch (error) {
+//     console.error("Webhook Logic Failed:", error.message);
+//     res.status(400).send("Verification Failed");
+//   }
+// };
+
+
 exports.verifyWebhook = async (req, res) => {
   try {
     const signature = req.headers["x-webhook-signature"];
@@ -640,35 +726,31 @@ exports.verifyWebhook = async (req, res) => {
     const webhookData = JSON.parse(rawBody);
     const { data, type } = webhookData;
 
-    if (type === "WEBHOOK_TEST_RESPONSE" || !data) {
-      return res.status(200).send("OK");
+    if (type === "PAYMENT_SUCCESS_WEBHOOK") {
+      const orderId = data.order.order_id;
+      
+      // Look for the booking
+      const booking = await Booking.findOne({ payment_order_id: orderId });
+      
+      if (booking) {
+        booking.payment_status = "paid";
+        booking.status = "confirmed";
+        await booking.save();
+        console.log(`Webhook: Updated existing booking ${orderId}`);
+      } else {
+        // If booking doesn't exist yet, it means the frontend is still processing.
+        // The frontend will handle the creation shortly.
+        console.log(`Webhook: Payment received for ${orderId}, but booking not in DB yet.`);
+      }
     }
 
-    const orderId = data.order?.order_id;
-    const paymentStatus = data.payment?.payment_status;
-
-    if (!orderId) return res.status(200).send("OK");
-
-    const booking = await Booking.findOne({ payment_order_id: orderId });
-    if (!booking) return res.status(200).send("OK");
-
-    // ✅ Match the payment status from the webhook data
-    if (paymentStatus === "SUCCESS") {
-      booking.payment_status = "paid";
-      booking.status = "confirmed";
-    } else if (["FAILED", "CANCELLED"].includes(paymentStatus)) {
-      booking.payment_status = "failed";
-      booking.status = "cancelled";
-    }
-
-    await booking.save();
     res.status(200).send("OK");
-
   } catch (error) {
-    console.error("Webhook Logic Failed:", error.message);
+    console.error("WEBHOOK ERROR:", error.message);
     res.status(400).send("Verification Failed");
   }
 };
+
 
 
 // exports.verifyPayment = async (req, res) => {
@@ -845,50 +927,78 @@ exports.verifyWebhook = async (req, res) => {
 // };
 
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+//     const { customerId, bikeId, startDate, endDate, amount } = req.query;
+
+//     // ✅ FIX: Use PGFetchOrder with the API version (matches your createOrder logic)
+//     const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
+//     const data = response.data;
+
+//     if (data.order_status === "PAID") {
+//       // 2. Check if booking already exists
+//       let booking = await Booking.findOne({ payment_order_id: orderId });
+
+//       if (!booking) {
+//         // 3. Create the booking record
+//         booking = await Booking.create({
+//           customer_id: customerId,
+//           bike_id: bikeId,
+//           start_datetime: startDate,
+//           end_datetime: endDate,
+//           total_amount: amount,
+//           payment_status: "paid",
+//           payment_method: "online",
+//           payment_order_id: orderId,
+//           status: "confirmed",
+//           booking_source: "online",
+//         });
+//       }
+
+//       return res.status(200).json({
+//         success: true,
+//         status: "PAID",
+//         booking
+//       });
+//     } else {
+//       return res.status(400).json({
+//         success: false,
+//         status: data.order_status,
+//         message: "Payment not completed"
+//       });
+//     }
+//   } catch (error) {
+//     // Improved error logging to catch SDK issues
+//     console.error("Verification error:", error.response?.data || error.message);
+//     res.status(500).json({ success: false, message: "Verification failed" });
+//   }
+// };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { customerId, bikeId, startDate, endDate, amount } = req.query;
 
-    // ✅ FIX: Use PGFetchOrder with the API version (matches your createOrder logic)
-    const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
-    const data = response.data;
+    // Fetch the status from Cashfree using their SDK
+    const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
+    
+    // Check if any of the payments for this order are successful
+    const isPaid = response.data.some(payment => payment.payment_status === "SUCCESS");
 
-    if (data.order_status === "PAID") {
-      // 2. Check if booking already exists
-      let booking = await Booking.findOne({ payment_order_id: orderId });
-
-      if (!booking) {
-        // 3. Create the booking record
-        booking = await Booking.create({
-          customer_id: customerId,
-          bike_id: bikeId,
-          start_datetime: startDate,
-          end_datetime: endDate,
-          total_amount: amount,
-          payment_status: "paid",
-          payment_method: "online",
-          payment_order_id: orderId,
-          status: "confirmed",
-          booking_source: "online",
-        });
-      }
-
+    if (isPaid) {
       return res.status(200).json({
         success: true,
-        status: "PAID",
-        booking
+        status: "PAID"
       });
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        status: data.order_status,
-        message: "Payment not completed"
+        status: "PENDING_OR_FAILED",
+        message: "Payment not confirmed yet"
       });
     }
   } catch (error) {
-    // Improved error logging to catch SDK issues
-    console.error("Verification error:", error.response?.data || error.message);
-    res.status(500).json({ success: false, message: "Verification failed" });
+    console.error("VERIFICATION ERROR:", error.response?.data || error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
