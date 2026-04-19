@@ -2036,16 +2036,35 @@ export default function Bookings() {
     }
   };
 
-  const formatToLocalInput = (isoDate) => {
-    if (!isoDate) return "";
+  // const formatToLocalInput = (isoDate) => {
+  //   if (!isoDate) return "";
 
-    const date = new Date(isoDate);
+  //   const date = new Date(isoDate);
 
-    const offset = date.getTimezoneOffset();
+  //   const offset = date.getTimezoneOffset();
 
-    const local = new Date(date.getTime() - offset * 60000);
+  //   const local = new Date(date.getTime() - offset * 60000);
 
-    return local.toISOString().slice(0, 16);
+  //   return local.toISOString().slice(0, 16);
+  // };
+
+  const formatToLocalInput = (utcDate) => {
+    if (!utcDate) return "";
+
+    try {
+      const date = new Date(utcDate);
+
+      // Convert UTC → Local (IST etc.)
+      const localDate = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000,
+      );
+
+      // Format to datetime-local required format
+      return localDate.toISOString().slice(0, 16);
+    } catch (error) {
+      console.error("Date conversion error:", error);
+      return "";
+    }
   };
 
   const handleEditBooking = (booking) => {
@@ -2056,9 +2075,17 @@ export default function Bookings() {
       customer_id: booking.customer_id,
 
       // ✅ FIXED TIMEZONE ISSUE HERE
-      start_datetime: formatToLocalInput(booking.start_datetime),
+      // start_datetime: formatToLocalInput(booking.start_datetime),
 
-      end_datetime: formatToLocalInput(booking.end_datetime),
+      // end_datetime: formatToLocalInput(booking.end_datetime),
+
+      start_datetime: formatToLocalInput(
+  booking.start_datetime
+),
+
+end_datetime: formatToLocalInput(
+  booking.end_datetime
+),
 
       notes: booking.notes || "",
 
