@@ -2036,36 +2036,133 @@ export default function Bookings() {
     }
   };
 
+const formatToLocalInput = (isoDate) => {
+  if (!isoDate) return "";
+
+  const date = new Date(isoDate);
+
+  const offset = date.getTimezoneOffset();
+
+  const local = new Date(
+    date.getTime() - offset * 60000
+  );
+
+  return local.toISOString().slice(0, 16);
+};
+
+const handleEditBooking = (booking) => {
+  setEditingBooking(booking._id);
+
+  setEditFormData({
+    bike_id: booking.bike_id,
+    customer_id: booking.customer_id,
+
+    // ✅ FIXED TIMEZONE ISSUE HERE
+    start_datetime: formatToLocalInput(
+      booking.start_datetime
+    ),
+
+    end_datetime: formatToLocalInput(
+      booking.end_datetime
+    ),
+
+    notes: booking.notes || "",
+
+    customer_name:
+      booking.customer_name ||
+      booking.customers?.name ||
+      "",
+
+    customer_phone:
+      booking.contact_number ||
+      booking.customers?.phone ||
+      "",
+
+    customer_email:
+      booking.customer_email ||
+      booking.customers?.email ||
+      "",
+
+    customer_location:
+      booking.customer_location || "",
+
+    is_new_customer: false,
+    aadhaar_file: null,
+    license_file: null,
+
+    partner_name: booking.source_name || "",
+    lead_source: booking.lead_source || "other",
+    source_name: booking.source_name || "",
+    rental_type: booking.rental_type || "daily",
+
+    total_amount: String(
+      booking.total_amount || ""
+    ),
+
+    deposit_amount: String(
+      booking.deposit_amount || ""
+    ),
+
+    reference_partner_share: String(
+      booking.reference_partner_share || ""
+    ),
+
+    provider_partner_share: String(
+      booking.provider_partner_share || ""
+    ),
+
+    fuel_quantity: String(
+      booking.fuel_quantity || ""
+    ),
+
+    account_manager:
+      booking.account_manager || "",
+
+    remarks: booking.remarks || "",
+
+    payment_method:
+      booking.payment_method || "cash",
+  });
+};
+
+
+
+
+
+
   // Edit booking (full form)
-  const handleEditBooking = (booking) => {
-    setEditingBooking(booking._id);
-    setEditFormData({
-      bike_id: booking.bike_id,
-      customer_id: booking.customer_id,
-      start_datetime: booking.start_datetime.slice(0, 16),
-      end_datetime: booking.end_datetime.slice(0, 16),
-      notes: booking.notes || "",
-      customer_name: booking.customer_name || booking.customers?.name || "",
-      customer_phone: booking.contact_number || booking.customers?.phone || "",
-      customer_email: booking.customer_email || booking.customers?.email || "",
-      customer_location: booking.customer_location || "",
-      is_new_customer: false,
-      aadhaar_file: null,
-      license_file: null,
-      partner_name: booking.source_name || "",
-      lead_source: booking.lead_source || "other",
-      source_name: booking.source_name || "",
-      rental_type: booking.rental_type || "daily",
-      total_amount: String(booking.total_amount || ""),
-      deposit_amount: String(booking.deposit_amount || ""),
-      reference_partner_share: String(booking.reference_partner_share || ""),
-      provider_partner_share: String(booking.provider_partner_share || ""),
-      fuel_quantity: String(booking.fuel_quantity || ""),
-      account_manager: booking.account_manager || "",
-      remarks: booking.remarks || "",
-      payment_method: booking.payment_method || "cash",
-    });
-  };
+  // const handleEditBooking = (booking) => {
+  //   setEditingBooking(booking._id);
+  //   setEditFormData({
+  //     bike_id: booking.bike_id,
+  //     customer_id: booking.customer_id,
+  //     start_datetime: booking.start_datetime.slice(0, 16),
+  //     end_datetime: booking.end_datetime.slice(0, 16),
+  //     notes: booking.notes || "",
+  //     customer_name: booking.customer_name || booking.customers?.name || "",
+  //     customer_phone: booking.contact_number || booking.customers?.phone || "",
+  //     customer_email: booking.customer_email || booking.customers?.email || "",
+  //     customer_location: booking.customer_location || "",
+  //     is_new_customer: false,
+  //     aadhaar_file: null,
+  //     license_file: null,
+  //     partner_name: booking.source_name || "",
+  //     lead_source: booking.lead_source || "other",
+  //     source_name: booking.source_name || "",
+  //     rental_type: booking.rental_type || "daily",
+  //     total_amount: String(booking.total_amount || ""),
+  //     deposit_amount: String(booking.deposit_amount || ""),
+  //     reference_partner_share: String(booking.reference_partner_share || ""),
+  //     provider_partner_share: String(booking.provider_partner_share || ""),
+  //     fuel_quantity: String(booking.fuel_quantity || ""),
+  //     account_manager: booking.account_manager || "",
+  //     remarks: booking.remarks || "",
+  //     payment_method: booking.payment_method || "cash",
+  //   });
+  // };
+
+
+
 
   // const handleSaveEdit = async () => {
   //   if (!editingBooking) return;
