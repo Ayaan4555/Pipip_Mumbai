@@ -527,7 +527,7 @@ exports.createOrder = async (req, res) => {
       },
       order_meta: {
         // This is a fallback if the modal fails
-        return_url: `${process.env.FRONTEND_URL}/payment-status?order_id={order_id}`,
+        return_url: `${process.env.BASE_URL}/payment-status?order_id={order_id}`,
       },
     };
 
