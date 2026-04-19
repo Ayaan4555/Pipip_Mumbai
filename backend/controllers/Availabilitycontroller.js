@@ -15,7 +15,8 @@ exports.checkAvailability = async (req, res) => {
 
   const conflict = await Booking.findOne({
     bike_id: bikeId,
-    status: { $ne: "cancelled" },
+    // status: { $ne: "cancelled" },
+      status: { $nin: ["cancelled", "completed"] },
     start_datetime: { $lt: end },
     end_datetime: { $gt: start },
   });
