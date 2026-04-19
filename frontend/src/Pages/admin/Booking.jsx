@@ -2068,6 +2068,12 @@ export default function Bookings() {
   };
 
   const handleEditBooking = (booking) => {
+     console.log("DB:", booking.start_datetime);
+  console.log(
+    "Formatted:",
+    formatToLocalInput(booking.start_datetime)
+  );
+
     setEditingBooking(booking._id);
 
     setEditFormData({
