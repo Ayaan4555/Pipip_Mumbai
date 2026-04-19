@@ -3313,13 +3313,13 @@ useEffect(() => {
                             </div>
                           </div>
 
-                          {availabilityMessage && (
+                          {/* {availabilityMessage && (
                             <div
                               className={`p-3 rounded-lg text-sm mb-4 ${isAvailable ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"}`}
                             >
                               {availabilityMessage}
                             </div>
-                          )}
+                          )} */}
 
                           <div className="space-y-0.5">
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
