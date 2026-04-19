@@ -466,6 +466,7 @@ exports.adminCreateBooking = async (req, res) => {
       vehicle_make_model,
       rental_type,
 
+      total_amount: manual_total_amount,
       deposit_amount,
 
       reference_partner_share,
@@ -510,26 +511,57 @@ exports.adminCreateBooking = async (req, res) => {
       Math.ceil((end - start) / (1000 * 60 * 60))
     );
 
-    let total_amount = 0;
+    // let total_amount = 0;
 
-    const hourlyRate = Number(bike.price_per_hour || 0);
-    const dailyRate = Number(bike.price_per_day || 0);
 
-    if (totalHours >= 24 && dailyRate > 0) {
+    // const hourlyRate = Number(bike.price_per_hour || 0);
+    // const dailyRate = Number(bike.price_per_day || 0);
 
-      const days = Math.floor(totalHours / 24);
-      const remainingHours = totalHours % 24;
+    // if (totalHours >= 24 && dailyRate > 0) {
 
-      total_amount = days * dailyRate + remainingHours * hourlyRate;
+    //   const days = Math.floor(totalHours / 24);
+    //   const remainingHours = totalHours % 24;
 
-      if (remainingHours * hourlyRate > dailyRate) {
-        total_amount = (days + 1) * dailyRate;
-      }
+    //   total_amount = days * dailyRate + remainingHours * hourlyRate;
 
+    //   if (remainingHours * hourlyRate > dailyRate) {
+    //     total_amount = (days + 1) * dailyRate;
+    //   }
+
+    // } else {
+
+    //   total_amount = totalHours * hourlyRate;
+
+    // }
+
+    // ✅ Replaced the old calculation block with this:
+    let final_total_amount = 0;
+
+    if (
+      manual_total_amount !== undefined &&
+      manual_total_amount !== null &&
+      manual_total_amount !== ""
+    ) {
+      final_total_amount = Number(manual_total_amount);
     } else {
+      const totalHours = Math.max(
+        1,
+        Math.ceil((end - start) / (1000 * 60 * 60)),
+      );
+      const hourlyRate = Number(bike.price_per_hour || 0);
+      const dailyRate = Number(bike.price_per_day || 0);
 
-      total_amount = totalHours * hourlyRate;
+      if (totalHours >= 24 && dailyRate > 0) {
+        const days = Math.floor(totalHours / 24);
+        const remainingHours = totalHours % 24;
+        final_total_amount = days * dailyRate + remainingHours * hourlyRate;
 
+        if (remainingHours * hourlyRate > dailyRate) {
+          final_total_amount = (days + 1) * dailyRate;
+        }
+      } else {
+        final_total_amount = totalHours * hourlyRate;
+      }
     }
 
     const booking = await Booking.create({
@@ -551,7 +583,8 @@ exports.adminCreateBooking = async (req, res) => {
       start_datetime: start,
       end_datetime: end,
 
-      total_amount,
+
+      total_amount:final_total_amount,
 
       // ✅ SAFE NUMBER CONVERSION
       deposit_amount: Number(deposit_amount) || 0,
