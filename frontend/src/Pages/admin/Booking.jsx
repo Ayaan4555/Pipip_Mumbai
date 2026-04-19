@@ -2036,99 +2036,66 @@ export default function Bookings() {
     }
   };
 
-const formatToLocalInput = (isoDate) => {
-  if (!isoDate) return "";
+  const formatToLocalInput = (isoDate) => {
+    if (!isoDate) return "";
 
-  const date = new Date(isoDate);
+    const date = new Date(isoDate);
 
-  const offset = date.getTimezoneOffset();
+    const offset = date.getTimezoneOffset();
 
-  const local = new Date(
-    date.getTime() - offset * 60000
-  );
+    const local = new Date(date.getTime() - offset * 60000);
 
-  return local.toISOString().slice(0, 16);
-};
+    return local.toISOString().slice(0, 16);
+  };
 
-const handleEditBooking = (booking) => {
-  setEditingBooking(booking._id);
+  const handleEditBooking = (booking) => {
+    setEditingBooking(booking._id);
 
-  setEditFormData({
-    bike_id: booking.bike_id,
-    customer_id: booking.customer_id,
+    setEditFormData({
+      bike_id: booking.bike_id,
+      customer_id: booking.customer_id,
 
-    // ✅ FIXED TIMEZONE ISSUE HERE
-    start_datetime: formatToLocalInput(
-      booking.start_datetime
-    ),
+      // ✅ FIXED TIMEZONE ISSUE HERE
+      start_datetime: formatToLocalInput(booking.start_datetime),
 
-    end_datetime: formatToLocalInput(
-      booking.end_datetime
-    ),
+      end_datetime: formatToLocalInput(booking.end_datetime),
 
-    notes: booking.notes || "",
+      notes: booking.notes || "",
 
-    customer_name:
-      booking.customer_name ||
-      booking.customers?.name ||
-      "",
+      customer_name: booking.customer_name || booking.customers?.name || "",
 
-    customer_phone:
-      booking.contact_number ||
-      booking.customers?.phone ||
-      "",
+      customer_phone: booking.contact_number || booking.customers?.phone || "",
 
-    customer_email:
-      booking.customer_email ||
-      booking.customers?.email ||
-      "",
+      customer_email: booking.customer_email || booking.customers?.email || "",
 
-    customer_location:
-      booking.customer_location || "",
+      customer_location: booking.customer_location || "",
 
-    is_new_customer: false,
-    aadhaar_file: null,
-    license_file: null,
+      is_new_customer: false,
+      aadhaar_file: null,
+      license_file: null,
 
-    partner_name: booking.source_name || "",
-    lead_source: booking.lead_source || "other",
-    source_name: booking.source_name || "",
-    rental_type: booking.rental_type || "daily",
+      partner_name: booking.source_name || "",
+      lead_source: booking.lead_source || "other",
+      source_name: booking.source_name || "",
+      rental_type: booking.rental_type || "daily",
 
-    total_amount: String(
-      booking.total_amount || ""
-    ),
+      total_amount: String(booking.total_amount || ""),
 
-    deposit_amount: String(
-      booking.deposit_amount || ""
-    ),
+      deposit_amount: String(booking.deposit_amount || ""),
 
-    reference_partner_share: String(
-      booking.reference_partner_share || ""
-    ),
+      reference_partner_share: String(booking.reference_partner_share || ""),
 
-    provider_partner_share: String(
-      booking.provider_partner_share || ""
-    ),
+      provider_partner_share: String(booking.provider_partner_share || ""),
 
-    fuel_quantity: String(
-      booking.fuel_quantity || ""
-    ),
+      fuel_quantity: String(booking.fuel_quantity || ""),
 
-    account_manager:
-      booking.account_manager || "",
+      account_manager: booking.account_manager || "",
 
-    remarks: booking.remarks || "",
+      remarks: booking.remarks || "",
 
-    payment_method:
-      booking.payment_method || "cash",
-  });
-};
-
-
-
-
-
+      payment_method: booking.payment_method || "cash",
+    });
+  };
 
   // Edit booking (full form)
   // const handleEditBooking = (booking) => {
@@ -2160,9 +2127,6 @@ const handleEditBooking = (booking) => {
   //     payment_method: booking.payment_method || "cash",
   //   });
   // };
-
-
-
 
   // const handleSaveEdit = async () => {
   //   if (!editingBooking) return;
@@ -2426,7 +2390,7 @@ const handleEditBooking = (booking) => {
 
       <div className="space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label>Start Date/Time *</Label>
             <Input
               type="datetime-local"
@@ -2448,6 +2412,36 @@ const handleEditBooking = (booking) => {
               value={data.end_datetime}
               onChange={(e) =>
                 setData({ ...data, end_datetime: roundToHour(e.target.value) })
+              }
+            />
+          </div> */}
+
+          <div className="space-y-2">
+            <Label>Start Date/Time *</Label>
+            <Input
+              type="datetime-local"
+              className="[color-scheme:dark]"
+              value={data.start_datetime}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  start_datetime: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>End Date/Time *</Label>
+            <Input
+              type="datetime-local"
+              className="[color-scheme:dark]"
+              value={data.end_datetime}
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  end_datetime: e.target.value,
+                })
               }
             />
           </div>
