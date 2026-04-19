@@ -77,7 +77,7 @@ export default function BookBike() {
   const createBooking = useCreateBooking();
   const { checkAvailability, checking } = useBikeAvailability();
 
-  const SECURITY_DEPOSIT = 1;
+  const SECURITY_DEPOSIT = 2000;
 
   // 1. Helper to get ISO string rounded to the top of the hour
   const getRoundedISO = (date) => {
