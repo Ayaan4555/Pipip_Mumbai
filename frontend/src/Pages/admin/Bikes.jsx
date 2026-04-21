@@ -7,7 +7,6 @@
 // // import { useBikes, useCreateBike, useUpdateBike, useDeleteBike } from '../../hooks/useBikes';
 // // import { useAreas } from '../../hooks/useAreas';
 
-
 // // import { Plus, Edit, Trash2, Bike as BikeIcon, Search, MapPin, Filter } from 'lucide-react';
 
 // // import { toast } from 'sonner';
@@ -36,7 +35,6 @@
 // // //   description: "",
 // // //   area_id: "",
 // // // };
-
 
 // // // export default function Bikes() {
 // // //   const [isOpen, setIsOpen] = useState(false);
@@ -74,7 +72,6 @@
 // // //       return;
 // // //     }
 
-    
 // // //     const data = new FormData();
 
 // // // Object.entries(formData).forEach(([key, value]) => {
@@ -82,7 +79,6 @@
 // // //     data.append(key, value);
 // // //   }
 // // // });
-
 
 // // //     try {
 // // //       if (editingBike) {
@@ -120,8 +116,6 @@
 // // //       setFormData(initialFormData);
 // // //     }
 // // //   };
-
-  
 
 // // //   return (
 // // //     <div className="space-y-6">
@@ -315,7 +309,7 @@
 // // //                   <Button
 // // //                     type="submit"
 // // //                     className="gradient-sunset text-primary-foreground"
-                  
+
 // // //                   >
 // // //                     {editingBike ? "Update" : "Add"} Bike
 // // //                   </Button>
@@ -612,8 +606,6 @@
 // //     }
 // //   };
 
-  
-
 // //   return (
 // //     <div className="space-y-6">
 // //       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -806,7 +798,7 @@
 // //                   <Button
 // //                     type="submit"
 // //                     className="gradient-sunset text-primary-foreground"
-                  
+
 // //                   >
 // //                     {editingBike ? "Update" : "Add"} Bike
 // //                   </Button>
@@ -1023,8 +1015,6 @@
 // import { Plus, Edit, Trash2, Bike as BikeIcon, Search, MapPin, Filter, Eye, X, Calendar, Gauge, Wrench, Battery, CircleDot, Navigation } from 'lucide-react';
 // import { Badge } from '../../components/ui/badge';
 // import { toast } from 'sonner';
-
-
 
 // const statusColors = {
 //   available: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -1699,10 +1689,6 @@
 //                   </div>
 //                 </div>
 
-
-
-
-
 //                 {/* Description */}
 //                 <div className="space-y-2">
 //                   <Label htmlFor="description">Description</Label>
@@ -1961,7 +1947,6 @@
 //                   </div>
 //                 </div>
 
-
 //                 {/* Inside viewingBike Dialog ScrollArea */}
 //                 {/* View Dialog ke andar */}
 //                 {viewingBike?.extra_images?.length > 0 && (
@@ -2004,8 +1989,6 @@
 //                     </div>
 //                   </div>
 //                 )}
-
-
 
 //                 {viewingBike.description && (
 //                   <div>
@@ -2162,25 +2145,57 @@
 //   );
 // }
 
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import { ScrollArea } from "../../components/ui/scroll-area";
+import {
+  useBikes,
+  useCreateBike,
+  useUpdateBike,
+  useDeleteBike,
+} from "../../hooks/useBikes";
+import { useAreas } from "../../hooks/useAreas";
+import { useBookings } from "../../hooks/useBooking";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { ScrollArea } from '../../components/ui/scroll-area';
-import { useBikes, useCreateBike, useUpdateBike, useDeleteBike } from '../../hooks/useBikes';
-import { useAreas } from '../../hooks/useAreas';
-
-import { Plus, Edit, Trash2, Bike as BikeIcon, Search, MapPin, Filter, Eye, X, Calendar, Gauge, Wrench, Battery, CircleDot, Navigation , Download  } from 'lucide-react';
-import { Badge } from '../../components/ui/badge';
-import { toast } from 'sonner';
-
-
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Bike as BikeIcon,
+  Search,
+  MapPin,
+  Filter,
+  Eye,
+  X,
+  Calendar,
+  Gauge,
+  Wrench,
+  Battery,
+  CircleDot,
+  Navigation,
+  Download,
+} from "lucide-react";
+import { Badge } from "../../components/ui/badge";
+import { toast } from "sonner";
 
 const statusColors = {
   available: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -2223,6 +2238,7 @@ export default function Bikes() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: bikes, isLoading } = useBikes();
+  const { data: bookings } = useBookings();
   const { data: areas } = useAreas();
   const createBike = useCreateBike();
   const updateBike = useUpdateBike();
@@ -2259,17 +2275,22 @@ export default function Bikes() {
   };
 
   // Remove file handler
- // Remove file handler
+  // Remove file handler
   const removeExtraFile = (index) => {
     const itemToRemove = extraPreviews[index];
 
     // Case 1: If it's a new file (a local blob/base64 preview)
-    if (typeof itemToRemove === "string" && (itemToRemove.startsWith("data:") || itemToRemove.startsWith("blob:"))) {
+    if (
+      typeof itemToRemove === "string" &&
+      (itemToRemove.startsWith("data:") || itemToRemove.startsWith("blob:"))
+    ) {
       // Find the relative index in the extraFiles (binary) array
       // We count how many "new" files appear before this one in the previews
       const binaryIndex = extraPreviews
         .slice(0, index)
-        .filter(src => src.startsWith("data:") || src.startsWith("blob:")).length;
+        .filter(
+          (src) => src.startsWith("data:") || src.startsWith("blob:"),
+        ).length;
 
       setExtraFiles((prev) => prev.filter((_, i) => i !== binaryIndex));
     }
@@ -2305,6 +2326,40 @@ export default function Bikes() {
     const statusMatch = statusFilter === "all" || bike.status === statusFilter;
     return searchMatch && areaMatch && statusMatch;
   });
+
+  // ===============================
+  // PROFESSIONAL BIKE STATUS LOGIC
+  // ADD BELOW filteredBikes
+  // ===============================
+
+  const currentTime = new Date();
+
+  // Active rentals
+  const activeRentals =
+    bookings?.filter((booking) => {
+      if (booking.status !== "active") return false;
+
+      const start = new Date(booking.start_datetime);
+
+      const end = new Date(booking.end_datetime);
+
+      return start <= currentTime && end >= currentTime;
+    }) || [];
+
+  // Get rented bike IDs
+  const rentedBikeIds = new Set(
+    activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+  );
+
+  // Maintenance bikes
+  const maintenanceCount =
+    bikes?.filter((bike) => bike.status === "maintenance").length || 0;
+
+  // Booked bikes
+  const bookedCount = rentedBikeIds.size;
+
+  // Available bikes
+  const availableCount = (bikes?.length || 0) - bookedCount - maintenanceCount;
 
   // Change this:
   const getAreaName = (areaId) => {
@@ -2353,64 +2408,64 @@ export default function Bikes() {
   //   }
   // };
 
- const handleSubmit = async (e) => {
-   e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-   const data = new FormData();
+    const data = new FormData();
 
-   // 1. Text fields append (Excluding images)
-   Object.keys(formData).forEach((key) => {
-     if (
-       key !== "image_url" &&
-       key !== "extra_images" &&
-       formData[key] !== undefined
-     ) {
-       data.append(key, formData[key]);
-     }
-   });
+    // 1. Text fields append (Excluding images)
+    Object.keys(formData).forEach((key) => {
+      if (
+        key !== "image_url" &&
+        key !== "extra_images" &&
+        formData[key] !== undefined
+      ) {
+        data.append(key, formData[key]);
+      }
+    });
 
-   // 2. Main Profile Image
-   if (selectedFile) {
-     data.append("image_url", selectedFile);
-   }
+    // 2. Main Profile Image
+    if (selectedFile) {
+      data.append("image_url", selectedFile);
+    }
 
-   // --- NEW CHANGE START ---
-   // 3. Send the list of EXISTING images that were NOT deleted
-   // We filter 'extraPreviews' to find strings that are already URLs (hosted on your server/cloudinary)
-   const remainingImages = extraPreviews.filter(
-     (src) => typeof src === "string" && src.startsWith("http"),
-   );
+    // --- NEW CHANGE START ---
+    // 3. Send the list of EXISTING images that were NOT deleted
+    // We filter 'extraPreviews' to find strings that are already URLs (hosted on your server/cloudinary)
+    const remainingImages = extraPreviews.filter(
+      (src) => typeof src === "string" && src.startsWith("http"),
+    );
 
-   // Send this as a stringified array so the backend can parse it
-   data.append("remaining_extra_images", JSON.stringify(remainingImages));
-   // --- NEW CHANGE END ---
+    // Send this as a stringified array so the backend can parse it
+    data.append("remaining_extra_images", JSON.stringify(remainingImages));
+    // --- NEW CHANGE END ---
 
-   // 4. Append NEWLY selected files
-   extraFiles.forEach((file) => {
-     data.append("extra_images", file);
-   });
+    // 4. Append NEWLY selected files
+    extraFiles.forEach((file) => {
+      data.append("extra_images", file);
+    });
 
-   try {
-     if (editingBike) {
-       await updateBike.mutateAsync({
-         id: editingBike._id || editingBike.id,
-         formData: data,
-       });
-     } else {
-       await createBike.mutateAsync(data);
-     }
+    try {
+      if (editingBike) {
+        await updateBike.mutateAsync({
+          id: editingBike._id || editingBike.id,
+          formData: data,
+        });
+      } else {
+        await createBike.mutateAsync(data);
+      }
 
-     toast.success(editingBike ? "Bike updated" : "Bike added");
+      toast.success(editingBike ? "Bike updated" : "Bike added");
 
-     setExtraFiles([]);
-     setExtraPreviews([]);
-     setSelectedFile(null);
-     handleOpenChange(false);
-   } catch (error) {
-     console.error("Upload Error:", error);
-     toast.error(error.response?.data?.message || "Failed to save");
-   }
- };
+      setExtraFiles([]);
+      setExtraPreviews([]);
+      setSelectedFile(null);
+      handleOpenChange(false);
+    } catch (error) {
+      console.error("Upload Error:", error);
+      toast.error(error.response?.data?.message || "Failed to save");
+    }
+  };
   const handleEdit = (bike) => {
     setEditingBike(bike);
     setSelectedFile(null); // <--- ADD THIS LINE
@@ -2432,10 +2487,9 @@ export default function Bikes() {
       bike_name: bike.bike_name || "",
       bike_colour: bike.bike_colour || "",
       bike_owner: bike.bike_owner || "",
-      
+
       bike_expenses: bike.bike_expenses || 0,
       total_km_run: bike.total_km_run || 0,
-
 
       insurance_end_date: toInputDate(bike.insurance_end_date),
       puc_end_date: toInputDate(bike.puc_end_date),
@@ -2445,13 +2499,13 @@ export default function Bikes() {
       last_tyre_change: toInputDate(bike.last_tyre_change),
       gps_installed_date: toInputDate(bike.gps_installed_date),
     });
-   if (bike.extra_images) {
-     setExtraPreviews(bike.extra_images);
-   } else {
-     setExtraPreviews([]);
-   }
+    if (bike.extra_images) {
+      setExtraPreviews(bike.extra_images);
+    } else {
+      setExtraPreviews([]);
+    }
 
-   setIsOpen(true);
+    setIsOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -2479,6 +2533,8 @@ export default function Bikes() {
       year: "numeric",
     });
   };
+
+  
 
   return (
     <div className="space-y-6">
@@ -3028,7 +3084,7 @@ export default function Bikes() {
       </div>
 
       {/* Stats */}
-      {bikes && (
+      {/* {bikes && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-card border-border">
             <CardContent className="p-4 text-center">
@@ -3058,6 +3114,46 @@ export default function Bikes() {
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-amber-400">
                 {bikes.filter((b) => b.status === "maintenance").length}
+              </p>
+              <p className="text-sm text-muted-foreground">Maintenance</p>
+            </CardContent>
+          </Card>
+        </div>
+      )} */}
+
+      {/* Stats */}
+
+      {bikes && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">
+                {bikes.length}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Bikes</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-green-400">
+                {availableCount}
+              </p>
+              <p className="text-sm text-muted-foreground">Available</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-red-400">{bookedCount}</p>
+              <p className="text-sm text-muted-foreground">Booked</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-400">
+                {maintenanceCount}
               </p>
               <p className="text-sm text-muted-foreground">Maintenance</p>
             </CardContent>
@@ -3304,11 +3400,37 @@ export default function Bikes() {
                       <BikeIcon className="w-16 h-16 text-muted-foreground" />
                     </div>
                   )}
-                  <Badge
+
+                  {/* <Badge
                     className={`absolute top-2 right-2 border ${statusColors[bike.status]}`}
                   >
                     {bike.status}
-                  </Badge>
+                  </Badge> */}
+
+                  {(() => {
+                    const isBooked = rentedBikeIds.has(bike._id);
+
+                    const displayStatus =
+                      bike.status === "maintenance"
+                        ? "maintenance"
+                        : isBooked
+                          ? "booked"
+                          : "available";
+
+                    return (
+                      <Badge
+                        className={`
+                            absolute
+                            top-2
+                            right-2
+                            border
+                            ${statusColors[displayStatus]}
+                          `}
+                      >
+                        {displayStatus}
+                      </Badge>
+                    );
+                  })()}
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
