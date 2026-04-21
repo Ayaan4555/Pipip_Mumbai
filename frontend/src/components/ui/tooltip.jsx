@@ -12,7 +12,42 @@ export function TooltipTrigger({ children }) {
   return children;
 }
 
-export function TooltipContent({ children, className = "" }) {
+// export function TooltipContent({ children, className = "" }) {
+//   return (
+
+//     <div
+//       className={`
+//         absolute
+//         z-50
+//         hidden
+//         group-hover:block
+//         bottom-full
+//         mb-2
+//         left-1/2
+//         -translate-x-1/2
+//         px-2
+//         py-1
+//         text-xs
+//         rounded
+//         bg-black
+//         text-white
+//         shadow-lg
+//         ${className}
+//       `}
+//     >
+
+//       {children}
+
+//     </div>
+
+//   );
+// }
+
+export function TooltipContent({
+  children,
+  className = ""
+}) {
+
   return (
 
     <div
@@ -21,17 +56,31 @@ export function TooltipContent({ children, className = "" }) {
         z-50
         hidden
         group-hover:block
-        bottom-full
-        mb-2
+
+        top-full
+        mt-2
         left-1/2
         -translate-x-1/2
-        px-2
-        py-1
+
+        min-w-[180px]
+        max-w-[220px]
+
+        px-3
+        py-2
+
         text-xs
-        rounded
-        bg-black
-        text-white
-        shadow-lg
+        rounded-lg
+
+        bg-card
+        text-foreground
+
+        border
+        border-border
+
+        shadow-xl
+
+        whitespace-normal
+
         ${className}
       `}
     >
@@ -41,4 +90,5 @@ export function TooltipContent({ children, className = "" }) {
     </div>
 
   );
+
 }
