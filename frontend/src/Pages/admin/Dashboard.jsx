@@ -399,7 +399,10 @@ export default function Dashboard() {
 
         <Dialog
           open={!!selectedFleet}
-          onOpenChange={() => setSelectedFleet(null)}
+          onOpenChange={() => {
+            setSelectedFleet(null);
+            setFleetSearch("");
+          }}
         >
           <DialogContent className="max-w-xl">
             <DialogTitle>{selectedFleet} Bikes</DialogTitle>
