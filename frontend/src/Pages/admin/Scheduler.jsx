@@ -46,8 +46,6 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/util";
 
-
-
 const statusColors = {
   pending: "#EAB308",
   confirmed: "#3B82F6",
@@ -416,12 +414,42 @@ export default function Scheduler() {
                     {/* 🔥 TOOLTIP CONTENT */}
 
                     {hasBookings && (
+                      // <TooltipContent
+                      //   side="top"
+                      //   className="max-w-xs bg-card border-border"
+                      // >
+                      //   <div className="space-y-2">
+                      //     {dayBookingsList.slice(0, 3).map((booking, idx) => (
+                      //       <div
+                      //         key={idx}
+                      //         className="text-xs border-b pb-1 last:border-none"
+                      //       >
+                      //         <p className="font-medium text-foreground">
+                      //           {booking.bike_model}
+                      //         </p>
+
+                      //         <p className="text-muted-foreground">
+                      //           {booking.customer_name}
+                      //         </p>
+
+                      //         <p className="text-muted-foreground">
+                      //           {format(new Date(booking.start), "h:mm a")}
+
+                      //           {" - "}
+
+                      //           {format(new Date(booking.end), "h:mm a")}
+                      //         </p>
+                      //       </div>
+                      //     ))}
+                      //   </div>
+                      // </TooltipContent>
+
                       <TooltipContent
                         side="top"
                         className="max-w-xs bg-card border-border"
                       >
-                        <div className="space-y-2">
-                          {dayBookingsList.slice(0, 5).map((booking, idx) => (
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {dayBookingsList.slice(0, 3).map((booking, idx) => (
                             <div
                               key={idx}
                               className="text-xs border-b pb-1 last:border-none"
@@ -443,6 +471,14 @@ export default function Scheduler() {
                               </p>
                             </div>
                           ))}
+
+                          {/* ⭐ ADD "+ more" HERE */}
+
+                          {dayBookingsList.length > 3 && (
+                            <p className="text-[10px] text-muted-foreground text-center">
+                              +{dayBookingsList.length - 3} more
+                            </p>
+                          )}
                         </div>
                       </TooltipContent>
                     )}
