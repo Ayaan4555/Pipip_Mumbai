@@ -71,45 +71,112 @@ export default function Dashboard() {
   // CLEAN PROFESSIONAL FLEET LOGIC
   // ===============================
 
-  // Current time
-  const currentTime = new Date();
+  // // Current time
+  // const currentTime = new Date();
 
-  // Active rentals (rename to avoid conflicts)
-  const activeRentals =
-    recentBookings?.filter((booking) => {
-      if (booking.status !== "active") return false;
+  // // Active rentals (rename to avoid conflicts)
+  // const activeRentals =
+  //   recentBookings?.filter((booking) => {
+  //     if (booking.status !== "active") return false;
 
-      const start = new Date(booking.start_datetime);
+  //     const start = new Date(booking.start_datetime);
 
-      const end = new Date(booking.end_datetime);
+  //     const end = new Date(booking.end_datetime);
 
-      return start <= currentTime && end >= currentTime;
-    }) || [];
+  //     return start <= currentTime && end >= currentTime;
+  //   }) || [];
 
-  // Get rented bike IDs
-  const rentedBikeIds = new Set(
-    activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
-  );
+  // // Get rented bike IDs
+  // const rentedBikeIds = new Set(
+  //   activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+  // );
 
-  // Maintenance bikes
-  const maintenanceBikeList =
-    bikes?.filter((bike) => bike.status === "maintenance") || [];
+  // // Maintenance bikes
+  // const maintenanceBikeList =
+  //   bikes?.filter((bike) => bike.status === "maintenance") || [];
 
-  // Available bikes
-  const availableBikeList =
-    bikes?.filter(
-      (bike) => !rentedBikeIds.has(bike._id) && bike.status !== "maintenance",
-    ) || [];
+  // // Available bikes
+  // const availableBikeList =
+  //   bikes?.filter(
+  //     (bike) => !rentedBikeIds.has(bike._id) && bike.status !== "maintenance",
+  //   ) || [];
 
-  // Rented bikes list
-  const rentedBikeList = activeRentals;
+  // // Rented bikes list
+  // const rentedBikeList = activeRentals;
 
-  // Counts
-  const availableBikes = availableBikeList.length;
+  // // Counts
+  // const availableBikes = availableBikeList.length;
 
-  const bookedBikes = rentedBikeList.length;
+  // const bookedBikes = rentedBikeList.length;
 
-  const maintenanceBikes = maintenanceBikeList.length;
+  // const maintenanceBikes = maintenanceBikeList.length;
+
+
+// ===============================
+// CLEAN PROFESSIONAL FLEET LOGIC
+// ===============================
+
+const currentTime = new Date();
+
+// Active rentals
+const activeRentals =
+  recentBookings?.filter((booking) => {
+
+    if (booking.status !== "active")
+      return false;
+
+    const start = new Date(
+      booking.start_datetime
+    );
+
+    const end = new Date(
+      booking.end_datetime
+    );
+
+    return (
+      start <= currentTime &&
+      end >= currentTime
+    );
+
+  }) || [];
+
+// Rented Bike IDs
+const rentedBikeIds = new Set(
+  activeRentals.map(
+    (booking) =>
+      booking.bike_id?._id ||
+      booking.bike_id
+  )
+);
+
+// Maintenance Bikes
+const maintenanceBikeList =
+  bikes?.filter(
+    (bike) =>
+      bike.status === "maintenance"
+  ) || [];
+
+// Available Bikes
+const availableBikeList =
+  bikes?.filter(
+    (bike) =>
+      !rentedBikeIds.has(bike._id) &&
+      bike.status !== "maintenance"
+  ) || [];
+
+// ✅ THIS FIXES YOUR ERROR
+const bookedBikeList = activeRentals;
+
+// Counts
+const availableBikes =
+  availableBikeList.length;
+
+const bookedBikes =
+  bookedBikeList.length;
+
+const maintenanceBikes =
+  maintenanceBikeList.length;
+
 
   return (
     <div className="space-y-6">
