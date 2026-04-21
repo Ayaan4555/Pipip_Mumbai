@@ -104,14 +104,84 @@ export default function Scheduler() {
   };
 
   // Fleet overview
-  const fleetStatus = useMemo(() => {
-    if (!bikes) return { available: 0, booked: 0, maintenance: 0 };
-    return {
-      available: bikes.filter(b => b.status === 'available').length,
-      booked: bikes.filter(b => b.status === 'booked').length,
-      maintenance: bikes.filter(b => b.status === 'maintenance').length
-    };
-  }, [bikes]);
+  // const fleetStatus = useMemo(() => {
+  //   if (!bikes) return { available: 0, booked: 0, maintenance: 0 };
+  //   return {
+  //     available: bikes.filter(b => b.status === 'available').length,
+  //     booked: bikes.filter(b => b.status === 'booked').length,
+  //     maintenance: bikes.filter(b => b.status === 'maintenance').length
+  //   };
+  // }, [bikes]);
+
+
+  // ===============================
+// PROFESSIONAL FLEET STATUS LOGIC
+// ===============================
+
+const fleetStatus = useMemo(() => {
+
+  if (!bikes || !bookings)
+    return { available: 0, booked: 0, maintenance: 0 };
+
+  const currentTime = new Date();
+
+  // Active rentals
+  const activeRentals =
+    bookings.filter((booking) => {
+
+      if (booking.status !== "active")
+        return false;
+
+      const start = new Date(
+        booking.start_datetime
+      );
+
+      const end = new Date(
+        booking.end_datetime
+      );
+
+      return (
+        start <= currentTime &&
+        end >= currentTime
+      );
+
+    });
+
+  // Get rented bike IDs
+  const rentedBikeIds = new Set(
+    activeRentals.map(
+      (booking) =>
+        booking.bike_id?._id ||
+        booking.bike_id
+    )
+  );
+
+  // Maintenance bikes
+  const maintenance =
+    bikes.filter(
+      (bike) =>
+        bike.status === "maintenance"
+    ).length;
+
+  // Booked bikes
+  const booked =
+    rentedBikeIds.size;
+
+  // Available bikes
+  const available =
+    bikes.length -
+    booked -
+    maintenance;
+
+  return {
+    available,
+    booked,
+    maintenance
+  };
+
+}, [bikes, bookings]);
+
+
 
   const StatusIcon = selectedEvent ? statusIcons[selectedEvent.status] || Timer : Timer;
 
