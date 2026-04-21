@@ -52,6 +52,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [selectedFleet, setSelectedFleet] = useState(null);
+  const [fleetSearch, setFleetSearch] = useState("");
 
   // Data fetching
   const { data: stats } = useBookingStats("month");
@@ -111,72 +112,48 @@ export default function Dashboard() {
 
   // const maintenanceBikes = maintenanceBikeList.length;
 
+  // ===============================
+  // CLEAN PROFESSIONAL FLEET LOGIC
+  // ===============================
 
-// ===============================
-// CLEAN PROFESSIONAL FLEET LOGIC
-// ===============================
+  const currentTime = new Date();
 
-const currentTime = new Date();
+  // Active rentals
+  const activeRentals =
+    recentBookings?.filter((booking) => {
+      if (booking.status !== "active") return false;
 
-// Active rentals
-const activeRentals =
-  recentBookings?.filter((booking) => {
+      const start = new Date(booking.start_datetime);
 
-    if (booking.status !== "active")
-      return false;
+      const end = new Date(booking.end_datetime);
 
-    const start = new Date(
-      booking.start_datetime
-    );
+      return start <= currentTime && end >= currentTime;
+    }) || [];
 
-    const end = new Date(
-      booking.end_datetime
-    );
+  // Rented Bike IDs
+  const rentedBikeIds = new Set(
+    activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+  );
 
-    return (
-      start <= currentTime &&
-      end >= currentTime
-    );
+  // Maintenance Bikes
+  const maintenanceBikeList =
+    bikes?.filter((bike) => bike.status === "maintenance") || [];
 
-  }) || [];
+  // Available Bikes
+  const availableBikeList =
+    bikes?.filter(
+      (bike) => !rentedBikeIds.has(bike._id) && bike.status !== "maintenance",
+    ) || [];
 
-// Rented Bike IDs
-const rentedBikeIds = new Set(
-  activeRentals.map(
-    (booking) =>
-      booking.bike_id?._id ||
-      booking.bike_id
-  )
-);
+  // ✅ THIS FIXES YOUR ERROR
+  const bookedBikeList = activeRentals;
 
-// Maintenance Bikes
-const maintenanceBikeList =
-  bikes?.filter(
-    (bike) =>
-      bike.status === "maintenance"
-  ) || [];
+  // Counts
+  const availableBikes = availableBikeList.length;
 
-// Available Bikes
-const availableBikeList =
-  bikes?.filter(
-    (bike) =>
-      !rentedBikeIds.has(bike._id) &&
-      bike.status !== "maintenance"
-  ) || [];
+  const bookedBikes = bookedBikeList.length;
 
-// ✅ THIS FIXES YOUR ERROR
-const bookedBikeList = activeRentals;
-
-// Counts
-const availableBikes =
-  availableBikeList.length;
-
-const bookedBikes =
-  bookedBikeList.length;
-
-const maintenanceBikes =
-  maintenanceBikeList.length;
-
+  const maintenanceBikes = maintenanceBikeList.length;
 
   return (
     <div className="space-y-6">
@@ -421,109 +398,121 @@ const maintenanceBikes =
         </Card>
 
         <Dialog
-  open={!!selectedFleet}
-  onOpenChange={() => setSelectedFleet(null)}
->
+          open={!!selectedFleet}
+          onOpenChange={() => setSelectedFleet(null)}
+        >
+          <DialogContent className="max-w-xl">
+            <DialogTitle>{selectedFleet} Bikes</DialogTitle>
 
-  <DialogContent className="max-w-xl">
+            {/* 🔍 SEARCH BOX */}
 
-    <DialogTitle>
-      {selectedFleet} Bikes
-    </DialogTitle>
+            <input
+              type="text"
+              placeholder="Search bike model, number or customer..."
+              value={fleetSearch}
+              onChange={(e) => setFleetSearch(e.target.value)}
+              className="
+    w-full
+    p-2
+    border
+    rounded-lg
+    mb-3
+    bg-background
+    text-foreground
+  "
+            />
 
-    <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {/* AVAILABLE */}
 
-      {/* AVAILABLE */}
+              {selectedFleet === "Available" &&
+                availableBikeList
+                  .filter(
+                    (bike) =>
+                      bike.model
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()) ||
+                      bike.number_plate
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()),
+                  )
+                  .map((bike) => (
+                    <div key={bike._id} className="p-3 border rounded-lg">
+                      <p className="font-medium">{bike.model}</p>
 
-      {selectedFleet === "Available" &&
-        availableBikeList.map(bike => (
+                      <p className="text-sm text-muted-foreground">
+                        {bike.number_plate}
+                      </p>
+                    </div>
+                  ))}
 
-          <div
-            key={bike._id}
-            className="p-3 border rounded-lg"
-          >
+              {/* ON RENT */}
 
-            <p className="font-medium">
-              {bike.model}
-            </p>
+              {selectedFleet === "On Rent" &&
+                bookedBikeList
+                  .filter(
+                    (booking) =>
+                      booking.bike_id?.model
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()) ||
+                      booking.bike_id?.number_plate
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()) ||
+                      booking.customer_id?.name
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()),
+                  )
+                  .map((booking) => (
+                    <div key={booking._id} className="p-3 border rounded-lg">
+                      <p className="font-medium">{booking.bike_id?.model}</p>
 
-            <p className="text-sm text-muted-foreground">
-              {bike.number_plate}
-            </p>
+                      <p className="text-sm">
+                        Customer: {booking.customer_id?.name}
+                      </p>
 
-          </div>
+                      <p className="text-xs text-muted-foreground">
+                        Return:{" "}
+                        {format(
+                          new Date(booking.end_datetime),
+                          "MMM d, h:mm a",
+                        )}
+                      </p>
 
-        ))
-      }
+                      <Badge className="mt-2 bg-red-500 text-white">
+                        On Rent
+                      </Badge>
+                    </div>
+                  ))}
 
-      {/* ON RENT */}
+              {/* MAINTENANCE */}
 
-      {selectedFleet === "On Rent" &&
-        bookedBikeList.map(booking => (
+              {selectedFleet === "Maintenance" &&
+                maintenanceBikeList
+                  .filter(
+                    (bike) =>
+                      bike.model
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()) ||
+                      bike.number_plate
+                        ?.toLowerCase()
+                        .includes(fleetSearch.toLowerCase()),
+                  )
+                  .map((bike) => (
+                    <div key={bike._id} className="p-3 border rounded-lg">
+                      <p className="font-medium">{bike.model}</p>
 
-          <div
-            key={booking._id}
-            className="p-3 border rounded-lg"
-          >
+                      <p className="text-sm text-muted-foreground">
+                        {bike.number_plate}
+                      </p>
 
-            <p className="font-medium">
-              {booking.bike_id?.model}
-            </p>
-
-            <p className="text-sm">
-              Customer: {booking.customer_id?.name}
-            </p>
-
-            <p className="text-xs text-muted-foreground">
-              Return:
-              {" "}
-              {format(
-                new Date(booking.end_datetime),
-                'MMM d, h:mm a'
-              )}
-            </p>
-
-            <Badge className="mt-2 bg-red-500 text-white">
-              On Rent
-            </Badge>
-
-          </div>
-
-        ))
-      }
-
-      {/* MAINTENANCE */}
-
-      {selectedFleet === "Maintenance" &&
-        maintenanceBikeList.map(bike => (
-
-          <div
-            key={bike._id}
-            className="p-3 border rounded-lg"
-          >
-
-            <p className="font-medium">
-              {bike.model}
-            </p>
-
-            <p className="text-sm text-muted-foreground">
-              {bike.number_plate}
-            </p>
-
-            <Badge className="mt-2 bg-yellow-500 text-white">
-              Maintenance
-            </Badge>
-
-          </div>
-
-        ))
-      }
-
-    </div>
-
-  </DialogContent>
-
-</Dialog>
+                      <Badge className="mt-2 bg-yellow-500 text-white">
+                        Maintenance
+                      </Badge>
+                    </div>
+                  ))}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Revenue Trend Chart */}
         <Card className="lg:col-span-2 bg-card border-border">
