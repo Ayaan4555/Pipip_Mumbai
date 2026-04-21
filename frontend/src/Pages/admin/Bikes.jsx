@@ -2197,10 +2197,16 @@ import {
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
 
+// const statusColors = {
+//   available: "bg-green-500/20 text-green-400 border-green-500/30",
+//   booked: "bg-red-500/20 text-red-400 border-red-500/30",
+//   maintenance: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+// };
+
 const statusColors = {
-  available: "bg-green-500/20 text-green-400 border-green-500/30",
-  booked: "bg-red-500/20 text-red-400 border-red-500/30",
-  maintenance: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  available: "bg-green-500 text-white border-green-600",
+  booked: "bg-red-500 text-white border-red-600",
+  maintenance: "bg-amber-500 text-white border-amber-600",
 };
 
 const initialFormData = {
