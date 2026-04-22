@@ -1457,75 +1457,7 @@ export default function Bookings() {
   //   checkAvailability,
   // ]);
 
-  useEffect(() => {
-    const checkDates = async () => {
-      const activeData = editingBooking ? editFormData : formData;
-
-      if (
-        !activeData.bike_id ||
-        !activeData.start_datetime ||
-        !activeData.end_datetime
-      ) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
-
-      const start = new Date(activeData.start_datetime);
-
-      const end = new Date(activeData.end_datetime);
-
-      if (end <= start) {
-        setAvailabilityMessage("⚠️ Return date must be after pickup date");
-        setIsAvailable(false);
-        return;
-      }
-
-      // ✅ CALL API WITH BOOKING ID
-      const result = await checkAvailability(
-        activeData.bike_id,
-        start,
-        end,
-        editingBooking, // 🔥 important
-      );
-
-      // Ignore same booking conflict
-      if (!result.isAvailable && result.bookingId === editingBooking) {
-        setAvailabilityMessage("✅ This is your current slot");
-        setIsAvailable(true);
-        return;
-      }
-
-      if (!result.isAvailable && result.bookedFrom) {
-        const fromDate = format(
-          new Date(result.bookedFrom),
-          "dd/MM/yyyy hh:mm a",
-        );
-
-        const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
-
-        setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
-
-        setIsAvailable(false);
-      } else {
-        setAvailabilityMessage("✅ Bike is available");
-
-        setIsAvailable(true);
-      }
-    };
-
-    checkDates();
-  }, [
-    formData.bike_id,
-    formData.start_datetime,
-    formData.end_datetime,
-
-    editFormData.bike_id,
-    editFormData.start_datetime,
-    editFormData.end_datetime,
-
-    editingBooking,
-  ]);
+  
 
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
@@ -1620,6 +1552,77 @@ export default function Bookings() {
 
   // Edit form state
   const [editFormData, setEditFormData] = useState(emptyFormData);
+
+useEffect(() => {
+    const checkDates = async () => {
+      const activeData = editingBooking ? editFormData : formData;
+
+      if (
+        !activeData.bike_id ||
+        !activeData.start_datetime ||
+        !activeData.end_datetime
+      ) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
+
+      const start = new Date(activeData.start_datetime);
+
+      const end = new Date(activeData.end_datetime);
+
+      if (end <= start) {
+        setAvailabilityMessage("⚠️ Return date must be after pickup date");
+        setIsAvailable(false);
+        return;
+      }
+
+      // ✅ CALL API WITH BOOKING ID
+      const result = await checkAvailability(
+        activeData.bike_id,
+        start,
+        end,
+        editingBooking, // 🔥 important
+      );
+
+      // Ignore same booking conflict
+      if (!result.isAvailable && result.bookingId === editingBooking) {
+        setAvailabilityMessage("✅ This is your current slot");
+        setIsAvailable(true);
+        return;
+      }
+
+      if (!result.isAvailable && result.bookedFrom) {
+        const fromDate = format(
+          new Date(result.bookedFrom),
+          "dd/MM/yyyy hh:mm a",
+        );
+
+        const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+        setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
+        setIsAvailable(false);
+      } else {
+        setAvailabilityMessage("✅ Bike is available");
+
+        setIsAvailable(true);
+      }
+    };
+
+    checkDates();
+  }, [
+    formData.bike_id,
+    formData.start_datetime,
+    formData.end_datetime,
+
+    editFormData.bike_id,
+    editFormData.start_datetime,
+    editFormData.end_datetime,
+
+    editingBooking,
+  ]);
+
 
   const filteredBookings = bookings
     ?.filter((booking) => {
