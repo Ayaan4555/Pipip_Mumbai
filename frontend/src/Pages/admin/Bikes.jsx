@@ -2256,6 +2256,13 @@ export default function Bikes() {
   // State for previews (blob urls)
   const [extraPreviews, setExtraPreviews] = useState([]);
 
+
+const activeRentals =
+  bookings?.filter(
+    (booking) =>
+      booking.status === "active"
+  ) || [];
+
   // File selection handler (One by One)
   const handleExtraFileChange = (e) => {
     const file = e.target.files[0];
@@ -2350,11 +2357,7 @@ export default function Bikes() {
 
   // Active rentals (status-based)
 
-const activeRentals =
-  bookings?.filter(
-    (booking) =>
-      booking.status === "active"
-  ) || [];
+
 
   // Get rented bike IDs
   const rentedBikeIds = new Set(

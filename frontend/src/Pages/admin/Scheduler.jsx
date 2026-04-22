@@ -74,6 +74,15 @@ export default function Scheduler() {
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
+
+const activeRentals =
+  bookings?.filter(
+    (booking) =>
+      booking.status === "active"
+  ) || [];
+
+
+
   // Get the day of week for the first day (0 = Sunday)
   const startDayOfWeek = monthStart.getDay();
   const paddingDays = Array(startDayOfWeek).fill(null);
@@ -171,11 +180,6 @@ export default function Scheduler() {
 
     // Active rentals (status-based)
 
-const activeRentals =
-  bookings?.filter(
-    (booking) =>
-      booking.status === "active"
-  ) || [];
 
     // Get rented bike IDs
     const rentedBikeIds = new Set(
