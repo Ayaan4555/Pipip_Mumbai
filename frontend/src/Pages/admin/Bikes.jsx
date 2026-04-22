@@ -2257,11 +2257,22 @@ export default function Bikes() {
   const [extraPreviews, setExtraPreviews] = useState([]);
 
 
-const activeRentals =
-  bookings?.filter(
+// ===============================
+// SAFE ACTIVE RENTAL LOGIC
+// ===============================
+
+const activeRentals = (bookings || []).filter(
+  (booking) =>
+    booking.status === "active"
+);
+
+const rentedBikeIds = new Set(
+  activeRentals.map(
     (booking) =>
-      booking.status === "active"
-  ) || [];
+      booking.bike_id?._id ||
+      booking.bike_id
+  )
+);
 
   // File selection handler (One by One)
   const handleExtraFileChange = (e) => {
@@ -2360,19 +2371,21 @@ const activeRentals =
 
 
   // Get rented bike IDs
-  const rentedBikeIds = new Set(
-    activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
-  );
-
+  
   // Maintenance bikes
   const maintenanceCount =
-    bikes?.filter((bike) => bike.status === "maintenance").length || 0;
+  (bikes || []).filter(
+    (bike) =>
+      bike.status === "maintenance"
+  ).length;
 
-  // Booked bikes
-  const bookedCount = rentedBikeIds.size;
+const bookedCount =
+  rentedBikeIds.size;
 
-  // Available bikes
-  const availableCount = (bikes?.length || 0) - bookedCount - maintenanceCount;
+const availableCount =
+  (bikes?.length || 0)
+  - bookedCount
+  - maintenanceCount;
 
   // Change this:
   const getAreaName = (areaId) => {
@@ -2386,7 +2399,7 @@ const activeRentals =
 
 
 
-const filteredBikes = bikes?.filter((bike) => {
+const filteredBikes = (bikes || []).filter((bike) => {
 
   const searchMatch =
     bike.model

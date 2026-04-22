@@ -133,37 +133,96 @@ export default function Dashboard() {
 
   // Active rentals (status-based)
 
+// const activeRentals =
+//   bookings?.filter(
+//     (booking) =>
+//       booking.status === "active"
+//   ) || [];
+
+
+//   // Rented Bike IDs
+//   const rentedBikeIds = new Set(
+//     activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+//   );
+
+//   // Maintenance Bikes
+//   const maintenanceBikeList =
+//     bikes?.filter((bike) => bike.status === "maintenance") || [];
+
+//   // Available Bikes
+//   const availableBikeList =
+//     bikes?.filter(
+//       (bike) => !rentedBikeIds.has(bike._id) && bike.status !== "maintenance",
+//     ) || [];
+
+//   // ✅ THIS FIXES YOUR ERROR
+//   const bookedBikeList = activeRentals;
+
+//   // Counts
+//   const availableBikes = availableBikeList.length;
+
+//   const bookedBikes = bookedBikeList.length;
+
+//   const maintenanceBikes = maintenanceBikeList.length;
+
+
+
+// ===============================
+// PROFESSIONAL FLEET LOGIC
+// ===============================
+
+// Active rentals (status-based)
+
 const activeRentals =
-  bookings?.filter(
+  (recentBookings || []).filter(
     (booking) =>
       booking.status === "active"
-  ) || [];
-
-
-  // Rented Bike IDs
-  const rentedBikeIds = new Set(
-    activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
   );
 
-  // Maintenance Bikes
-  const maintenanceBikeList =
-    bikes?.filter((bike) => bike.status === "maintenance") || [];
+// Get rented bike IDs
 
-  // Available Bikes
-  const availableBikeList =
-    bikes?.filter(
-      (bike) => !rentedBikeIds.has(bike._id) && bike.status !== "maintenance",
-    ) || [];
+const rentedBikeIds = new Set(
+  activeRentals.map(
+    (booking) =>
+      booking.bike_id?._id ||
+      booking.bike_id
+  )
+);
 
-  // ✅ THIS FIXES YOUR ERROR
-  const bookedBikeList = activeRentals;
+// Maintenance bikes
 
-  // Counts
-  const availableBikes = availableBikeList.length;
+const maintenanceBikeList =
+  (bikes || []).filter(
+    (bike) =>
+      bike.status === "maintenance"
+  );
 
-  const bookedBikes = bookedBikeList.length;
+// Available bikes
 
-  const maintenanceBikes = maintenanceBikeList.length;
+const availableBikeList =
+  (bikes || []).filter(
+    (bike) =>
+      !rentedBikeIds.has(bike._id) &&
+      bike.status !== "maintenance"
+  );
+
+// Booked bikes
+
+const bookedBikeList =
+  activeRentals;
+
+// Counts
+
+const availableBikes =
+  availableBikeList.length;
+
+const bookedBikes =
+  bookedBikeList.length;
+
+const maintenanceBikes =
+  maintenanceBikeList.length;
+
+
 
   return (
     <div className="space-y-6">

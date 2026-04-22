@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { useBookings } from "../../hooks/useBooking";
-import { useBikes } from "../..//hooks/useBikes";
+import { useBikes } from "../../hooks/useBikes";
 import {
   Dialog,
   DialogContent,
@@ -75,11 +75,7 @@ export default function Scheduler() {
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
 
-const activeRentals =
-  bookings?.filter(
-    (booking) =>
-      booking.status === "active"
-  ) || [];
+
 
 
 
@@ -162,47 +158,93 @@ const activeRentals =
   // PROFESSIONAL FLEET STATUS LOGIC
   // ===============================
 
-  const fleetStatus = useMemo(() => {
-    if (!bikes || !bookings) return { available: 0, booked: 0, maintenance: 0 };
+  // const fleetStatus = useMemo(() => {
+  //   if (!bikes || !bookings) return { available: 0, booked: 0, maintenance: 0 };
 
-    const currentTime = new Date();
+  //   const currentTime = new Date();
 
-    // Active rentals
-    // const activeRentals = bookings.filter((booking) => {
-    //   if (booking.status !== "active") return false;
+  //   // Active rentals
+  //   // const activeRentals = bookings.filter((booking) => {
+  //   //   if (booking.status !== "active") return false;
 
-    //   const start = new Date(booking.start_datetime);
+  //   //   const start = new Date(booking.start_datetime);
 
-    //   const end = new Date(booking.end_datetime);
+  //   //   const end = new Date(booking.end_datetime);
 
-    //   return start <= currentTime && end >= currentTime;
-    // });
+  //   //   return start <= currentTime && end >= currentTime;
+  //   // });
 
-    // Active rentals (status-based)
+  //   // Active rentals (status-based)
 
 
-    // Get rented bike IDs
-    const rentedBikeIds = new Set(
-      activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
-    );
+  //   // Get rented bike IDs
+  //   const rentedBikeIds = new Set(
+  //     activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+  //   );
 
-    // Maintenance bikes
-    const maintenance = bikes.filter(
-      (bike) => bike.status === "maintenance",
-    ).length;
+  //   // Maintenance bikes
+  //   const maintenance = bikes.filter(
+  //     (bike) => bike.status === "maintenance",
+  //   ).length;
 
-    // Booked bikes
-    const booked = rentedBikeIds.size;
+  //   // Booked bikes
+  //   const booked = rentedBikeIds.size;
 
-    // Available bikes
-    const available = bikes.length - booked - maintenance;
+  //   // Available bikes
+  //   const available = bikes.length - booked - maintenance;
 
-    return {
-      available,
-      booked,
-      maintenance,
-    };
-  }, [bikes, bookings]);
+  //   return {
+  //     available,
+  //     booked,
+  //     maintenance,
+  //   };
+  // }, [bikes, bookings]);
+
+
+  // ===============================
+// PROFESSIONAL FLEET STATUS LOGIC
+// ===============================
+
+const fleetStatus = useMemo(() => {
+  if (!bikes || !bookings) {
+    return { available: 0, booked: 0, maintenance: 0 };
+  }
+
+  // ✅ Active rentals based on STATUS
+  const activeRentals = bookings.filter(
+    (booking) => booking.status === "active"
+  );
+
+  // ✅ Get rented bike IDs
+  const rentedBikeIds = new Set(
+    activeRentals.map(
+      (booking) =>
+        booking.bike_id?._id || booking.bike_id
+    )
+  );
+
+  // ✅ Maintenance bikes
+  const maintenance = bikes.filter(
+    (bike) =>
+      bike.status === "maintenance"
+  ).length;
+
+  // ✅ Booked bikes
+  const booked = rentedBikeIds.size;
+
+  // ✅ Available bikes
+  const available =
+    bikes.length - booked - maintenance;
+
+  return {
+    available,
+    booked,
+    maintenance,
+  };
+
+}, [bikes, bookings]);
+
+
 
   const StatusIcon = selectedEvent
     ? statusIcons[selectedEvent.status] || Timer
