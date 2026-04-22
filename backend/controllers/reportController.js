@@ -169,38 +169,112 @@ exports.getDailyRevenueReport = async (req, res) => {
 
 
 // Get bookings ending in the next 60 minutes
+// exports.getEndingSoon = async (req, res) => {
+//   try {
+//     const now = new Date();
+//     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+//     // Find active bookings where end time is between NOW and 1 HOUR from now
+//     const bookings = await Booking.find({
+//       status: 'active',
+//       end_datetime: { 
+//         $gte: now, 
+//         $lte: oneHourLater 
+//       }
+//     })
+//     .populate('bike_id', 'model number_plate image_url')
+//     .populate('customer_id', 'name phone')
+//     .sort({ end_datetime: 1 });
+
+//     // Calculate minutes remaining on the server for accuracy
+//     const results = bookings.map(booking => {
+//       const remaining = Math.round(
+//         (new Date(booking.end_datetime).getTime() - now.getTime()) / (60 * 1000)
+//       );
+      
+//       return {
+//         ...booking._doc,
+//         minutesRemaining: remaining > 0 ? remaining : 0
+//       };
+//     });
+
+//     res.json(results);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.getEndingSoon = async (req, res) => {
   try {
     const now = new Date();
-    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
-    // Find active bookings where end time is between NOW and 1 HOUR from now
+    // ⭐ Change window to 3 days
+    const threeDaysLater = new Date(
+      now.getTime() + 3 * 24 * 60 * 60 * 1000
+    );
+
+    // Find active bookings ending within 3 days
     const bookings = await Booking.find({
-      status: 'active',
-      end_datetime: { 
-        $gte: now, 
-        $lte: oneHourLater 
-      }
+      status: "active",
+      end_datetime: {
+        $gte: now,
+        $lte: threeDaysLater,
+      },
     })
-    .populate('bike_id', 'model number_plate image_url')
-    .populate('customer_id', 'name phone')
-    .sort({ end_datetime: 1 });
+      .populate(
+        "bike_id",
+        "model number_plate image_url"
+      )
+      .populate(
+        "customer_id",
+        "name phone"
+      )
+      .sort({ end_datetime: 1 });
 
-    // Calculate minutes remaining on the server for accuracy
-    const results = bookings.map(booking => {
-      const remaining = Math.round(
-        (new Date(booking.end_datetime).getTime() - now.getTime()) / (60 * 1000)
-      );
-      
-      return {
-        ...booking._doc,
-        minutesRemaining: remaining > 0 ? remaining : 0
-      };
-    });
+    // Calculate remaining time
+    const results = bookings.map(
+      (booking) => {
+
+        const remainingMinutes =
+          Math.round(
+            (new Date(
+              booking.end_datetime
+            ).getTime() -
+              now.getTime()) /
+              (60 * 1000)
+          );
+
+        const remainingDays =
+          Math.ceil(
+            remainingMinutes /
+              (60 * 24)
+          );
+
+        return {
+          ...booking._doc,
+
+          minutesRemaining:
+            remainingMinutes > 0
+              ? remainingMinutes
+              : 0,
+
+          daysRemaining:
+            remainingDays > 0
+              ? remainingDays
+              : 0,
+        };
+
+      }
+    );
 
     res.json(results);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message,
+    });
+
   }
 };
 
