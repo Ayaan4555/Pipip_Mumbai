@@ -1390,7 +1390,7 @@ export default function BookBike() {
                     <img
                       src={bike.image_url}
                       alt={bike.model}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-fill"
                     />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">

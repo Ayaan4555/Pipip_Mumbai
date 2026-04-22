@@ -320,7 +320,7 @@ const Catalog = () => {
                         <motion.img
                           src={bike.image_url}
                           alt={bike.model}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-fill"
                           whileHover={{ scale: 1.1 }}
                           transition={{ duration: 0.4 }}
                         />
