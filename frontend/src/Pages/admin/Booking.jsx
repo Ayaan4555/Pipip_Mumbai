@@ -1398,6 +1398,12 @@ export default function Bookings() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+  if (!editingBooking) {
+    setBikeSearch("");
+  }
+}, [editingBooking]);
+
   // useEffect(() => {
   //   const checkDates = async () => {
   //     // Determine which data to use (Edit form or Create form)
@@ -2231,6 +2237,7 @@ export default function Bookings() {
 
       setIsOpen(false);
       resetForm();
+      setBikeSearch("");
       toast.success("Booking completed successfully!");
     } catch (err) {
       console.error("❌ Process Error:", err);
@@ -2516,6 +2523,7 @@ export default function Bookings() {
       });
 
       setEditingBooking(null);
+      setBikeSearch("");
       toast.success("Booking updated successfully");
     } catch (err) {
       console.error(err);
@@ -3243,7 +3251,11 @@ export default function Bookings() {
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   variant="outline"
-                  onClick={() => setEditingBooking(null)}
+                  // onClick={() => setEditingBooking(null)}
+                  onClick={() => {
+  setEditingBooking(null);
+  setBikeSearch("");
+}}
                 >
                   Cancel
                 </Button>
