@@ -2113,7 +2113,10 @@ const handleEditBooking = (booking) => {
     setEditingBooking(booking._id);
 
     setEditFormData({
-      bike_id: booking.bike_id,
+      // bike_id: booking.bike_id,
+
+      bike_id: booking.bike_id?._id || booking.bike_id,
+      
       customer_id: booking.customer_id,
       // start_datetime: booking.start_datetime.slice(0, 16),
       // end_datetime: booking.end_datetime.slice(0, 16),
@@ -2302,6 +2305,9 @@ const handleEditBooking = (booking) => {
       await updateBooking.mutateAsync({
         id: editingBooking,
         data: {
+
+           bike_id: editFormData.bike_id,
+
           start_datetime: start.toISOString(),
           end_datetime: end.toISOString(),
           total_amount: Number(editFormData.total_amount),
