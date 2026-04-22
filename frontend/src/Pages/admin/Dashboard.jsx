@@ -173,13 +173,72 @@ export default function Dashboard() {
 
 // Active rentals (status-based)
 
+// ✅ STATUS-BASED ACTIVE RENTALS
+
+// const activeRentals =
+//   bookings?.filter(
+//     (booking) =>
+//       booking.status === "active"
+//   ) || [];
+
+// // Get rented bike IDs
+
+// const rentedBikeIds = new Set(
+//   activeRentals.map(
+//     (booking) =>
+//       booking.bike_id?._id ||
+//       booking.bike_id
+//   )
+// );
+
+// // Maintenance bikes
+
+// const maintenanceBikeList =
+//   (bikes || []).filter(
+//     (bike) =>
+//       bike.status === "maintenance"
+//   );
+
+// // Available bikes
+
+// const availableBikeList =
+//   (bikes || []).filter(
+//     (bike) =>
+//       !rentedBikeIds.has(bike._id) &&
+//       bike.status !== "maintenance"
+//   );
+
+// // Booked bikes
+
+// const bookedBikeList =
+//   activeRentals;
+
+// // Counts
+
+// const availableBikes =
+//   availableBikeList.length;
+
+// const bookedBikes =
+//   bookedBikeList.length;
+
+// const maintenanceBikes =
+//   maintenanceBikeList.length;
+
+
+
+// ===============================
+// FINAL PROFESSIONAL FLEET LOGIC
+// ===============================
+
+// Active rentals (STATUS ONLY)
+
 const activeRentals =
   (recentBookings || []).filter(
     (booking) =>
       booking.status === "active"
   );
 
-// Get rented bike IDs
+// Rented bike IDs
 
 const rentedBikeIds = new Set(
   activeRentals.map(
@@ -206,22 +265,19 @@ const availableBikeList =
       bike.status !== "maintenance"
   );
 
-// Booked bikes
-
-const bookedBikeList =
-  activeRentals;
-
 // Counts
 
 const availableBikes =
   availableBikeList.length;
+
+const bookedBikeList =
+  activeRentals;
 
 const bookedBikes =
   bookedBikeList.length;
 
 const maintenanceBikes =
   maintenanceBikeList.length;
-
 
 
   return (

@@ -90,7 +90,11 @@ export default function Scheduler() {
     const map = new Map();
 
     bookings
-      .filter((b) => b.status !== "cancelled")
+  .filter(
+    (b) =>
+      b.status !== "cancelled" &&
+      b.status !== "completed"
+  )
       .forEach((booking) => {
         const start = parseISO(booking.start_datetime);
         const end = parseISO(booking.end_datetime);
@@ -211,9 +215,23 @@ const fleetStatus = useMemo(() => {
   }
 
   // ✅ Active rentals based on STATUS
-  const activeRentals = bookings.filter(
-    (booking) => booking.status === "active"
+  // const activeRentals = bookings.filter(
+  //   (booking) => booking.status === "active"
+  // );
+ // ✅ STATUS-BASED ACTIVE RENTALS
+
+// const activeRentals =
+//   bookings?.filter(
+//     (booking) =>
+//       booking.status === "active"
+//   ) || [];
+
+const activeRentals =
+  (bookings || []).filter(
+    (booking) =>
+      booking.status === "active"
   );
+
 
   // ✅ Get rented bike IDs
   const rentedBikeIds = new Set(

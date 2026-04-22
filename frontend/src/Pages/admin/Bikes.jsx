@@ -2261,10 +2261,13 @@ export default function Bikes() {
 // SAFE ACTIVE RENTAL LOGIC
 // ===============================
 
-const activeRentals = (bookings || []).filter(
-  (booking) =>
-    booking.status === "active"
-);
+// ✅ STATUS-BASED ACTIVE RENTALS
+
+const activeRentals =
+  (bookings || []).filter(
+    (booking) =>
+      booking.status === "active"
+  );
 
 const rentedBikeIds = new Set(
   activeRentals.map(
@@ -2352,7 +2355,7 @@ const rentedBikeIds = new Set(
   // });
 
 
-   const currentTime = new Date();
+  //  const currentTime = new Date();
 
   // Active rentals
   // const activeRentals =
