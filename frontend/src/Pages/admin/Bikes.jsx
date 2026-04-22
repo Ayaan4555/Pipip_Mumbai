@@ -2334,51 +2334,7 @@ export default function Bikes() {
   // });
 
 
-const filteredBikes = bikes?.filter((bike) => {
-
-  const searchMatch =
-    bike.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    bike.number_plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (bike.bike_name || "")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-  const areaMatch =
-    areaFilter === "all" ||
-    bike.area_id === areaFilter;
-
-  // 🔥 NEW STATUS LOGIC
-
-  const isBooked =
-    rentedBikeIds.has(bike._id);
-
-  const displayStatus =
-    bike.status === "maintenance"
-      ? "maintenance"
-      : isBooked
-      ? "booked"
-      : "available";
-
-  const statusMatch =
-    statusFilter === "all" ||
-    displayStatus === statusFilter;
-
-  return (
-    searchMatch &&
-    areaMatch &&
-    statusMatch
-  );
-
-});
-
-
-
-  // ===============================
-  // PROFESSIONAL BIKE STATUS LOGIC
-  // ADD BELOW filteredBikes
-  // ===============================
-
-  const currentTime = new Date();
+   const currentTime = new Date();
 
   // Active rentals
   const activeRentals =
@@ -2414,6 +2370,97 @@ const filteredBikes = bikes?.filter((bike) => {
       areas.find((a) => a._id === areaId || a.id === areaId)?.name || "Unknown"
     );
   };
+
+
+
+
+
+const filteredBikes = bikes?.filter((bike) => {
+
+  const searchMatch =
+    bike.model
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) ||
+
+    bike.number_plate
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) ||
+
+    (bike.bike_name || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+  const areaMatch =
+    areaFilter === "all" ||
+    bike.area_id === areaFilter;
+
+  // 🔥 CORRECT STATUS LOGIC
+
+  const isBooked =
+    rentedBikeIds.has(bike._id);
+
+  const displayStatus =
+    bike.status === "maintenance"
+      ? "maintenance"
+      : isBooked
+      ? "booked"
+      : "available";
+
+  const statusMatch =
+    statusFilter === "all" ||
+    displayStatus === statusFilter;
+
+  return (
+    searchMatch &&
+    areaMatch &&
+    statusMatch
+  );
+
+});
+
+
+
+  // ===============================
+  // PROFESSIONAL BIKE STATUS LOGIC
+  // ADD BELOW filteredBikes
+  // ===============================
+
+  // const currentTime = new Date();
+
+  // // Active rentals
+  // const activeRentals =
+  //   bookings?.filter((booking) => {
+  //     if (booking.status !== "active") return false;
+
+  //     const start = new Date(booking.start_datetime);
+
+  //     const end = new Date(booking.end_datetime);
+
+  //     return start <= currentTime && end >= currentTime;
+  //   }) || [];
+
+  // // Get rented bike IDs
+  // const rentedBikeIds = new Set(
+  //   activeRentals.map((booking) => booking.bike_id?._id || booking.bike_id),
+  // );
+
+  // // Maintenance bikes
+  // const maintenanceCount =
+  //   bikes?.filter((bike) => bike.status === "maintenance").length || 0;
+
+  // // Booked bikes
+  // const bookedCount = rentedBikeIds.size;
+
+  // // Available bikes
+  // const availableCount = (bikes?.length || 0) - bookedCount - maintenanceCount;
+
+  // // Change this:
+  // const getAreaName = (areaId) => {
+  //   if (!areaId || !areas) return "Not Assigned";
+  //   return (
+  //     areas.find((a) => a._id === areaId || a.id === areaId)?.name || "Unknown"
+  //   );
+  // };
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
