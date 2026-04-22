@@ -2323,15 +2323,55 @@ export default function Bikes() {
     }
   };
 
-  const filteredBikes = bikes?.filter((bike) => {
-    const searchMatch =
-      bike.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bike.number_plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (bike.bike_name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const areaMatch = areaFilter === "all" || bike.area_id === areaFilter;
-    const statusMatch = statusFilter === "all" || bike.status === statusFilter;
-    return searchMatch && areaMatch && statusMatch;
-  });
+  // const filteredBikes = bikes?.filter((bike) => {
+  //   const searchMatch =
+  //     bike.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     bike.number_plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     (bike.bike_name || "").toLowerCase().includes(searchQuery.toLowerCase());
+  //   const areaMatch = areaFilter === "all" || bike.area_id === areaFilter;
+  //   const statusMatch = statusFilter === "all" || bike.status === statusFilter;
+  //   return searchMatch && areaMatch && statusMatch;
+  // });
+
+
+const filteredBikes = bikes?.filter((bike) => {
+
+  const searchMatch =
+    bike.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    bike.number_plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (bike.bike_name || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+  const areaMatch =
+    areaFilter === "all" ||
+    bike.area_id === areaFilter;
+
+  // 🔥 NEW STATUS LOGIC
+
+  const isBooked =
+    rentedBikeIds.has(bike._id);
+
+  const displayStatus =
+    bike.status === "maintenance"
+      ? "maintenance"
+      : isBooked
+      ? "booked"
+      : "available";
+
+  const statusMatch =
+    statusFilter === "all" ||
+    displayStatus === statusFilter;
+
+  return (
+    searchMatch &&
+    areaMatch &&
+    statusMatch
+  );
+
+});
+
+
 
   // ===============================
   // PROFESSIONAL BIKE STATUS LOGIC
