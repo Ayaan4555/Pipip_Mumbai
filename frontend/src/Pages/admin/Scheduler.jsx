@@ -159,15 +159,23 @@ export default function Scheduler() {
     const currentTime = new Date();
 
     // Active rentals
-    const activeRentals = bookings.filter((booking) => {
-      if (booking.status !== "active") return false;
+    // const activeRentals = bookings.filter((booking) => {
+    //   if (booking.status !== "active") return false;
 
-      const start = new Date(booking.start_datetime);
+    //   const start = new Date(booking.start_datetime);
 
-      const end = new Date(booking.end_datetime);
+    //   const end = new Date(booking.end_datetime);
 
-      return start <= currentTime && end >= currentTime;
-    });
+    //   return start <= currentTime && end >= currentTime;
+    // });
+
+    // Active rentals (status-based)
+
+const activeRentals =
+  bookings?.filter(
+    (booking) =>
+      booking.status === "active"
+  ) || [];
 
     // Get rented bike IDs
     const rentedBikeIds = new Set(
