@@ -1503,45 +1503,47 @@ export default function Bookings() {
     }
   };
 
-  useEffect(() => {
-    const checkDates = async () => {
-      // 🚀 DO NOT CHECK when edit form first opens
-      if (editingBooking && !hasEditedFields) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
+  // useEffect(() => {
+  //   const checkDates = async () => {
+  //     // 🚀 DO NOT CHECK when edit form first opens
+  //     if (editingBooking && !hasEditedFields) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
 
-      if (
-        !formData.bike_id ||
-        !formData.start_datetime ||
-        !formData.end_datetime
-      ) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
+  //     if (
+  //       !formData.bike_id ||
+  //       !formData.start_datetime ||
+  //       !formData.end_datetime
+  //     ) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
 
-      const start = new Date(formData.start_datetime);
-      const end = new Date(formData.end_datetime);
+  //     const start = new Date(formData.start_datetime);
+  //     const end = new Date(formData.end_datetime);
 
-      if (end <= start) {
-        setAvailabilityMessage("⚠️ Return date must be after pickup date");
-        setIsAvailable(false);
-        return;
-      }
+  //     if (end <= start) {
+  //       setAvailabilityMessage("⚠️ Return date must be after pickup date");
+  //       setIsAvailable(false);
+  //       return;
+  //     }
 
-      // Note: Ensure your hook is named 'checkAvailability' or 'checkBikeAvailability'
-      const result = await checkAvailability(formData.bike_id, start, end);
-      setIsAvailable(result.isAvailable);
-      setAvailabilityMessage(
-        result.isAvailable ? "✅ Bike is available" : result.message,
-      );
-    };
+  //     // Note: Ensure your hook is named 'checkAvailability' or 'checkBikeAvailability'
+  //     const result = await checkAvailability(formData.bike_id, start, end);
+  //     setIsAvailable(result.isAvailable);
+  //     setAvailabilityMessage(
+  //       result.isAvailable ? "✅ Bike is available" : result.message,
+  //     );
+  //   };
 
-    checkDates();
-  }, [formData.bike_id, formData.start_datetime, formData.end_datetime]);
+  //   checkDates();
+  // }, [formData.bike_id, formData.start_datetime, formData.end_datetime]);
+
   // Add this function to handle file to URL conversion for previews
+
   const handleFileChange = (e, type) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -1558,9 +1560,87 @@ export default function Bookings() {
   // Edit form state
   const [editFormData, setEditFormData] = useState(emptyFormData);
   const [hasEditedFields, setHasEditedFields] = useState(false);
+  const [originalBookingData, setOriginalBookingData] = useState(null);
+
+  // useEffect(() => {
+  //   const checkDates = async () => {
+  //     const activeData = editingBooking ? editFormData : formData;
+
+  //     if (
+  //       !activeData.bike_id ||
+  //       !activeData.start_datetime ||
+  //       !activeData.end_datetime
+  //     ) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
+
+  //     const start = new Date(activeData.start_datetime);
+
+  //     const end = new Date(activeData.end_datetime);
+
+  //     if (end <= start) {
+  //       setAvailabilityMessage("⚠️ Return date must be after pickup date");
+  //       setIsAvailable(false);
+  //       return;
+  //     }
+
+  //     // ✅ CALL API WITH BOOKING ID
+  //     const result = await checkAvailability(
+  //       activeData.bike_id,
+  //       start,
+  //       end,
+  //       editingBooking, // 🔥 important
+  //     );
+
+  //     // Ignore same booking conflict
+  //     if (!result.isAvailable && result.bookingId === editingBooking) {
+  //       setAvailabilityMessage("✅ This is your current slot");
+  //       setIsAvailable(true);
+  //       return;
+  //     }
+
+  //     if (!result.isAvailable && result.bookedFrom) {
+  //       const fromDate = format(
+  //         new Date(result.bookedFrom),
+  //         "dd/MM/yyyy hh:mm a",
+  //       );
+
+  //       const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+  //       setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
+  //       setIsAvailable(false);
+  //     } else {
+  //       setAvailabilityMessage("✅ Bike is available");
+
+  //       setIsAvailable(true);
+  //     }
+  //   };
+
+  //   checkDates();
+  // }, [
+  //   formData.bike_id,
+  //   formData.start_datetime,
+  //   formData.end_datetime,
+
+  //   editFormData.bike_id,
+  //   editFormData.start_datetime,
+  //   editFormData.end_datetime,
+
+  //   editingBooking,
+  // ]);
 
   useEffect(() => {
     const checkDates = async () => {
+      // 🚨 Prevent check when edit first opens
+      if (editingBooking && !hasEditedFields) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
+
       const activeData = editingBooking ? editFormData : formData;
 
       if (
@@ -1583,20 +1663,28 @@ export default function Bookings() {
         return;
       }
 
-      // ✅ CALL API WITH BOOKING ID
+      // ⭐ CRITICAL FIX — Ignore unchanged values
+      if (
+        editingBooking &&
+        originalBookingData &&
+        activeData.bike_id === originalBookingData.bike_id &&
+        new Date(activeData.start_datetime).toISOString() ===
+          new Date(originalBookingData.start_datetime).toISOString() &&
+        new Date(activeData.end_datetime).toISOString() ===
+          new Date(originalBookingData.end_datetime).toISOString()
+      ) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
+
+      // 🚀 Call API
       const result = await checkAvailability(
         activeData.bike_id,
         start,
         end,
-        editingBooking, // 🔥 important
+        editingBooking,
       );
-
-      // Ignore same booking conflict
-      if (!result.isAvailable && result.bookingId === editingBooking) {
-        setAvailabilityMessage("✅ This is your current slot");
-        setIsAvailable(true);
-        return;
-      }
 
       if (!result.isAvailable && result.bookedFrom) {
         const fromDate = format(
@@ -1627,6 +1715,7 @@ export default function Bookings() {
     editFormData.end_datetime,
 
     editingBooking,
+    originalBookingData,
   ]);
 
   const filteredBookings = bookings
@@ -2191,6 +2280,13 @@ export default function Bookings() {
 
   const handleEditBooking = (booking) => {
     setHasEditedFields(false);
+
+    setOriginalBookingData({
+      bike_id: booking.bike_id?._id || booking.bike_id,
+      start_datetime: booking.start_datetime,
+      end_datetime: booking.end_datetime,
+    });
+
     setEditingBooking(booking._id);
 
     setEditFormData({
