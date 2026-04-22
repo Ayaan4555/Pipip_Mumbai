@@ -1759,6 +1759,7 @@ export default function Bookings() {
     setAadhaarPreview(null);
     setLicensePreview(null);
     setCustomerSearch("");
+     setBikeSearch("");
   };
 
   // Status transitions
