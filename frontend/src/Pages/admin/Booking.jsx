@@ -1457,8 +1457,6 @@ export default function Bookings() {
   //   checkAvailability,
   // ]);
 
-  
-
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
 
@@ -1507,6 +1505,13 @@ export default function Bookings() {
 
   useEffect(() => {
     const checkDates = async () => {
+      // 🚀 DO NOT CHECK when edit form first opens
+      if (editingBooking && !hasEditedFields) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
+
       if (
         !formData.bike_id ||
         !formData.start_datetime ||
@@ -1552,8 +1557,9 @@ export default function Bookings() {
 
   // Edit form state
   const [editFormData, setEditFormData] = useState(emptyFormData);
+  const [hasEditedFields, setHasEditedFields] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     const checkDates = async () => {
       const activeData = editingBooking ? editFormData : formData;
 
@@ -1622,7 +1628,6 @@ useEffect(() => {
 
     editingBooking,
   ]);
-
 
   const filteredBookings = bookings
     ?.filter((booking) => {
@@ -2185,6 +2190,7 @@ useEffect(() => {
   };
 
   const handleEditBooking = (booking) => {
+    setHasEditedFields(false);
     setEditingBooking(booking._id);
 
     setEditFormData({
@@ -2479,7 +2485,11 @@ useEffect(() => {
             <Label>Select Bike *</Label>
             <Select
               value={data.bike_id}
-              onValueChange={(v) => setData({ ...data, bike_id: v })}
+              // onValueChange={(v) => setData({ ...data, bike_id: v })}
+              onValueChange={(v) => {
+                setData({ ...data, bike_id: v });
+                setHasEditedFields(true);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choose a bike" />
@@ -2585,12 +2595,19 @@ useEffect(() => {
               type="datetime-local"
               className="[color-scheme:dark]"
               value={data.start_datetime}
-              onChange={(e) =>
+              // onChange={(e) =>
+              //   setData({
+              //     ...data,
+              //     start_datetime: roundToHour(e.target.value),
+              //   })
+              // }
+              onChange={(e) => {
                 setData({
                   ...data,
                   start_datetime: roundToHour(e.target.value),
-                })
-              }
+                });
+                setHasEditedFields(true);
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -2599,9 +2616,16 @@ useEffect(() => {
               type="datetime-local"
               className="[color-scheme:dark]"
               value={data.end_datetime}
-              onChange={(e) =>
-                setData({ ...data, end_datetime: roundToHour(e.target.value) })
-              }
+              // onChange={(e) =>
+              //   setData({ ...data, end_datetime: roundToHour(e.target.value) })
+              // }
+              onChange={(e) => {
+                setData({
+                  ...data,
+                  end_datetime: roundToHour(e.target.value),
+                });
+                setHasEditedFields(true);
+              }}
             />
           </div>
         </div>
