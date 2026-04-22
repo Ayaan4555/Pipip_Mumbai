@@ -1398,9 +1398,67 @@ export default function Bookings() {
     }
   }, [isOpen]);
 
+  // useEffect(() => {
+  //   const checkDates = async () => {
+  //     // Determine which data to use (Edit form or Create form)
+  //     const activeData = editingBooking ? editFormData : formData;
+
+  //     if (
+  //       !activeData.bike_id ||
+  //       !activeData.start_datetime ||
+  //       !activeData.end_datetime
+  //     ) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
+
+  //     const start = new Date(activeData.start_datetime);
+  //     const end = new Date(activeData.end_datetime);
+
+  //     if (end <= start) {
+  //       setAvailabilityMessage("⚠️ Return date must be after pickup date");
+  //       setIsAvailable(false);
+  //       return;
+  //     }
+
+  //     // Call API
+  //     const result = await checkAvailability(activeData.bike_id, start, end);
+
+  //     // If we are editing, we should ignore the "overlap" if it's the current booking itself
+  //     if (!result.isAvailable && result.bookingId === editingBooking) {
+  //       setAvailabilityMessage("✅ This is your current slot");
+  //       setIsAvailable(true);
+  //       return;
+  //     }
+
+  //     if (!result.isAvailable && result.bookedFrom) {
+  //       const fromDate = format(
+  //         new Date(result.bookedFrom),
+  //         "dd/MM/yyyy hh:mm a",
+  //       );
+  //       const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+  //       setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+  //       setIsAvailable(false);
+  //     } else {
+  //       setAvailabilityMessage(
+  //         result.isAvailable ? "✅ Bike is available" : result.message,
+  //       );
+  //       setIsAvailable(result.isAvailable);
+  //     }
+  //   };
+
+  //   checkDates();
+  // }, [
+  //   formData.bike_id,
+  //   formData.start_datetime,
+  //   formData.end_datetime,
+  //   editingBooking,
+  //   checkAvailability,
+  // ]);
+
   useEffect(() => {
     const checkDates = async () => {
-      // Determine which data to use (Edit form or Create form)
       const activeData = editingBooking ? editFormData : formData;
 
       if (
@@ -1414,6 +1472,7 @@ export default function Bookings() {
       }
 
       const start = new Date(activeData.start_datetime);
+
       const end = new Date(activeData.end_datetime);
 
       if (end <= start) {
@@ -1422,10 +1481,15 @@ export default function Bookings() {
         return;
       }
 
-      // Call API
-      const result = await checkAvailability(activeData.bike_id, start, end);
+      // ✅ CALL API WITH BOOKING ID
+      const result = await checkAvailability(
+        activeData.bike_id,
+        start,
+        end,
+        editingBooking, // 🔥 important
+      );
 
-      // If we are editing, we should ignore the "overlap" if it's the current booking itself
+      // Ignore same booking conflict
       if (!result.isAvailable && result.bookingId === editingBooking) {
         setAvailabilityMessage("✅ This is your current slot");
         setIsAvailable(true);
@@ -1437,14 +1501,16 @@ export default function Bookings() {
           new Date(result.bookedFrom),
           "dd/MM/yyyy hh:mm a",
         );
+
         const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
         setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
         setIsAvailable(false);
       } else {
-        setAvailabilityMessage(
-          result.isAvailable ? "✅ Bike is available" : result.message,
-        );
-        setIsAvailable(result.isAvailable);
+        setAvailabilityMessage("✅ Bike is available");
+
+        setIsAvailable(true);
       }
     };
 
@@ -1453,8 +1519,12 @@ export default function Bookings() {
     formData.bike_id,
     formData.start_datetime,
     formData.end_datetime,
+
+    editFormData.bike_id,
+    editFormData.start_datetime,
+    editFormData.end_datetime,
+
     editingBooking,
-    checkAvailability,
   ]);
 
   const handleCreateCustomer = async (e) => {
@@ -2087,36 +2157,38 @@ export default function Bookings() {
   //   return local.toISOString().slice(0, 16);
   // };
 
-const toLocalISO = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  
-  // Use Intl to format the date specifically for India
-  // This produces a string like "2026-04-21 19:30"
-  const options = {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
+  const toLocalISO = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+
+    // Use Intl to format the date specifically for India
+    // This produces a string like "2026-04-21 19:30"
+    const options = {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    const formatter = new Intl.DateTimeFormat("en-IN", options);
+    const parts = formatter.formatToParts(date);
+    const f = (type) => parts.find((p) => p.type === type).value;
+
+    // Return in YYYY-MM-DDTHH:mm format required by <input type="datetime-local">
+    return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:${f("minute")}`;
   };
-  
-  const formatter = new Intl.DateTimeFormat('en-IN', options);
-  const parts = formatter.formatToParts(date);
-  const f = (type) => parts.find(p => p.type === type).value;
-  
-  // Return in YYYY-MM-DDTHH:mm format required by <input type="datetime-local">
-  return `${f('year')}-${f('month')}-${f('day')}T${f('hour')}:${f('minute')}`;
-};
 
-  
-
-const handleEditBooking = (booking) => {
+  const handleEditBooking = (booking) => {
     setEditingBooking(booking._id);
 
     setEditFormData({
       // bike_id: booking.bike_id,
 
       bike_id: booking.bike_id?._id || booking.bike_id,
-      
+
       customer_id: booking.customer_id,
       // start_datetime: booking.start_datetime.slice(0, 16),
       // end_datetime: booking.end_datetime.slice(0, 16),
@@ -2146,69 +2218,68 @@ const handleEditBooking = (booking) => {
     });
   };
 
+  //   const handleEditBooking = (booking) => {
+  //      console.log("DB:", booking.start_datetime);
+  //   console.log(
+  //     "Formatted:",
+  //     formatToLocalInput(booking.start_datetime)
+  //   );
 
-//   const handleEditBooking = (booking) => {
-//      console.log("DB:", booking.start_datetime);
-//   console.log(
-//     "Formatted:",
-//     formatToLocalInput(booking.start_datetime)
-//   );
+  //     setEditingBooking(booking._id);
 
-//     setEditingBooking(booking._id);
+  //     setEditFormData({
+  //       bike_id: booking.bike_id,
+  //       customer_id: booking.customer_id,
 
-//     setEditFormData({
-//       bike_id: booking.bike_id,
-//       customer_id: booking.customer_id,
+  //       // ✅ FIXED TIMEZONE ISSUE HERE
+  //       // start_datetime: formatToLocalInput(booking.start_datetime),
 
-//       // ✅ FIXED TIMEZONE ISSUE HERE
-//       // start_datetime: formatToLocalInput(booking.start_datetime),
+  //       // end_datetime: formatToLocalInput(booking.end_datetime),
 
-//       // end_datetime: formatToLocalInput(booking.end_datetime),
+  //       start_datetime: formatToLocalInput(
+  //   booking.start_datetime
+  // ),
 
-//       start_datetime: formatToLocalInput(
-//   booking.start_datetime
-// ),
+  // end_datetime: formatToLocalInput(
+  //   booking.end_datetime
+  // ),
 
-// end_datetime: formatToLocalInput(
-//   booking.end_datetime
-// ),
+  //       notes: booking.notes || "",
 
-//       notes: booking.notes || "",
+  //       customer_name: booking.customer_name || booking.customers?.name || "",
 
-//       customer_name: booking.customer_name || booking.customers?.name || "",
+  //       customer_phone: booking.contact_number || booking.customers?.phone || "",
 
-//       customer_phone: booking.contact_number || booking.customers?.phone || "",
+  //       customer_email: booking.customer_email || booking.customers?.email || "",
 
-//       customer_email: booking.customer_email || booking.customers?.email || "",
+  //       customer_location: booking.customer_location || "",
 
-//       customer_location: booking.customer_location || "",
+  //       is_new_customer: false,
+  //       aadhaar_file: null,
+  //       license_file: null,
 
-//       is_new_customer: false,
-//       aadhaar_file: null,
-//       license_file: null,
+  //       partner_name: booking.source_name || "",
+  //       lead_source: booking.lead_source || "other",
+  //       source_name: booking.source_name || "",
+  //       rental_type: booking.rental_type || "daily",
 
-//       partner_name: booking.source_name || "",
-//       lead_source: booking.lead_source || "other",
-//       source_name: booking.source_name || "",
-//       rental_type: booking.rental_type || "daily",
+  //       total_amount: String(booking.total_amount || ""),
 
-//       total_amount: String(booking.total_amount || ""),
+  //       deposit_amount: String(booking.deposit_amount || ""),
 
-//       deposit_amount: String(booking.deposit_amount || ""),
+  //       reference_partner_share: String(booking.reference_partner_share || ""),
 
-//       reference_partner_share: String(booking.reference_partner_share || ""),
+  //       provider_partner_share: String(booking.provider_partner_share || ""),
 
-//       provider_partner_share: String(booking.provider_partner_share || ""),
+  //       fuel_quantity: String(booking.fuel_quantity || ""),
 
-//       fuel_quantity: String(booking.fuel_quantity || ""),
+  //       account_manager: booking.account_manager || "",
 
-//       account_manager: booking.account_manager || "",
+  //       remarks: booking.remarks || "",
 
-//       remarks: booking.remarks || "",
-
-//       payment_method: booking.payment_method || "cash",
-//     });
-//   };
+  //       payment_method: booking.payment_method || "cash",
+  //     });
+  //   };
 
   // Edit booking (full form)
   // const handleEditBooking = (booking) => {
@@ -2305,8 +2376,7 @@ const handleEditBooking = (booking) => {
       await updateBooking.mutateAsync({
         id: editingBooking,
         data: {
-
-           bike_id: editFormData.bike_id,
+          bike_id: editFormData.bike_id,
 
           start_datetime: start.toISOString(),
           end_datetime: end.toISOString(),
@@ -2533,7 +2603,7 @@ const handleEditBooking = (booking) => {
           </div>
         </div>
 
-        {!isEdit && availabilityMessage && (
+        {availabilityMessage && (
           <div
             className={`p-4 rounded-xl flex items-center gap-3 text-sm mt-2 border ${
               isAvailable
@@ -3054,7 +3124,14 @@ const handleEditBooking = (booking) => {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSaveEdit} className="gradient-sunset">
+                {/* <Button onClick={handleSaveEdit} className="gradient-sunset">
+                  Save Changes
+                </Button> */}
+
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={isAvailable === false}
+                >
                   Save Changes
                 </Button>
               </div>
@@ -3526,8 +3603,6 @@ const handleEditBooking = (booking) => {
                               </span>
                             </div>
                           </div> */}
-
-
 
                           {/* {availabilityMessage && (
                             <div
