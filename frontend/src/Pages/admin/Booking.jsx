@@ -1638,115 +1638,262 @@ export default function Bookings() {
   //   editingBooking,
   // ]);
 
+  // useEffect(() => {
+  //   const checkDates = async () => {
+  //     // 🚨 Prevent check when edit first opens
+  //     if (editingBooking && !hasEditedFields) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
+
+  //     const activeData = editingBooking ? editFormData : formData;
+
+  //     if (
+  //       !activeData.bike_id ||
+  //       !activeData.start_datetime ||
+  //       !activeData.end_datetime
+  //     ) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
+
+  //     const start = new Date(activeData.start_datetime);
+
+  //     const end = new Date(activeData.end_datetime);
+
+  //     if (end <= start) {
+  //       setAvailabilityMessage("⚠️ Return date must be after pickup date");
+  //       setIsAvailable(false);
+  //       return;
+  //     }
+
+  //     // ⭐ CRITICAL FIX — Ignore unchanged values
+  //     if (
+  //       editingBooking &&
+  //       originalBookingData &&
+  //       activeData.bike_id === originalBookingData.bike_id &&
+  //       new Date(activeData.start_datetime).toISOString() ===
+  //         new Date(originalBookingData.start_datetime).toISOString() &&
+  //       new Date(activeData.end_datetime).toISOString() ===
+  //         new Date(originalBookingData.end_datetime).toISOString()
+  //     ) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(null);
+  //       return;
+  //     }
+
+  //     // 🚀 Call API
+  //     const result = await checkAvailability(
+  //       activeData.bike_id,
+  //       start,
+  //       end,
+  //       editingBooking,
+  //     );
+
+  //     // if (!result.isAvailable && result.bookedFrom) {
+  //     //   const fromDate = format(
+  //     //     new Date(result.bookedFrom),
+  //     //     "dd/MM/yyyy hh:mm a",
+  //     //   );
+
+  //     //   const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+  //     //   setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
+  //     //   setIsAvailable(false);
+  //     // } else {
+  //     //   setAvailabilityMessage("✅ Bike is available");
+
+  //     //   setIsAvailable(true);
+  //     // }
+
+  //     // 🚨 Ignore SAME booking conflict
+  //     if (!result.isAvailable && result.bookingId === editingBooking) {
+  //       setAvailabilityMessage(null);
+  //       setIsAvailable(true);
+  //       return;
+  //     }
+
+  //     if (!result.isAvailable && result.bookedFrom) {
+  //       const fromDate = format(
+  //         new Date(result.bookedFrom),
+  //         "dd/MM/yyyy hh:mm a",
+  //       );
+
+  //       const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+  //       setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
+  //       setIsAvailable(false);
+  //     } else {
+  //       setAvailabilityMessage("✅ Bike is available");
+
+  //       setIsAvailable(true);
+  //     }
+  //   };
+
+  //   checkDates();
+  // }, [
+  //   formData.bike_id,
+  //   formData.start_datetime,
+  //   formData.end_datetime,
+
+  //   editFormData.bike_id,
+  //   editFormData.start_datetime,
+  //   editFormData.end_datetime,
+
+  //   editingBooking,
+  //   originalBookingData,
+  // ]);
+
   useEffect(() => {
-    const checkDates = async () => {
-      // 🚨 Prevent check when edit first opens
-      if (editingBooking && !hasEditedFields) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
 
-      const activeData = editingBooking ? editFormData : formData;
+  const checkDates = async () => {
 
-      if (
-        !activeData.bike_id ||
-        !activeData.start_datetime ||
-        !activeData.end_datetime
-      ) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
+    const activeData =
+      editingBooking
+        ? editFormData
+        : formData;
 
-      const start = new Date(activeData.start_datetime);
+    if (
+      !activeData.bike_id ||
+      !activeData.start_datetime ||
+      !activeData.end_datetime
+    ) {
 
-      const end = new Date(activeData.end_datetime);
+      setAvailabilityMessage(null);
+      setIsAvailable(null);
+      return;
 
-      if (end <= start) {
-        setAvailabilityMessage("⚠️ Return date must be after pickup date");
-        setIsAvailable(false);
-        return;
-      }
+    }
 
-      // ⭐ CRITICAL FIX — Ignore unchanged values
-      if (
-        editingBooking &&
-        originalBookingData &&
-        activeData.bike_id === originalBookingData.bike_id &&
-        new Date(activeData.start_datetime).toISOString() ===
-          new Date(originalBookingData.start_datetime).toISOString() &&
-        new Date(activeData.end_datetime).toISOString() ===
-          new Date(originalBookingData.end_datetime).toISOString()
-      ) {
-        setAvailabilityMessage(null);
-        setIsAvailable(null);
-        return;
-      }
+    const start =
+      new Date(
+        activeData.start_datetime
+      );
 
-      // 🚀 Call API
-      const result = await checkAvailability(
+    const end =
+      new Date(
+        activeData.end_datetime
+      );
+
+    if (end <= start) {
+
+      setAvailabilityMessage(
+        "⚠️ Return date must be after pickup date"
+      );
+
+      setIsAvailable(false);
+      return;
+
+    }
+
+    // 🚨 CRITICAL FIX — Ignore original booking values
+
+    if (
+      editingBooking &&
+      originalBookingData &&
+      activeData.bike_id === originalBookingData.bike_id &&
+      new Date(
+        activeData.start_datetime
+      ).toISOString() ===
+        new Date(
+          originalBookingData.start_datetime
+        ).toISOString() &&
+      new Date(
+        activeData.end_datetime
+      ).toISOString() ===
+        new Date(
+          originalBookingData.end_datetime
+        ).toISOString()
+    ) {
+
+      setAvailabilityMessage(null);
+      setIsAvailable(null);
+      return;
+
+    }
+
+    // 🚀 Call API
+
+    const result =
+      await checkAvailability(
         activeData.bike_id,
         start,
         end,
-        editingBooking,
+        editingBooking // VERY IMPORTANT
       );
 
-      // if (!result.isAvailable && result.bookedFrom) {
-      //   const fromDate = format(
-      //     new Date(result.bookedFrom),
-      //     "dd/MM/yyyy hh:mm a",
-      //   );
+    // 🚨 Ignore SAME booking conflict
 
-      //   const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+    if (
+      !result.isAvailable &&
+      result.bookingId === editingBooking
+    ) {
 
-      //   setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+      setAvailabilityMessage(null);
+      setIsAvailable(true);
+      return;
 
-      //   setIsAvailable(false);
-      // } else {
-      //   setAvailabilityMessage("✅ Bike is available");
+    }
 
-      //   setIsAvailable(true);
-      // }
+    // 🚨 Real conflict
 
-      // 🚨 Ignore SAME booking conflict
-      if (!result.isAvailable && result.bookingId === editingBooking) {
-        setAvailabilityMessage(null);
-        setIsAvailable(true);
-        return;
-      }
+    if (
+      !result.isAvailable &&
+      result.bookedFrom
+    ) {
 
-      if (!result.isAvailable && result.bookedFrom) {
-        const fromDate = format(
+      const fromDate =
+        format(
           new Date(result.bookedFrom),
-          "dd/MM/yyyy hh:mm a",
+          "dd/MM/yyyy hh:mm a"
         );
 
-        const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+      const toDate =
+        format(
+          new Date(result.bookedTo),
+          "dd/MM/yyyy hh:mm a"
+        );
 
-        setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+      setAvailabilityMessage(
+        `❌ Already booked: ${fromDate} to ${toDate}`
+      );
 
-        setIsAvailable(false);
-      } else {
-        setAvailabilityMessage("✅ Bike is available");
+      setIsAvailable(false);
 
-        setIsAvailable(true);
-      }
-    };
+    }
 
-    checkDates();
-  }, [
-    formData.bike_id,
-    formData.start_datetime,
-    formData.end_datetime,
+    else {
 
-    editFormData.bike_id,
-    editFormData.start_datetime,
-    editFormData.end_datetime,
+      setAvailabilityMessage(
+        "✅ Bike is available"
+      );
 
-    editingBooking,
-    originalBookingData,
-  ]);
+      setIsAvailable(true);
+
+    }
+
+  };
+
+  checkDates();
+
+}, [
+
+  formData.bike_id,
+  formData.start_datetime,
+  formData.end_datetime,
+
+  editFormData.bike_id,
+  editFormData.start_datetime,
+  editFormData.end_datetime,
+
+  editingBooking,
+  originalBookingData
+
+]);
 
   const filteredBookings = bookings
     ?.filter((booking) => {
@@ -2313,11 +2460,24 @@ export default function Bookings() {
   const handleEditBooking = (booking) => {
     setHasEditedFields(false);
 
+    // setOriginalBookingData({
+    //   bike_id: booking.bike_id?._id || booking.bike_id,
+    //   start_datetime: booking.start_datetime,
+    //   end_datetime: booking.end_datetime,
+    // });
+
+
     setOriginalBookingData({
-      bike_id: booking.bike_id?._id || booking.bike_id,
-      start_datetime: booking.start_datetime,
-      end_datetime: booking.end_datetime,
-    });
+  bike_id: booking.bike_id?._id || booking.bike_id,
+
+  // ⭐ IMPORTANT — match form format
+  start_datetime:
+    booking.start_datetime.slice(0, 16),
+
+  end_datetime:
+    booking.end_datetime.slice(0, 16),
+});
+
 
     setEditingBooking(booking._id);
 
