@@ -1748,18 +1748,19 @@ export default function Bookings() {
   //   originalBookingData,
   // ]);
 
-  useEffect(() => {
+ useEffect(() => {
 
   const checkDates = async () => {
 
-     // 🚨 CRITICAL — Don't check when edit just opens
-  if (editingBooking && !hasEditedFields) {
+    // 🚨 VERY IMPORTANT
+    // Do not check when edit form first opens
+    if (editingBooking && !hasEditedFields) {
 
-    setAvailabilityMessage(null);
-    setIsAvailable(null);
+      setAvailabilityMessage(null);
+      setIsAvailable(null);
 
-    return;
-  }
+      return;
+    }
 
     const activeData =
       editingBooking
@@ -1779,14 +1780,10 @@ export default function Bookings() {
     }
 
     const start =
-      new Date(
-        activeData.start_datetime
-      );
+      new Date(activeData.start_datetime);
 
     const end =
-      new Date(
-        activeData.end_datetime
-      );
+      new Date(activeData.end_datetime);
 
     if (end <= start) {
 
@@ -1799,24 +1796,13 @@ export default function Bookings() {
 
     }
 
-    // 🚨 CRITICAL FIX — Ignore original booking values
-
+    // Ignore original unchanged values
     if (
       editingBooking &&
       originalBookingData &&
       activeData.bike_id === originalBookingData.bike_id &&
-      new Date(
-        activeData.start_datetime
-      ).toISOString() ===
-        new Date(
-          originalBookingData.start_datetime
-        ).toISOString() &&
-      new Date(
-        activeData.end_datetime
-      ).toISOString() ===
-        new Date(
-          originalBookingData.end_datetime
-        ).toISOString()
+      activeData.start_datetime === originalBookingData.start_datetime &&
+      activeData.end_datetime === originalBookingData.end_datetime
     ) {
 
       setAvailabilityMessage(null);
@@ -1825,18 +1811,16 @@ export default function Bookings() {
 
     }
 
-    // 🚀 Call API
-
+    // Call API
     const result =
       await checkAvailability(
         activeData.bike_id,
         start,
         end,
-        editingBooking // VERY IMPORTANT
+        editingBooking
       );
 
-    // 🚨 Ignore SAME booking conflict
-
+    // Ignore same booking conflict
     if (
       !result.isAvailable &&
       result.bookingId === editingBooking
@@ -1848,8 +1832,7 @@ export default function Bookings() {
 
     }
 
-    // 🚨 Real conflict
-
+    // Real conflict
     if (
       !result.isAvailable &&
       result.bookedFrom
@@ -1900,7 +1883,8 @@ export default function Bookings() {
   editFormData.end_datetime,
 
   editingBooking,
-  originalBookingData
+  originalBookingData,
+  hasEditedFields   // ⭐ IMPORTANT
 
 ]);
 
