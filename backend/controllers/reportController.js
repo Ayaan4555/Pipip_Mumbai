@@ -210,7 +210,7 @@ exports.getEndingSoon = async (req, res) => {
 
     // ⭐ Change window to 3 days
     const threeDaysLater = new Date(
-      now.getTime() + 3 * 24 * 60 * 60 * 1000
+      now.getTime() + 1 * 24 * 60 * 60 * 1000
     );
 
     // Find active bookings ending within 3 days

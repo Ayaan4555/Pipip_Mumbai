@@ -1399,10 +1399,10 @@ export default function Bookings() {
   }, [isOpen]);
 
   useEffect(() => {
-  if (!editingBooking) {
-    setBikeSearch("");
-  }
-}, [editingBooking]);
+    if (!editingBooking) {
+      setBikeSearch("");
+    }
+  }, [editingBooking]);
 
   // useEffect(() => {
   //   const checkDates = async () => {
@@ -1692,6 +1692,30 @@ export default function Bookings() {
         editingBooking,
       );
 
+      // if (!result.isAvailable && result.bookedFrom) {
+      //   const fromDate = format(
+      //     new Date(result.bookedFrom),
+      //     "dd/MM/yyyy hh:mm a",
+      //   );
+
+      //   const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+      //   setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
+
+      //   setIsAvailable(false);
+      // } else {
+      //   setAvailabilityMessage("✅ Bike is available");
+
+      //   setIsAvailable(true);
+      // }
+
+      // 🚨 Ignore SAME booking conflict
+      if (!result.isAvailable && result.bookingId === editingBooking) {
+        setAvailabilityMessage(null);
+        setIsAvailable(true);
+        return;
+      }
+
       if (!result.isAvailable && result.bookedFrom) {
         const fromDate = format(
           new Date(result.bookedFrom),
@@ -1759,7 +1783,7 @@ export default function Bookings() {
     setAadhaarPreview(null);
     setLicensePreview(null);
     setCustomerSearch("");
-     setBikeSearch("");
+    setBikeSearch("");
   };
 
   // Status transitions
@@ -3254,9 +3278,9 @@ export default function Bookings() {
                   variant="outline"
                   // onClick={() => setEditingBooking(null)}
                   onClick={() => {
-  setEditingBooking(null);
-  setBikeSearch("");
-}}
+                    setEditingBooking(null);
+                    setBikeSearch("");
+                  }}
                 >
                   Cancel
                 </Button>
