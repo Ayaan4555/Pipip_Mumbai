@@ -2463,12 +2463,12 @@ export default function Bookings() {
     setOriginalBookingData({
   bike_id: booking.bike_id?._id || booking.bike_id,
 
-  // ⭐ IMPORTANT — match form format
+  // ⭐ MUST match editFormData format
   start_datetime:
-    booking.start_datetime.slice(0, 16),
+    toLocalISO(booking.start_datetime),
 
   end_datetime:
-    booking.end_datetime.slice(0, 16),
+    toLocalISO(booking.end_datetime),
 });
 
 

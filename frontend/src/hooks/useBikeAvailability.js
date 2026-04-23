@@ -57,7 +57,7 @@ export function useBikeAvailability() {
       bikeId,
       startDate,
       endDate,
-      bookingId = null   // ⭐ ADD THIS
+      bookingId = null
     ) => {
 
       if (!bikeId || !startDate || !endDate) {
@@ -85,29 +85,12 @@ export function useBikeAvailability() {
             end_datetime:
               endDate.toISOString(),
 
-            bookingId   // ⭐ VERY IMPORTANT
+            bookingId: bookingId   // ⭐ MUST SEND
 
           }
         );
 
-        return {
-
-          isAvailable:
-            res.data.isAvailable,
-
-          message:
-            res.data.message,
-
-          bookedFrom:
-            res.data.bookedFrom,
-
-          bookedTo:
-            res.data.bookedTo,
-
-          bookingId:
-            res.data.bookingId   // ⭐ return this
-
-        };
+        return res.data;
 
       }
 
@@ -121,7 +104,6 @@ export function useBikeAvailability() {
         return {
 
           isAvailable: false,
-
           message:
             "Failed to check availability",
 
