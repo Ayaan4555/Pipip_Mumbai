@@ -1752,6 +1752,15 @@ export default function Bookings() {
 
   const checkDates = async () => {
 
+     // 🚨 CRITICAL — Don't check when edit just opens
+  if (editingBooking && !hasEditedFields) {
+
+    setAvailabilityMessage(null);
+    setIsAvailable(null);
+
+    return;
+  }
+
     const activeData =
       editingBooking
         ? editFormData
