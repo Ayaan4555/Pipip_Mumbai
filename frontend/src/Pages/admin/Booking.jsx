@@ -1295,22 +1295,22 @@ const roundToHour = (dateTimeStr) => {
   const minutes = date.getMinutes();
   const seconds = date.getSeconds();
 
-  if (minutes > 0 || seconds > 0) {
+  // Only run rounding logic if it's NOT exactly :00 or :30
+  if (minutes !== 0 && minutes !== 30) {
     if (minutes < 30) {
-      // If between 0:01 and 29:59, round up to 30 minutes
+      // If 10:01 - 10:29 -> 10:30
       date.setMinutes(30);
     } else {
-      // If between 30:01 and 59:59, round up to the next full hour
+      // If 10:31 - 10:59 -> 11:00
       date.setMinutes(0);
       date.setHours(date.getHours() + 1);
     }
   }
 
-  // Set seconds and milliseconds to 0 for a clean timestamp
+  // Always reset seconds/ms to ensure 10:30:05 becomes 10:30:00
   date.setSeconds(0);
   date.setMilliseconds(0);
 
-  // Format for datetime-local input (YYYY-MM-DDTHH:mm)
   const options = {
     timeZone: "Asia/Kolkata",
     year: "numeric",
@@ -1325,8 +1325,8 @@ const roundToHour = (dateTimeStr) => {
   const parts = formatter.formatToParts(date);
   const f = (type) => parts.find((p) => p.type === type).value;
 
-  // Use f("minute") dynamically now instead of hardcoding ":00"
   return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:${f("minute")}`;
+
 };
 
 
