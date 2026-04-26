@@ -2689,68 +2689,209 @@ export default function Bookings() {
   //   }
   // };
 
-  const handleSaveEdit = async () => {
-    if (!editingBooking) return;
 
-    const start = new Date(editFormData.start_datetime);
-    const end = new Date(editFormData.end_datetime);
+  // const handleSaveEdit = async () => {
+  //   if (!editingBooking) return;
 
-    if (end.getTime() <= start.getTime()) {
-      toast.error("End time must be after start time");
-      return;
+  //   const start = new Date(editFormData.start_datetime);
+  //   const end = new Date(editFormData.end_datetime);
+
+  //   if (end.getTime() <= start.getTime()) {
+  //     toast.error("End time must be after start time");
+  //     return;
+  //   }
+
+  //   if (!editFormData.total_amount || Number(editFormData.total_amount) <= 0) {
+  //     toast.error("Please enter rental amount");
+  //     return;
+  //   }
+
+  //   try {
+  //     await updateBooking.mutateAsync({
+  //       id: editingBooking,
+  //       data: {
+  //         bike_id: editFormData.bike_id,
+
+  //         start_datetime: start.toISOString(),
+  //         end_datetime: end.toISOString(),
+  //         total_amount: Number(editFormData.total_amount),
+
+  //         customer_name: editFormData.customer_name || undefined,
+  //         contact_number: editFormData.customer_phone || undefined,
+  //         customer_email: editFormData.customer_email || undefined,
+  //         customer_location: editFormData.customer_location || undefined,
+
+  //         lead_source: editFormData.lead_source,
+  //         source_name: editFormData.source_name || undefined,
+  //         rental_type: editFormData.rental_type,
+
+  //         deposit_amount: Number(editFormData.deposit_amount) || 0,
+
+  //         reference_partner_share:
+  //           Number(editFormData.reference_partner_share) || undefined,
+
+  //         provider_partner_share:
+  //           Number(editFormData.provider_partner_share) || undefined,
+
+  //         fuel_quantity: Number(editFormData.fuel_quantity) || undefined,
+
+  //         account_manager: editFormData.account_manager || undefined,
+
+  //         remarks: editFormData.remarks || undefined,
+  //         notes: editFormData.notes || undefined,
+
+  //         payment_method: editFormData.payment_method,
+  //       },
+  //     });
+
+  //     setEditingBooking(null);
+  //     setBikeSearch("");
+  //     toast.success("Booking updated successfully");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to update booking");
+  //   }
+  // };
+
+
+ const handleSaveEdit = async () => {
+
+  if (!editingBooking) return;
+
+  const start =
+    new Date(editFormData.start_datetime);
+
+  const end =
+    new Date(editFormData.end_datetime);
+
+  if (end <= start) {
+
+    toast.error(
+      "End time must be after start time"
+    );
+
+    return;
+
+  }
+
+  try {
+
+    // ⭐ STEP 1 — Update Customer Master
+    if (editFormData.customer_id) {
+
+      try {
+
+        await updateCustomer.mutateAsync({
+
+          id: editFormData.customer_id,
+
+          data: {
+
+            name:
+              editFormData.customer_name,
+
+            phone:
+              editFormData.customer_phone,
+
+            email:
+              editFormData.customer_email,
+
+            location:
+              editFormData.customer_location,
+
+          },
+
+        });
+
+      }
+
+      catch (err) {
+
+        console.error(
+          "Customer update failed:",
+          err
+        );
+
+        toast.error(
+          "Customer update failed"
+        );
+
+      }
+
     }
 
-    if (!editFormData.total_amount || Number(editFormData.total_amount) <= 0) {
-      toast.error("Please enter rental amount");
-      return;
-    }
+    // ⭐ STEP 2 — Update Booking
+    await updateBooking.mutateAsync({
 
-    try {
-      await updateBooking.mutateAsync({
-        id: editingBooking,
-        data: {
-          bike_id: editFormData.bike_id,
+      id: editingBooking,
 
-          start_datetime: start.toISOString(),
-          end_datetime: end.toISOString(),
-          total_amount: Number(editFormData.total_amount),
+      data: {
 
-          customer_name: editFormData.customer_name || undefined,
-          contact_number: editFormData.customer_phone || undefined,
-          customer_email: editFormData.customer_email || undefined,
-          customer_location: editFormData.customer_location || undefined,
+        bike_id:
+          editFormData.bike_id,
 
-          lead_source: editFormData.lead_source,
-          source_name: editFormData.source_name || undefined,
-          rental_type: editFormData.rental_type,
+        start_datetime:
+          start.toISOString(),
 
-          deposit_amount: Number(editFormData.deposit_amount) || 0,
+        end_datetime:
+          end.toISOString(),
 
-          reference_partner_share:
-            Number(editFormData.reference_partner_share) || undefined,
+        total_amount:
+          Number(editFormData.total_amount),
 
-          provider_partner_share:
-            Number(editFormData.provider_partner_share) || undefined,
+        customer_name:
+          editFormData.customer_name,
 
-          fuel_quantity: Number(editFormData.fuel_quantity) || undefined,
+        contact_number:
+          editFormData.customer_phone,
 
-          account_manager: editFormData.account_manager || undefined,
+        customer_email:
+          editFormData.customer_email,
 
-          remarks: editFormData.remarks || undefined,
-          notes: editFormData.notes || undefined,
+        customer_location:
+          editFormData.customer_location,
 
-          payment_method: editFormData.payment_method,
-        },
-      });
+        rental_type:
+          editFormData.rental_type,
 
-      setEditingBooking(null);
-      setBikeSearch("");
-      toast.success("Booking updated successfully");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update booking");
-    }
-  };
+        deposit_amount:
+          Number(editFormData.deposit_amount) || 0,
+
+        notes:
+          editFormData.notes,
+
+        remarks:
+          editFormData.remarks,
+
+        payment_method:
+          editFormData.payment_method,
+
+      },
+
+    });
+
+    setEditingBooking(null);
+
+    toast.success(
+      "Booking updated successfully"
+    );
+
+  }
+
+  catch (err) {
+
+    console.error(err);
+
+    toast.error(
+      "Failed to update booking"
+    );
+
+  }
+
+};
+
+
+
 
   const handleExtraDocsChange = (e) => {
     const files = Array.from(e.target.files);
