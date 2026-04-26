@@ -2522,7 +2522,8 @@ export default function Bookings() {
 
       bike_id: booking.bike_id?._id || booking.bike_id,
 
-      customer_id: booking.customer_id,
+      // customer_id: booking.customer_id,
+      customer_id: booking.customers?._id || booking.customer_id,
       // start_datetime: booking.start_datetime.slice(0, 16),
       // end_datetime: booking.end_datetime.slice(0, 16),
 
@@ -2755,140 +2756,79 @@ export default function Bookings() {
 
 
  const handleSaveEdit = async () => {
+   if (!editingBooking) return;
 
-  if (!editingBooking) return;
+   const start = new Date(editFormData.start_datetime);
+   const end = new Date(editFormData.end_datetime);
 
-  const start =
-    new Date(editFormData.start_datetime);
+   if (end.getTime() <= start.getTime()) {
+     toast.error("End time must be after start time");
+     return;
+   }
 
-  const end =
-    new Date(editFormData.end_datetime);
+   if (!editFormData.total_amount || Number(editFormData.total_amount) <= 0) {
+     toast.error("Please enter rental amount");
+     return;
+   }
 
-  if (end <= start) {
+   try {
+     // 1️⃣ UPDATE BOOKING
+     await updateBooking.mutateAsync({
+       id: editingBooking,
+       data: {
+         start_datetime: start.toISOString(),
+         end_datetime: end.toISOString(),
+         total_amount: Number(editFormData.total_amount),
 
-    toast.error(
-      "End time must be after start time"
-    );
+         customer_name: editFormData.customer_name || undefined,
+         contact_number: editFormData.customer_phone || undefined,
+         customer_email: editFormData.customer_email || undefined,
+         customer_location: editFormData.customer_location || undefined,
 
-    return;
+         lead_source: editFormData.lead_source,
+         source_name: editFormData.source_name || undefined,
+         rental_type: editFormData.rental_type,
 
-  }
+         deposit_amount: Number(editFormData.deposit_amount) || 0,
 
-  try {
+         reference_partner_share:
+           Number(editFormData.reference_partner_share) || undefined,
 
-    // ⭐ STEP 1 — Update Customer Master
-    if (editFormData.customer_id) {
+         provider_partner_share:
+           Number(editFormData.provider_partner_share) || undefined,
 
-      try {
+         fuel_quantity: Number(editFormData.fuel_quantity) || undefined,
 
-        await updateCustomer.mutateAsync({
+         account_manager: editFormData.account_manager || undefined,
 
-          id: editFormData.customer_id,
+         remarks: editFormData.remarks || undefined,
+         notes: editFormData.notes || undefined,
 
-          data: {
+         payment_method: editFormData.payment_method,
+       },
+     });
 
-            name:
-              editFormData.customer_name,
+     // 2️⃣ UPDATE CUSTOMER — fix: use customer_id, build FormData
+     if (editFormData.customer_id) {
+       const customerFormData = new FormData();
+       customerFormData.append("name", editFormData.customer_name || "");
+       customerFormData.append("phone", editFormData.customer_phone || "");
+       customerFormData.append("email", editFormData.customer_email || "");
+       customerFormData.append("address", editFormData.customer_location || "");
 
-            phone:
-              editFormData.customer_phone,
+       await updateCustomerMutation.mutateAsync({
+         id: editFormData.customer_id, // ✅ customer's _id, NOT booking id
+         formData: customerFormData, // ✅ FormData, not plain object
+       });
+     }
 
-            email:
-              editFormData.customer_email,
-
-            location:
-              editFormData.customer_location,
-
-          },
-
-        });
-
-      }
-
-      catch (err) {
-
-        console.error(
-          "Customer update failed:",
-          err
-        );
-
-        toast.error(
-          "Customer update failed"
-        );
-
-      }
-
-    }
-
-    // ⭐ STEP 2 — Update Booking
-    await updateBooking.mutateAsync({
-
-      id: editingBooking,
-
-      data: {
-
-        bike_id:
-          editFormData.bike_id,
-
-        start_datetime:
-          start.toISOString(),
-
-        end_datetime:
-          end.toISOString(),
-
-        total_amount:
-          Number(editFormData.total_amount),
-
-        customer_name:
-          editFormData.customer_name,
-
-        contact_number:
-          editFormData.customer_phone,
-
-        customer_email:
-          editFormData.customer_email,
-
-        customer_location:
-          editFormData.customer_location,
-
-        rental_type:
-          editFormData.rental_type,
-
-        deposit_amount:
-          Number(editFormData.deposit_amount) || 0,
-
-        notes:
-          editFormData.notes,
-
-        remarks:
-          editFormData.remarks,
-
-        payment_method:
-          editFormData.payment_method,
-
-      },
-
-    });
-
-    setEditingBooking(null);
-
-    toast.success(
-      "Booking updated successfully"
-    );
-
-  }
-
-  catch (err) {
-
-    console.error(err);
-
-    toast.error(
-      "Failed to update booking"
-    );
-
-  }
-
-};
+     setEditingBooking(null);
+     toast.success("Booking & customer updated successfully");
+   } catch (err) {
+     console.error(err);
+     toast.error("Failed to update booking");
+   }
+ };
 
 
 
