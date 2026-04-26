@@ -1258,18 +1258,59 @@ const emptyCompletionData = {
 //   return `${year}-${month}-${day}T${hours}:00`;
 // };
 
+// const roundToHour = (dateTimeStr) => {
+//   if (!dateTimeStr) return "";
+//   const date = new Date(dateTimeStr);
+
+//   // Convert to IST context if necessary before rounding
+//   const minutes = date.getMinutes();
+//   if (minutes > 0) {
+//     date.setMinutes(0);
+//     date.setHours(date.getHours() + 1);
+//   }
+
+//   // Format specifically for the datetime-local input which expects YYYY-MM-DDTHH:mm
+//   const options = {
+//     timeZone: "Asia/Kolkata",
+//     year: "numeric",
+//     month: "2-digit",
+//     day: "2-digit",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     hour12: false,
+//   };
+
+//   const formatter = new Intl.DateTimeFormat("en-IN", options);
+//   const parts = formatter.formatToParts(date);
+//   const f = (type) => parts.find((p) => p.type === type).value;
+
+//   return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:00`;
+// };
+
+
 const roundToHour = (dateTimeStr) => {
   if (!dateTimeStr) return "";
   const date = new Date(dateTimeStr);
 
-  // Convert to IST context if necessary before rounding
   const minutes = date.getMinutes();
-  if (minutes > 0) {
-    date.setMinutes(0);
-    date.setHours(date.getHours() + 1);
+  const seconds = date.getSeconds();
+
+  if (minutes > 0 || seconds > 0) {
+    if (minutes < 30) {
+      // If between 0:01 and 29:59, round up to 30 minutes
+      date.setMinutes(30);
+    } else {
+      // If between 30:01 and 59:59, round up to the next full hour
+      date.setMinutes(0);
+      date.setHours(date.getHours() + 1);
+    }
   }
 
-  // Format specifically for the datetime-local input which expects YYYY-MM-DDTHH:mm
+  // Set seconds and milliseconds to 0 for a clean timestamp
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+
+  // Format for datetime-local input (YYYY-MM-DDTHH:mm)
   const options = {
     timeZone: "Asia/Kolkata",
     year: "numeric",
@@ -1284,8 +1325,10 @@ const roundToHour = (dateTimeStr) => {
   const parts = formatter.formatToParts(date);
   const f = (type) => parts.find((p) => p.type === type).value;
 
-  return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:00`;
+  // Use f("minute") dynamically now instead of hardcoding ":00"
+  return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:${f("minute")}`;
 };
+
 
 export default function Bookings() {
   const [isOpen, setIsOpen] = useState(false);
