@@ -130,51 +130,44 @@ exports.getCustomer= async (req, res) => {
 
 
 exports.updateCustomer = async (req, res) => {
-
   try {
-
-    console.log("REQ BODY:", req.body);
-
-    const customer =
-      await Customer.findById(req.params.id);
-
+    const customer = await Customer.findById(req.params.id);
     if (!customer)
-      return res.status(404).json({
-        message: "Not found"
-      });
+      return res.status(404).json({ message: "Customer not found" });
 
-    const updateData = {
+    const updateData = { ...req.body };
 
-      name: req.body.name,
-      phone: req.body.phone,
-      email: req.body.email,
-      location: req.body.location,
+    // Handle File Updates
+    if (req.files?.aadhaar_image) {
+      updateData.aadhaar_image_url = req.files.aadhaar_image[0].path;
+    }
+    if (req.files?.license_image) {
+      updateData.license_image_url = req.files.license_image[0].path;
+    }
 
-    };
+    // Sync Extra Documents
+    let finalDocs = [];
+    if (req.body.remaining_documents) {
+      finalDocs = JSON.parse(req.body.remaining_documents);
+    } else {
+      finalDocs = customer.extra_documents || [];
+    }
 
-    const updatedCustomer =
-      await Customer.findByIdAndUpdate(
+    if (req.files?.extra_documents) {
+      const newPaths = req.files.extra_documents.map((f) => f.path);
+      finalDocs = [...finalDocs, ...newPaths];
+    }
+    updateData.extra_documents = finalDocs.slice(0, 5);
 
-        req.params.id,
-
-        { $set: updateData },
-
-        { new: true }
-
-      );
-
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true },
+    );
     res.json(updatedCustomer);
-
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  catch (error) {
-
-    res.status(500).json({
-      message: error.message
-    });
-
-  }
-
 };
 
 
