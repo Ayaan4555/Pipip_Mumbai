@@ -85,48 +85,97 @@ exports.getCustomer= async (req, res) => {
 //   }
 // };
 
+
+// exports.updateCustomer = async (req, res) => {
+//   try {
+//     const customer = await Customer.findById(req.params.id);
+//     if (!customer) return res.status(404).json({ message: "Not found" });
+
+//     const updateData = { ...req.body };
+
+//     // 1. Handle Single Uploads (Aadhaar/License)
+//     if (req.files?.aadhaar_image) {
+//       updateData.aadhaar_image_url = req.files.aadhaar_image[0].path;
+//     }
+//     if (req.files?.license_image) {
+//       updateData.license_image_url = req.files.license_image[0].path;
+//     }
+
+//     // 2. Handle Extra Documents Syncing
+//     let finalDocs = [];
+//     if (req.body.remaining_documents) {
+//       finalDocs = JSON.parse(req.body.remaining_documents);
+//     } else {
+//       finalDocs = customer.extra_documents || [];
+//     }
+
+//     if (req.files?.extra_documents) {
+//       const newPaths = req.files.extra_documents.map(f => f.path);
+//       finalDocs = [...finalDocs, ...newPaths];
+//     }
+
+//     updateData.extra_documents = finalDocs.slice(0, 5);
+
+//     const updatedCustomer = await Customer.findByIdAndUpdate(
+//       req.params.id,
+//       { $set: updateData },
+//       { new: true }
+//     );
+
+//     res.json(updatedCustomer);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
 exports.updateCustomer = async (req, res) => {
+
   try {
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) return res.status(404).json({ message: "Not found" });
 
-    const updateData = { ...req.body };
+    console.log("REQ BODY:", req.body);
 
-    // 1. Handle Single Uploads (Aadhaar/License)
-    if (req.files?.aadhaar_image) {
-      updateData.aadhaar_image_url = req.files.aadhaar_image[0].path;
-    }
-    if (req.files?.license_image) {
-      updateData.license_image_url = req.files.license_image[0].path;
-    }
+    const customer =
+      await Customer.findById(req.params.id);
 
-    // 2. Handle Extra Documents Syncing
-    let finalDocs = [];
-    if (req.body.remaining_documents) {
-      finalDocs = JSON.parse(req.body.remaining_documents);
-    } else {
-      finalDocs = customer.extra_documents || [];
-    }
+    if (!customer)
+      return res.status(404).json({
+        message: "Not found"
+      });
 
-    if (req.files?.extra_documents) {
-      const newPaths = req.files.extra_documents.map(f => f.path);
-      finalDocs = [...finalDocs, ...newPaths];
-    }
+    const updateData = {
 
-    updateData.extra_documents = finalDocs.slice(0, 5);
+      name: req.body.name,
+      phone: req.body.phone,
+      email: req.body.email,
+      location: req.body.location,
 
-    const updatedCustomer = await Customer.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateData },
-      { new: true }
-    );
+    };
+
+    const updatedCustomer =
+      await Customer.findByIdAndUpdate(
+
+        req.params.id,
+
+        { $set: updateData },
+
+        { new: true }
+
+      );
 
     res.json(updatedCustomer);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
+  }
+
+  catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};
 
 
 
