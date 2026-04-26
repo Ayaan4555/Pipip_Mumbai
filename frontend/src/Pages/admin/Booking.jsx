@@ -1433,7 +1433,7 @@ export default function Bookings() {
 
   const createCustomerMutation = useCreateCustomer();
   const adminCreateBookingMutation = useAdminCreateBooking();
-
+  const updateCustomerMutation = useUpdateCustomer();
   // Add this inside your Bookings component
   useEffect(() => {
     if (!isOpen) {
