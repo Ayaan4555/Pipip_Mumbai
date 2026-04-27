@@ -2397,6 +2397,14 @@ export default function Bookings() {
       bookingData.append("deposit_amount", formData.deposit_amount || 0);
       bookingData.append("total_amount", formData.total_amount || 0);
       bookingData.append("payment_method", "cash");
+      bookingData.append(
+        "provider_partner_share",
+        formData.provider_partner_share || 0,
+      );
+      bookingData.append(
+        "reference_partner_share",
+        formData.reference_partner_share || 0,
+      );
 
       // Optional Booking Fields
       bookingData.append("fuel_quantity", formData.fuel_quantity || 0);
