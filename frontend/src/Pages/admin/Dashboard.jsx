@@ -417,7 +417,7 @@ const maintenanceBikes =
             exit={{ opacity: 0, y: -20, height: 0 }}
             className="overflow-hidden"
           >
-            <Card className="border-orange-300 bg-orange-50 dark:bg-orange-950/20 shadow-lg">
+            <Card className=" bg-orange-950/20 shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
                   <motion.div
@@ -454,8 +454,8 @@ const maintenanceBikes =
                         transition={{ delay: index * 0.05 }}
                         className={`flex items-center justify-between p-3 rounded-lg border shadow-sm ${
                           booking.minutesRemaining <= 30
-                            ? "bg-red-50 dark:bg-red-900/20 border-red-200"
-                            : "bg-white dark:bg-gray-800 border-orange-100"
+                            ? " bg-red-900/20 border-red-200"
+                            : "bg-gray-800 border-orange-100"
                         }`}
                       >
                         <div className="flex items-center gap-3">
