@@ -2851,68 +2851,192 @@ export default function Bookings() {
   //   }
   // };
 
+  // const handleExtendRental = async () => {
+  //   if (!extendDialog) return;
+
+  //   try {
+  //     const oldEnd = new Date(extendDialog.end_datetime);
+
+  //     const newEnd = new Date(extendData.new_end_datetime);
+
+  //     if (!extendData.extra_amount) {
+  //       toast.error("Enter extra amount");
+
+  //       return;
+  //     }
+
+  //     // 🚨 CHECK AVAILABILITY FIRST
+
+  //     const result = await checkAvailability(
+  //       extendDialog.bike_id,
+
+  //       oldEnd,
+
+  //       newEnd,
+
+  //       extendDialog._id,
+  //     );
+
+  //     // ❌ If conflict found
+
+  //     if (!result.isAvailable) {
+  //       if (result.bookedFrom) {
+  //         const from = format(
+  //           new Date(result.bookedFrom),
+  //           "dd/MM/yyyy hh:mm a",
+  //         );
+
+  //         const to = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+  //         toast.error(`Bike already booked: ${from} to ${to}`);
+  //       } else {
+  //         toast.error(result.message || "Bike not available");
+  //       }
+
+  //       return;
+  //     }
+
+  //     // ✅ IF AVAILABLE → EXTEND
+
+  //     await extendBooking.mutateAsync({
+  //       id: extendDialog._id,
+
+  //       data: {
+  //         new_end_datetime: newEnd.toISOString(),
+
+  //         extra_amount: Number(extendData.extra_amount),
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+
+  //     toast.error("Extension failed");
+  //   }
+  // };
+
   const handleExtendRental = async () => {
-    if (!extendDialog) return;
 
-    try {
-      const oldEnd = new Date(extendDialog.end_datetime);
+  if (!extendDialog) return;
 
-      const newEnd = new Date(extendData.new_end_datetime);
+  try {
 
-      if (!extendData.extra_amount) {
-        toast.error("Enter extra amount");
-
-        return;
-      }
-
-      // 🚨 CHECK AVAILABILITY FIRST
-
-      const result = await checkAvailability(
-        extendDialog.bike_id,
-
-        oldEnd,
-
-        newEnd,
-
-        extendDialog._id,
+    const oldEnd =
+      new Date(
+        extendDialog.end_datetime
       );
 
-      // ❌ If conflict found
+    const newEnd =
+      new Date(
+        extendData.new_end_datetime
+      );
 
-      if (!result.isAvailable) {
-        if (result.bookedFrom) {
-          const from = format(
+    if (!extendData.extra_amount) {
+
+      toast.error(
+        "Enter extra amount"
+      );
+
+      return;
+
+    }
+
+    // ⭐ FIXED bikeId
+
+    const bikeId =
+      extendDialog.bike_id?._id ||
+      extendDialog.bike_id;
+
+    console.log("Extend Check:", {
+
+      bikeId,
+      bookingId: extendDialog._id,
+      oldEnd,
+      newEnd
+
+    });
+
+    // 🚨 CHECK AVAILABILITY
+
+    const result =
+      await checkAvailability(
+
+        bikeId,
+        oldEnd,
+        newEnd,
+        extendDialog._id
+
+      );
+
+    // ❌ Conflict
+
+    if (!result.isAvailable) {
+
+      if (result.bookedFrom) {
+
+        const from =
+          format(
             new Date(result.bookedFrom),
-            "dd/MM/yyyy hh:mm a",
+            "dd/MM/yyyy hh:mm a"
           );
 
-          const to = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+        const to =
+          format(
+            new Date(result.bookedTo),
+            "dd/MM/yyyy hh:mm a"
+          );
 
-          toast.error(`Bike already booked: ${from} to ${to}`);
-        } else {
-          toast.error(result.message || "Bike not available");
-        }
+        toast.error(
+          `Already booked: ${from} to ${to}`
+        );
 
-        return;
       }
 
-      // ✅ IF AVAILABLE → EXTEND
+      else {
 
-      await extendBooking.mutateAsync({
-        id: extendDialog._id,
+        toast.error(
+          result.message ||
+          "Bike not available"
+        );
 
-        data: {
-          new_end_datetime: newEnd.toISOString(),
+      }
 
-          extra_amount: Number(extendData.extra_amount),
-        },
-      });
-    } catch (error) {
-      console.error(error);
+      return;
 
-      toast.error("Extension failed");
     }
-  };
+
+    // ✅ EXTEND
+
+    await extendBooking.mutateAsync({
+
+      id: extendDialog._id,
+
+      data: {
+
+        new_end_datetime:
+          newEnd.toISOString(),
+
+        extra_amount:
+          Number(
+            extendData.extra_amount
+          ),
+
+      },
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    toast.error(
+      "Extension failed"
+    );
+
+  }
+
+};
 
   const handleOpenExtend = (booking) => {
     setExtendDialog(booking);
