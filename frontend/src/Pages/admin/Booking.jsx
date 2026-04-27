@@ -4156,8 +4156,8 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        {/* <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0"> */}
-                        <div className="flex flex-wrap lg:flex-col items-center lg:items-end gap-2 shrink-0 w-full lg:w-auto justify-start sm:justify-end">
+                        <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0">
+                        
                           <Button
                             size="sm"
                             variant="ghost"
@@ -4189,7 +4189,9 @@ export default function Bookings() {
                             </Button>
                           )}
 
-                          {booking.status === "active" && (
+                          {(booking.status === "active" ||
+                            booking.status === "confirmed" ||
+                            booking.status === "pending") && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -4208,7 +4210,9 @@ export default function Bookings() {
                                 onClick={() => handleMarkPaid(booking._id)}
                                 className="text-green-600 hover:bg-green-50 border-green-200 dark:hover:bg-green-500/10"
                               >
-                                <CreditCard className="w-4 h-4 mr-1" /> Paid
+                                {/* <CreditCard className="w-4 h-4 mr-1" /> Paid */}
+                                <CreditCard className="w-4 h-4" />
+                                <span className="ml-1 hidden sm:inline">Paid</span>
                               </Button>
                             )}
 
