@@ -1005,6 +1005,12 @@ exports.extendBooking = async (req, res) => {
       (booking.total_amount || 0) +
       Number(extra_amount || 0);
 
+      booking.extended_amount =
+  (booking.extended_amount || 0) +
+  Number(extra_amount || 0);
+
+booking.is_extended = true;
+
     await booking.save();
 
     res.json({

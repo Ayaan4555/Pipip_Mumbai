@@ -1353,7 +1353,7 @@ export default function Bookings() {
   });
 
   const [extendMessage, setExtendMessage] = useState("");
-const [isExtendAvailable, setIsExtendAvailable] = useState(null);
+  const [isExtendAvailable, setIsExtendAvailable] = useState(null);
 
   const queryClient = useQueryClient();
   // Completion dialog
@@ -1897,202 +1897,155 @@ const [isExtendAvailable, setIsExtendAvailable] = useState(null);
     hasEditedFields, // ⭐ IMPORTANT
   ]);
 
+  //   useEffect(() => {
 
-//   useEffect(() => {
+  //   const runCheck = async () => {
 
-//   const runCheck = async () => {
+  //     if (!extendDialog) return;
 
-//     if (!extendDialog) return;
+  //     if (!extendData.new_end_datetime) return;
 
-//     if (!extendData.new_end_datetime) return;
+  //     const bikeId =
+  //       extendDialog.bike_id?._id ||
+  //       extendDialog.bike_id;
 
-//     const bikeId =
-//       extendDialog.bike_id?._id ||
-//       extendDialog.bike_id;
+  //     const oldEnd =
+  //       new Date(
+  //         extendDialog.end_datetime
+  //       );
 
-//     const oldEnd =
-//       new Date(
-//         extendDialog.end_datetime
-//       );
+  //     const newEnd =
+  //       new Date(
+  //         extendData.new_end_datetime
+  //       );
 
-//     const newEnd =
-//       new Date(
-//         extendData.new_end_datetime
-//       );
+  //     if (newEnd <= oldEnd) {
 
-//     if (newEnd <= oldEnd) {
+  //       setExtendMessage(
+  //         "⚠️ New end must be after current end"
+  //       );
 
-//       setExtendMessage(
-//         "⚠️ New end must be after current end"
-//       );
+  //       setIsExtendAvailable(false);
 
-//       setIsExtendAvailable(false);
+  //       return;
 
-//       return;
+  //     }
 
-//     }
+  //     const result =
+  //       await checkAvailability(
 
-//     const result =
-//       await checkAvailability(
+  //         bikeId,
+  //         oldEnd,
+  //         newEnd,
+  //         extendDialog._id
 
-//         bikeId,
-//         oldEnd,
-//         newEnd,
-//         extendDialog._id
+  //       );
 
-//       );
+  //     if (!result.isAvailable) {
 
-//     if (!result.isAvailable) {
+  //       if (result.bookedFrom) {
 
-//       if (result.bookedFrom) {
+  //         const from =
+  //           format(
+  //             new Date(result.bookedFrom),
+  //             "dd/MM/yyyy hh:mm a"
+  //           );
 
-//         const from =
-//           format(
-//             new Date(result.bookedFrom),
-//             "dd/MM/yyyy hh:mm a"
-//           );
+  //         const to =
+  //           format(
+  //             new Date(result.bookedTo),
+  //             "dd/MM/yyyy hh:mm a"
+  //           );
 
-//         const to =
-//           format(
-//             new Date(result.bookedTo),
-//             "dd/MM/yyyy hh:mm a"
-//           );
+  //         setExtendMessage(
+  //           `❌ Already booked: ${from} to ${to}`
+  //         );
 
-//         setExtendMessage(
-//           `❌ Already booked: ${from} to ${to}`
-//         );
+  //       }
 
-//       }
+  //       else {
 
-//       else {
+  //         setExtendMessage(
+  //           result.message
+  //         );
 
-//         setExtendMessage(
-//           result.message
-//         );
+  //       }
 
-//       }
+  //       setIsExtendAvailable(false);
 
-//       setIsExtendAvailable(false);
+  //     }
 
-//     }
+  //     else {
 
-//     else {
+  //       setExtendMessage(
+  //         "✅ Bike available"
+  //       );
 
-//       setExtendMessage(
-//         "✅ Bike available"
-//       );
+  //       setIsExtendAvailable(true);
 
-//       setIsExtendAvailable(true);
+  //     }
 
-//     }
+  //   };
 
-//   };
+  //   runCheck();
 
-//   runCheck();
+  // }, [
 
-// }, [
+  //   extendData.new_end_datetime
 
-//   extendData.new_end_datetime
+  // ]);
 
-// ]);
+  useEffect(() => {
+    const runCheck = async () => {
+      if (!extendDialog) return;
 
-useEffect(() => {
+      if (!extendData.new_end_datetime) return;
 
-  const runCheck = async () => {
+      const bikeId = extendDialog.bike_id?._id || extendDialog.bike_id;
 
-    if (!extendDialog) return;
+      const oldEnd = new Date(extendDialog.end_datetime);
 
-    if (!extendData.new_end_datetime) return;
+      const newEnd = new Date(extendData.new_end_datetime);
 
-    const bikeId =
-      extendDialog.bike_id?._id ||
-      extendDialog.bike_id;
+      if (newEnd <= oldEnd) {
+        setExtendMessage("⚠️ New end must be after current end");
 
-    const oldEnd =
-      new Date(
-        extendDialog.end_datetime
-      );
+        setIsExtendAvailable(false);
 
-    const newEnd =
-      new Date(
-        extendData.new_end_datetime
-      );
+        return;
+      }
 
-    if (newEnd <= oldEnd) {
-
-      setExtendMessage(
-        "⚠️ New end must be after current end"
-      );
-
-      setIsExtendAvailable(false);
-
-      return;
-
-    }
-
-    const result =
-      await checkAvailability(
-
+      const result = await checkAvailability(
         bikeId,
         oldEnd,
         newEnd,
-        extendDialog._id
-
+        extendDialog._id,
       );
 
-    if (!result.isAvailable) {
-
-      if (result.bookedFrom) {
-
-        const from =
-          format(
+      if (!result.isAvailable) {
+        if (result.bookedFrom) {
+          const from = format(
             new Date(result.bookedFrom),
-            "dd/MM/yyyy hh:mm a"
+            "dd/MM/yyyy hh:mm a",
           );
 
-        const to =
-          format(
-            new Date(result.bookedTo),
-            "dd/MM/yyyy hh:mm a"
-          );
+          const to = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
 
-        setExtendMessage(
-          `❌ Already booked: ${from} to ${to}`
-        );
+          setExtendMessage(`❌ Already booked: ${from} to ${to}`);
+        } else {
+          setExtendMessage(result.message);
+        }
 
+        setIsExtendAvailable(false);
+      } else {
+        setExtendMessage("✅ Bike available");
+
+        setIsExtendAvailable(true);
       }
+    };
 
-      else {
-
-        setExtendMessage(
-          result.message
-        );
-
-      }
-
-      setIsExtendAvailable(false);
-
-    }
-
-    else {
-
-      setExtendMessage(
-        "✅ Bike available"
-      );
-
-      setIsExtendAvailable(true);
-
-    }
-
-  };
-
-  runCheck();
-
-}, [
-
-  extendData.new_end_datetime
-
-]);
+    runCheck();
+  }, [extendData.new_end_datetime]);
 
   const filteredBookings = bookings
     ?.filter((booking) => {
@@ -3115,138 +3068,81 @@ useEffect(() => {
   // };
 
   const handleExtendRental = async () => {
-
     if (!isExtendAvailable) {
-
-  toast.error(
-    "Cannot extend — bike not available"
-  );
-
-  return;
-
-}
-
-  if (!extendDialog) return;
-
-  try {
-
-    const oldEnd =
-      new Date(
-        extendDialog.end_datetime
-      );
-
-    const newEnd =
-      new Date(
-        extendData.new_end_datetime
-      );
-
-    if (!extendData.extra_amount) {
-
-      toast.error(
-        "Enter extra amount"
-      );
+      toast.error("Cannot extend — bike not available");
 
       return;
-
     }
 
-    // ⭐ FIXED bikeId
+    if (!extendDialog) return;
 
-    const bikeId =
-      extendDialog.bike_id?._id ||
-      extendDialog.bike_id;
+    try {
+      const oldEnd = new Date(extendDialog.end_datetime);
 
-    console.log("Extend Check:", {
+      const newEnd = new Date(extendData.new_end_datetime);
 
-      bikeId,
-      bookingId: extendDialog._id,
-      oldEnd,
-      newEnd
+      if (!extendData.extra_amount) {
+        toast.error("Enter extra amount");
 
-    });
+        return;
+      }
 
-    // 🚨 CHECK AVAILABILITY
+      // ⭐ FIXED bikeId
 
-    const result =
-      await checkAvailability(
+      const bikeId = extendDialog.bike_id?._id || extendDialog.bike_id;
 
+      console.log("Extend Check:", {
+        bikeId,
+        bookingId: extendDialog._id,
+        oldEnd,
+        newEnd,
+      });
+
+      // 🚨 CHECK AVAILABILITY
+
+      const result = await checkAvailability(
         bikeId,
         oldEnd,
         newEnd,
-        extendDialog._id
-
+        extendDialog._id,
       );
 
-    // ❌ Conflict
+      // ❌ Conflict
 
-    if (!result.isAvailable) {
-
-      if (result.bookedFrom) {
-
-        const from =
-          format(
+      if (!result.isAvailable) {
+        if (result.bookedFrom) {
+          const from = format(
             new Date(result.bookedFrom),
-            "dd/MM/yyyy hh:mm a"
+            "dd/MM/yyyy hh:mm a",
           );
 
-        const to =
-          format(
-            new Date(result.bookedTo),
-            "dd/MM/yyyy hh:mm a"
-          );
+          const to = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
 
-        toast.error(
-          `Already booked: ${from} to ${to}`
-        );
+          toast.error(`Already booked: ${from} to ${to}`);
+        } else {
+          toast.error(result.message || "Bike not available");
+        }
 
+        return;
       }
 
-      else {
+      // ✅ EXTEND
 
-        toast.error(
-          result.message ||
-          "Bike not available"
-        );
+      await extendBooking.mutateAsync({
+        id: extendDialog._id,
 
-      }
+        data: {
+          new_end_datetime: newEnd.toISOString(),
 
-      return;
+          extra_amount: Number(extendData.extra_amount),
+        },
+      });
+    } catch (error) {
+      console.error(error);
 
+      toast.error("Extension failed");
     }
-
-    // ✅ EXTEND
-
-    await extendBooking.mutateAsync({
-
-      id: extendDialog._id,
-
-      data: {
-
-        new_end_datetime:
-          newEnd.toISOString(),
-
-        extra_amount:
-          Number(
-            extendData.extra_amount
-          ),
-
-      },
-
-    });
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-    toast.error(
-      "Extension failed"
-    );
-
-  }
-
-};
+  };
 
   const handleOpenExtend = (booking) => {
     setExtendDialog(booking);
@@ -4356,6 +4252,13 @@ useEffect(() => {
                         >
                           {booking.status}
                         </Badge>
+
+                        {booking.is_extended && (
+                          <Badge className="bg-blue-500 text-white">
+                            Extended
+                          </Badge>
+                        )}
+
                         <Badge
                           className={`${paymentStatusColors[booking.payment_status || "pending"]} border text-[11px] gap-1`}
                         >
@@ -4478,10 +4381,19 @@ useEffect(() => {
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                               Amount
                             </p>
-                            <p className="text-lg font-bold text-foreground flex items-center gap-1">
+                            {/* <p className="text-lg font-bold text-foreground flex items-center gap-1">
                               <IndianRupee className="w-4 h-4" />
                               {booking.total_amount?.toLocaleString() || 0}
+                            </p> */}
+                            <p className="text-lg font-bold">
+                              ₹ {booking.total_amount}
                             </p>
+
+                            {booking.extended_amount > 0 && (
+                              <p className="text-sm text-blue-400">
+                                +₹ {booking.extended_amount} Extended
+                              </p>
+                            )}
                             {(booking.deposit_amount ?? 0) > 0 && (
                               <p className="text-xs text-muted-foreground">
                                 Dep: ₹{booking.deposit_amount?.toLocaleString()}
@@ -4491,7 +4403,6 @@ useEffect(() => {
                         </div>
 
                         <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0">
-                        
                           <Button
                             size="sm"
                             variant="ghost"
@@ -4546,7 +4457,9 @@ useEffect(() => {
                               >
                                 {/* <CreditCard className="w-4 h-4 mr-1" /> Paid */}
                                 <CreditCard className="w-4 h-4" />
-                                <span className="ml-1 hidden sm:inline">Paid</span>
+                                <span className="ml-1 hidden sm:inline">
+                                  Paid
+                                </span>
                               </Button>
                             )}
 
@@ -4843,22 +4756,18 @@ useEffect(() => {
               />
 
               {extendMessage && (
-
-  <div
-    className={`text-sm px-3 py-2 rounded-md border
+                <div
+                  className={`text-sm px-3 py-2 rounded-md border
       ${
         isExtendAvailable
           ? "bg-green-500/10 border-green-500 text-green-400"
           : "bg-red-500/10 border-red-500 text-red-400"
       }
     `}
-  >
-
-    {extendMessage}
-
-  </div>
-
-)}
+                >
+                  {extendMessage}
+                </div>
+              )}
             </div>
 
             {/* Buttons */}

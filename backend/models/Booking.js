@@ -306,6 +306,16 @@ const bookingSchema = new mongoose.Schema(
     default: false,
   },
 
+  extended_amount: {
+  type: Number,
+  default: 0,
+},
+
+is_extended: {
+  type: Boolean,
+  default: false,
+},
+
 },
 { timestamps: true }
 );
