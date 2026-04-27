@@ -2281,6 +2281,7 @@ export default function Bookings() {
       let finalCustomerId = formData.customer_id;
       let finalCustomerName = formData.customer_name;
       let finalCustomerPhone = formData.customer_phone;
+      let finalCustomerLocation = formData.customer_location;
 
       // 1️⃣ CREATE CUSTOMER FIRST (IF NEW)
       // if (formData.is_new_customer) {
@@ -2358,6 +2359,7 @@ export default function Bookings() {
         finalCustomerId = selectedCust._id;
         finalCustomerName = selectedCust.name;
         finalCustomerPhone = selectedCust.phone;
+        finalCustomerLocation = selectedCust.address;
       }
 
       // 2️⃣ PREPARE BOOKING DATA
@@ -2370,6 +2372,7 @@ export default function Bookings() {
       bookingData.append("bike_id", formData.bike_id);
       bookingData.append("customer_name", finalCustomerName);
       bookingData.append("contact_number", finalCustomerPhone);
+      bookingData.append("customer_location", finalCustomerLocation);
 
       // bookingData.append("start_datetime", formData.start_datetime);
       // bookingData.append("end_datetime", formData.end_datetime);
