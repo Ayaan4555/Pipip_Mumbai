@@ -1129,7 +1129,7 @@ import { useBikeAvailability } from "../../hooks/useBikeAvailability";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Download } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation ,  useQueryClient  } from "@tanstack/react-query";
 import axios from "axios";
 
 const statusColors = {
@@ -1352,6 +1352,7 @@ export default function Bookings() {
     extra_amount: "",
   });
 
+  const queryClient = useQueryClient();
   // Completion dialog
   const [completionDialog, setCompletionDialog] = useState(null);
   const [completionData, setCompletionData] = useState(emptyCompletionData);
@@ -2843,7 +2844,7 @@ export default function Bookings() {
     setExtendDialog(booking);
 
     setExtendData({
-      new_end_datetime: formatToLocalInput(booking.end_datetime),
+      new_end_datetime: toLocalISO(booking.end_datetime),
 
       extra_amount: "",
     });
