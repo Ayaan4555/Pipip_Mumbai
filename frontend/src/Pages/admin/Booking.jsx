@@ -1129,7 +1129,7 @@ import { useBikeAvailability } from "../../hooks/useBikeAvailability";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Download } from "lucide-react";
-import { useMutation ,  useQueryClient  } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 const statusColors = {
@@ -2825,10 +2825,38 @@ export default function Bookings() {
     },
   });
 
+  // const handleExtendRental = async () => {
+  //   if (!extendDialog) return;
+
+  //   try {
+  //     const newEnd = new Date(extendData.new_end_datetime);
+
+  //     if (!extendData.extra_amount) {
+  //       toast.error("Enter extra amount");
+
+  //       return;
+  //     }
+
+  //     await extendBooking.mutateAsync({
+  //       id: extendDialog._id,
+
+  //       data: {
+  //         new_end_datetime: newEnd.toISOString(),
+
+  //         extra_amount: Number(extendData.extra_amount),
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
   const handleExtendRental = async () => {
     if (!extendDialog) return;
 
     try {
+      const oldEnd = new Date(extendDialog.end_datetime);
+
       const newEnd = new Date(extendData.new_end_datetime);
 
       if (!extendData.extra_amount) {
@@ -2836,6 +2864,39 @@ export default function Bookings() {
 
         return;
       }
+
+      // 🚨 CHECK AVAILABILITY FIRST
+
+      const result = await checkAvailability(
+        extendDialog.bike_id,
+
+        oldEnd,
+
+        newEnd,
+
+        extendDialog._id,
+      );
+
+      // ❌ If conflict found
+
+      if (!result.isAvailable) {
+        if (result.bookedFrom) {
+          const from = format(
+            new Date(result.bookedFrom),
+            "dd/MM/yyyy hh:mm a",
+          );
+
+          const to = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
+
+          toast.error(`Bike already booked: ${from} to ${to}`);
+        } else {
+          toast.error(result.message || "Bike not available");
+        }
+
+        return;
+      }
+
+      // ✅ IF AVAILABLE → EXTEND
 
       await extendBooking.mutateAsync({
         id: extendDialog._id,
@@ -2848,6 +2909,8 @@ export default function Bookings() {
       });
     } catch (error) {
       console.error(error);
+
+      toast.error("Extension failed");
     }
   };
 
@@ -4093,7 +4156,8 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0">
+                        {/* <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0"> */}
+                        <div className="flex flex-wrap lg:flex-col items-center lg:items-end gap-2 shrink-0 w-full lg:w-auto justify-start sm:justify-end">
                           <Button
                             size="sm"
                             variant="ghost"
@@ -4125,13 +4189,16 @@ export default function Bookings() {
                             </Button>
                           )}
 
-                          <Button
-                            variant="outline"
-                            className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
-                            onClick={() => handleOpenExtend(booking)}
-                          >
-                            Extend
-                          </Button>
+                          {booking.status === "active" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
+                              onClick={() => handleOpenExtend(booking)}
+                            >
+                              <Clock className="w-4 h-4 mr-1" /> Extend
+                            </Button>
+                          )}
 
                           {booking.payment_status !== "paid" &&
                             booking.status !== "cancelled" && (
