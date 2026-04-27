@@ -4254,7 +4254,7 @@ export default function Bookings() {
                         </Badge>
 
                         {booking.is_extended && (
-                          <Badge className="bg-blue-500 text-white">
+                          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/30">
                             Extended
                           </Badge>
                         )}
