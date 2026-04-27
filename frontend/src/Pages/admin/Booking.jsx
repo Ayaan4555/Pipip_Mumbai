@@ -1898,7 +1898,105 @@ const [isExtendAvailable, setIsExtendAvailable] = useState(null);
   ]);
 
 
-  useEffect(() => {
+//   useEffect(() => {
+
+//   const runCheck = async () => {
+
+//     if (!extendDialog) return;
+
+//     if (!extendData.new_end_datetime) return;
+
+//     const bikeId =
+//       extendDialog.bike_id?._id ||
+//       extendDialog.bike_id;
+
+//     const oldEnd =
+//       new Date(
+//         extendDialog.end_datetime
+//       );
+
+//     const newEnd =
+//       new Date(
+//         extendData.new_end_datetime
+//       );
+
+//     if (newEnd <= oldEnd) {
+
+//       setExtendMessage(
+//         "⚠️ New end must be after current end"
+//       );
+
+//       setIsExtendAvailable(false);
+
+//       return;
+
+//     }
+
+//     const result =
+//       await checkAvailability(
+
+//         bikeId,
+//         oldEnd,
+//         newEnd,
+//         extendDialog._id
+
+//       );
+
+//     if (!result.isAvailable) {
+
+//       if (result.bookedFrom) {
+
+//         const from =
+//           format(
+//             new Date(result.bookedFrom),
+//             "dd/MM/yyyy hh:mm a"
+//           );
+
+//         const to =
+//           format(
+//             new Date(result.bookedTo),
+//             "dd/MM/yyyy hh:mm a"
+//           );
+
+//         setExtendMessage(
+//           `❌ Already booked: ${from} to ${to}`
+//         );
+
+//       }
+
+//       else {
+
+//         setExtendMessage(
+//           result.message
+//         );
+
+//       }
+
+//       setIsExtendAvailable(false);
+
+//     }
+
+//     else {
+
+//       setExtendMessage(
+//         "✅ Bike available"
+//       );
+
+//       setIsExtendAvailable(true);
+
+//     }
+
+//   };
+
+//   runCheck();
+
+// }, [
+
+//   extendData.new_end_datetime
+
+// ]);
+
+useEffect(() => {
 
   const runCheck = async () => {
 
@@ -1995,7 +2093,6 @@ const [isExtendAvailable, setIsExtendAvailable] = useState(null);
   extendData.new_end_datetime
 
 ]);
-
 
   const filteredBookings = bookings
     ?.filter((booking) => {
@@ -4745,21 +4842,19 @@ const [isExtendAvailable, setIsExtendAvailable] = useState(null);
                 }
               />
 
-              {extendAvailabilityMessage && (
+              {extendMessage && (
 
   <div
-    className={cn(
-
-      "text-sm px-3 py-2 rounded-md border",
-
-      isExtendAvailable
-        ? "bg-green-500/10 border-green-500 text-green-400"
-        : "bg-red-500/10 border-red-500 text-red-400"
-
-    )}
+    className={`text-sm px-3 py-2 rounded-md border
+      ${
+        isExtendAvailable
+          ? "bg-green-500/10 border-green-500 text-green-400"
+          : "bg-red-500/10 border-red-500 text-red-400"
+      }
+    `}
   >
 
-    {extendAvailabilityMessage}
+    {extendMessage}
 
   </div>
 
