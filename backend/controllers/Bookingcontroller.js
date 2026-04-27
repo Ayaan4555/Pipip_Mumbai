@@ -919,3 +919,111 @@ exports.deleteBooking = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.extendBooking = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const {
+      new_end_datetime,
+      extra_amount
+    } = req.body;
+
+    const booking =
+      await Booking.findById(id);
+
+    if (!booking) {
+
+      return res.status(404).json({
+        message: "Booking not found"
+      });
+
+    }
+
+    // 🚨 Allow extend only if active
+    if (booking.status !== "active") {
+
+      return res.status(400).json({
+        message: "Only active bookings can be extended"
+      });
+
+    }
+
+    const newEnd =
+      new Date(new_end_datetime);
+
+    const oldEnd =
+      booking.end_datetime;
+
+    // 🚨 Check availability
+    const conflict =
+      await Booking.findOne({
+
+        bike_id: booking.bike_id,
+
+        status: {
+          $nin: ["cancelled", "completed"]
+        },
+
+        _id: { $ne: booking._id },
+
+        start_datetime: {
+          $lt: newEnd
+        },
+
+        end_datetime: {
+          $gt: oldEnd
+        },
+
+      });
+
+    if (conflict) {
+
+      return res.status(400).json({
+
+        message:
+          "Bike already booked in extended time",
+
+        bookedFrom:
+          conflict.start_datetime,
+
+        bookedTo:
+          conflict.end_datetime,
+
+      });
+
+    }
+
+    // ✅ Update booking
+
+    booking.end_datetime =
+      newEnd;
+
+    booking.total_amount =
+      (booking.total_amount || 0) +
+      Number(extra_amount || 0);
+
+    await booking.save();
+
+    res.json({
+
+      message:
+        "Booking extended successfully",
+
+      booking,
+
+    });
+
+  }
+
+  catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};

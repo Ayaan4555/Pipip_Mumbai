@@ -1287,7 +1287,6 @@ const emptyCompletionData = {
 //   return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:00`;
 // };
 
-
 const roundToHour = (dateTimeStr) => {
   if (!dateTimeStr) return "";
   const date = new Date(dateTimeStr);
@@ -1326,9 +1325,7 @@ const roundToHour = (dateTimeStr) => {
   const f = (type) => parts.find((p) => p.type === type).value;
 
   return `${f("year")}-${f("month")}-${f("day")}T${f("hour")}:${f("minute")}`;
-
 };
-
 
 export default function Bookings() {
   const [isOpen, setIsOpen] = useState(false);
@@ -1345,6 +1342,13 @@ export default function Bookings() {
   const [previewImage, setPreviewImage] = useState(null);
   const [extraDocFiles, setExtraDocFiles] = useState([]); // Binary files
   const [extraDocPreviews, setExtraDocPreviews] = useState([]); // UI previews
+
+  const [extendDialog, setExtendDialog] = useState(null);
+
+  const [extendData, setExtendData] = useState({
+    new_end_datetime: "",
+    extra_amount: "",
+  });
 
   // Completion dialog
   const [completionDialog, setCompletionDialog] = useState(null);
@@ -1791,145 +1795,101 @@ export default function Bookings() {
   //   originalBookingData,
   // ]);
 
- useEffect(() => {
+  useEffect(() => {
+    const checkDates = async () => {
+      // 🚨 VERY IMPORTANT
+      // Do not check when edit form first opens
+      if (editingBooking && !hasEditedFields) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
 
-  const checkDates = async () => {
+        return;
+      }
 
-    // 🚨 VERY IMPORTANT
-    // Do not check when edit form first opens
-    if (editingBooking && !hasEditedFields) {
+      const activeData = editingBooking ? editFormData : formData;
 
-      setAvailabilityMessage(null);
-      setIsAvailable(null);
+      if (
+        !activeData.bike_id ||
+        !activeData.start_datetime ||
+        !activeData.end_datetime
+      ) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
 
-      return;
-    }
+      const start = new Date(activeData.start_datetime);
 
-    const activeData =
-      editingBooking
-        ? editFormData
-        : formData;
+      const end = new Date(activeData.end_datetime);
 
-    if (
-      !activeData.bike_id ||
-      !activeData.start_datetime ||
-      !activeData.end_datetime
-    ) {
+      if (end <= start) {
+        setAvailabilityMessage("⚠️ Return date must be after pickup date");
 
-      setAvailabilityMessage(null);
-      setIsAvailable(null);
-      return;
+        setIsAvailable(false);
+        return;
+      }
 
-    }
+      // Ignore original unchanged values
+      if (
+        editingBooking &&
+        originalBookingData &&
+        activeData.bike_id === originalBookingData.bike_id &&
+        activeData.start_datetime === originalBookingData.start_datetime &&
+        activeData.end_datetime === originalBookingData.end_datetime
+      ) {
+        setAvailabilityMessage(null);
+        setIsAvailable(null);
+        return;
+      }
 
-    const start =
-      new Date(activeData.start_datetime);
-
-    const end =
-      new Date(activeData.end_datetime);
-
-    if (end <= start) {
-
-      setAvailabilityMessage(
-        "⚠️ Return date must be after pickup date"
-      );
-
-      setIsAvailable(false);
-      return;
-
-    }
-
-    // Ignore original unchanged values
-    if (
-      editingBooking &&
-      originalBookingData &&
-      activeData.bike_id === originalBookingData.bike_id &&
-      activeData.start_datetime === originalBookingData.start_datetime &&
-      activeData.end_datetime === originalBookingData.end_datetime
-    ) {
-
-      setAvailabilityMessage(null);
-      setIsAvailable(null);
-      return;
-
-    }
-
-    // Call API
-    const result =
-      await checkAvailability(
+      // Call API
+      const result = await checkAvailability(
         activeData.bike_id,
         start,
         end,
-        editingBooking
+        editingBooking,
       );
 
-    // Ignore same booking conflict
-    if (
-      !result.isAvailable &&
-      result.bookingId === editingBooking
-    ) {
+      // Ignore same booking conflict
+      if (!result.isAvailable && result.bookingId === editingBooking) {
+        setAvailabilityMessage(null);
+        setIsAvailable(true);
+        return;
+      }
 
-      setAvailabilityMessage(null);
-      setIsAvailable(true);
-      return;
-
-    }
-
-    // Real conflict
-    if (
-      !result.isAvailable &&
-      result.bookedFrom
-    ) {
-
-      const fromDate =
-        format(
+      // Real conflict
+      if (!result.isAvailable && result.bookedFrom) {
+        const fromDate = format(
           new Date(result.bookedFrom),
-          "dd/MM/yyyy hh:mm a"
+          "dd/MM/yyyy hh:mm a",
         );
 
-      const toDate =
-        format(
-          new Date(result.bookedTo),
-          "dd/MM/yyyy hh:mm a"
-        );
+        const toDate = format(new Date(result.bookedTo), "dd/MM/yyyy hh:mm a");
 
-      setAvailabilityMessage(
-        `❌ Already booked: ${fromDate} to ${toDate}`
-      );
+        setAvailabilityMessage(`❌ Already booked: ${fromDate} to ${toDate}`);
 
-      setIsAvailable(false);
+        setIsAvailable(false);
+      } else {
+        setAvailabilityMessage("✅ Bike is available");
 
-    }
+        setIsAvailable(true);
+      }
+    };
 
-    else {
+    checkDates();
+  }, [
+    formData.bike_id,
+    formData.start_datetime,
+    formData.end_datetime,
 
-      setAvailabilityMessage(
-        "✅ Bike is available"
-      );
+    editFormData.bike_id,
+    editFormData.start_datetime,
+    editFormData.end_datetime,
 
-      setIsAvailable(true);
-
-    }
-
-  };
-
-  checkDates();
-
-}, [
-
-  formData.bike_id,
-  formData.start_datetime,
-  formData.end_datetime,
-
-  editFormData.bike_id,
-  editFormData.start_datetime,
-  editFormData.end_datetime,
-
-  editingBooking,
-  originalBookingData,
-  hasEditedFields   // ⭐ IMPORTANT
-
-]);
+    editingBooking,
+    originalBookingData,
+    hasEditedFields, // ⭐ IMPORTANT
+  ]);
 
   const filteredBookings = bookings
     ?.filter((booking) => {
@@ -2502,18 +2462,14 @@ export default function Bookings() {
     //   end_datetime: booking.end_datetime,
     // });
 
-
     setOriginalBookingData({
-  bike_id: booking.bike_id?._id || booking.bike_id,
+      bike_id: booking.bike_id?._id || booking.bike_id,
 
-  // ⭐ MUST match editFormData format
-  start_datetime:
-    toLocalISO(booking.start_datetime),
+      // ⭐ MUST match editFormData format
+      start_datetime: toLocalISO(booking.start_datetime),
 
-  end_datetime:
-    toLocalISO(booking.end_datetime),
-});
-
+      end_datetime: toLocalISO(booking.end_datetime),
+    });
 
     setEditingBooking(booking._id);
 
@@ -2690,7 +2646,6 @@ export default function Bookings() {
   //   }
   // };
 
-
   // const handleSaveEdit = async () => {
   //   if (!editingBooking) return;
 
@@ -2754,84 +2709,143 @@ export default function Bookings() {
   //   }
   // };
 
+  const handleSaveEdit = async () => {
+    if (!editingBooking) return;
 
- const handleSaveEdit = async () => {
-   if (!editingBooking) return;
+    const start = new Date(editFormData.start_datetime);
+    const end = new Date(editFormData.end_datetime);
 
-   const start = new Date(editFormData.start_datetime);
-   const end = new Date(editFormData.end_datetime);
+    if (end.getTime() <= start.getTime()) {
+      toast.error("End time must be after start time");
+      return;
+    }
 
-   if (end.getTime() <= start.getTime()) {
-     toast.error("End time must be after start time");
-     return;
-   }
+    if (!editFormData.total_amount || Number(editFormData.total_amount) <= 0) {
+      toast.error("Please enter rental amount");
+      return;
+    }
 
-   if (!editFormData.total_amount || Number(editFormData.total_amount) <= 0) {
-     toast.error("Please enter rental amount");
-     return;
-   }
+    try {
+      // 1️⃣ UPDATE BOOKING
+      await updateBooking.mutateAsync({
+        id: editingBooking,
+        data: {
+          start_datetime: start.toISOString(),
+          end_datetime: end.toISOString(),
+          total_amount: Number(editFormData.total_amount),
 
-   try {
-     // 1️⃣ UPDATE BOOKING
-     await updateBooking.mutateAsync({
-       id: editingBooking,
-       data: {
-         start_datetime: start.toISOString(),
-         end_datetime: end.toISOString(),
-         total_amount: Number(editFormData.total_amount),
+          customer_name: editFormData.customer_name || undefined,
+          contact_number: editFormData.customer_phone || undefined,
+          customer_email: editFormData.customer_email || undefined,
+          customer_location: editFormData.customer_location || undefined,
 
-         customer_name: editFormData.customer_name || undefined,
-         contact_number: editFormData.customer_phone || undefined,
-         customer_email: editFormData.customer_email || undefined,
-         customer_location: editFormData.customer_location || undefined,
+          lead_source: editFormData.lead_source,
+          source_name: editFormData.source_name || undefined,
+          rental_type: editFormData.rental_type,
 
-         lead_source: editFormData.lead_source,
-         source_name: editFormData.source_name || undefined,
-         rental_type: editFormData.rental_type,
+          deposit_amount: Number(editFormData.deposit_amount) || 0,
 
-         deposit_amount: Number(editFormData.deposit_amount) || 0,
+          reference_partner_share:
+            Number(editFormData.reference_partner_share) || undefined,
 
-         reference_partner_share:
-           Number(editFormData.reference_partner_share) || undefined,
+          provider_partner_share:
+            Number(editFormData.provider_partner_share) || undefined,
 
-         provider_partner_share:
-           Number(editFormData.provider_partner_share) || undefined,
+          fuel_quantity: Number(editFormData.fuel_quantity) || undefined,
 
-         fuel_quantity: Number(editFormData.fuel_quantity) || undefined,
+          account_manager: editFormData.account_manager || undefined,
 
-         account_manager: editFormData.account_manager || undefined,
+          remarks: editFormData.remarks || undefined,
+          notes: editFormData.notes || undefined,
 
-         remarks: editFormData.remarks || undefined,
-         notes: editFormData.notes || undefined,
+          payment_method: editFormData.payment_method,
+        },
+      });
 
-         payment_method: editFormData.payment_method,
-       },
-     });
+      // 2️⃣ UPDATE CUSTOMER — fix: use customer_id, build FormData
+      if (editFormData.customer_id) {
+        const customerFormData = new FormData();
+        customerFormData.append("name", editFormData.customer_name || "");
+        customerFormData.append("phone", editFormData.customer_phone || "");
+        customerFormData.append("email", editFormData.customer_email || "");
+        customerFormData.append(
+          "address",
+          editFormData.customer_location || "",
+        );
 
-     // 2️⃣ UPDATE CUSTOMER — fix: use customer_id, build FormData
-     if (editFormData.customer_id) {
-       const customerFormData = new FormData();
-       customerFormData.append("name", editFormData.customer_name || "");
-       customerFormData.append("phone", editFormData.customer_phone || "");
-       customerFormData.append("email", editFormData.customer_email || "");
-       customerFormData.append("address", editFormData.customer_location || "");
+        await updateCustomerMutation.mutateAsync({
+          id: editFormData.customer_id, // ✅ customer's _id, NOT booking id
+          formData: customerFormData, // ✅ FormData, not plain object
+        });
+      }
 
-       await updateCustomerMutation.mutateAsync({
-         id: editFormData.customer_id, // ✅ customer's _id, NOT booking id
-         formData: customerFormData, // ✅ FormData, not plain object
-       });
-     }
+      setEditingBooking(null);
+      toast.success("Booking & customer updated successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update booking");
+    }
+  };
 
-     setEditingBooking(null);
-     toast.success("Booking & customer updated successfully");
-   } catch (err) {
-     console.error(err);
-     toast.error("Failed to update booking");
-   }
- };
+  const extendBooking = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const res = await axios.patch(
+        `https://pipip-backend-eid3.onrender.com/api/bookings/${id}/extend`,
 
+        data,
+      );
 
+      return res.data;
+    },
 
+    onSuccess: () => {
+      toast.success("Rental extended successfully");
+
+      queryClient.invalidateQueries(["bookings"]);
+
+      setExtendDialog(null);
+    },
+
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to extend rental");
+    },
+  });
+
+  const handleExtendRental = async () => {
+    if (!extendDialog) return;
+
+    try {
+      const newEnd = new Date(extendData.new_end_datetime);
+
+      if (!extendData.extra_amount) {
+        toast.error("Enter extra amount");
+
+        return;
+      }
+
+      await extendBooking.mutateAsync({
+        id: extendDialog._id,
+
+        data: {
+          new_end_datetime: newEnd.toISOString(),
+
+          extra_amount: Number(extendData.extra_amount),
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleOpenExtend = (booking) => {
+    setExtendDialog(booking);
+
+    setExtendData({
+      new_end_datetime: formatToLocalInput(booking.end_datetime),
+
+      extra_amount: "",
+    });
+  };
 
   const handleExtraDocsChange = (e) => {
     const files = Array.from(e.target.files);
@@ -4097,6 +4111,14 @@ export default function Bookings() {
                             </Button>
                           )}
 
+                          <Button
+                            variant="outline"
+                            className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
+                            onClick={() => handleOpenExtend(booking)}
+                          >
+                            Extend
+                          </Button>
+
                           {booking.payment_status !== "paid" &&
                             booking.status !== "cancelled" && (
                               <Button
@@ -4361,6 +4383,64 @@ export default function Bookings() {
           )}
         </div>
       )}
+
+      <Dialog open={!!extendDialog} onOpenChange={() => setExtendDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Extend Rental</DialogTitle>
+
+          <div className="space-y-4">
+            {/* New End Time */}
+
+            <div className="space-y-2">
+              <Label>New End Date/Time</Label>
+
+              <Input
+                type="datetime-local"
+                value={extendData.new_end_datetime}
+                onChange={(e) =>
+                  setExtendData({
+                    ...extendData,
+                    new_end_datetime: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            {/* Extra Amount */}
+
+            <div className="space-y-2">
+              <Label>Extra Amount (₹)</Label>
+
+              <Input
+                type="number"
+                placeholder="Enter extra amount"
+                value={extendData.extra_amount}
+                onChange={(e) =>
+                  setExtendData({
+                    ...extendData,
+                    extra_amount: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            {/* Buttons */}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setExtendDialog(null)}>
+                Cancel
+              </Button>
+
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleExtendRental}
+              >
+                Extend Rental
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -38,6 +38,7 @@ const {
   updateBookingStatus,
   deleteBooking,
   adminCreateBooking,
+  extendBooking,
 } = require("../controllers/Bookingcontroller");
 const upload = require("../middleware/upload");
 const router = express.Router();
@@ -62,5 +63,10 @@ router.put(
 );
 
 router.delete("/:id", deleteBooking);
+
+router.patch(
+  "/:id/extend",
+  extendBooking
+);
 
 module.exports = router;
