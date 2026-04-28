@@ -2897,6 +2897,10 @@ export default function Bookings() {
       await updateBooking.mutateAsync({
         id: editingBooking,
         data: {
+
+            bike_id: editFormData.bike_id,
+
+
           start_datetime: start.toISOString(),
           end_datetime: end.toISOString(),
           total_amount: Number(editFormData.total_amount),
