@@ -4453,33 +4453,17 @@ export default function Bookings() {
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||
                             booking.status === "pending") && (
-                            //   <Button
-                            //     size="sm"
-                            //     variant="outline"
-                            //     className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
-                            //     onClick={() => handleOpenExtend(booking)}
-                            //   >
-                            //     <Clock className="w-4 h-4 mr-1" /> Extend
-                            //   </Button>
-                            // )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
+                                onClick={() => handleOpenExtend(booking)}
+                              >
+                                <Clock className="w-4 h-4 mr-1" /> Extend
+                              </Button>
+                            )}
 
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenExtend(booking)}
-                              className="text-blue-600 hover:bg-blue-50 border-blue-200 dark:hover:bg-blue-500/10"
-                            >
-                              <Clock className="w-4 h-4" />
-
-                              {/* Mobile → Ext */}
-                              <span className="ml-1 sm:hidden">Ext</span>
-
-                              {/* Desktop → Extend */}
-                              <span className="ml-1 hidden sm:inline">
-                                Extend
-                              </span>
-                            </Button>
-                          )}
+                            
 
                           {booking.payment_status !== "paid" &&
                             booking.status !== "cancelled" && (
