@@ -4417,7 +4417,8 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0">
+                        {/* <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0"> */}
+                        <div className="flex flex-wrap lg:flex-col items-center lg:items-end gap-2 shrink-0 w-full lg:w-auto justify-start sm:justify-end">
                           <Button
                             size="sm"
                             variant="ghost"
