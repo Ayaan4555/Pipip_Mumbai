@@ -2977,9 +2977,20 @@ export default function Bookings() {
       setExtendDialog(null);
     },
 
+    // onError: (error) => {
+    //   toast.error(error.response?.data?.message || "Failed to extend rental");
+    // },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to extend rental");
-    },
+
+  console.log("Extend Error:", error.response?.data);
+
+  toast.error(
+    error.response?.data?.message ||
+    JSON.stringify(error.response?.data) ||
+    "Failed to extend rental"
+  );
+
+},
   });
 
   // const handleExtendRental = async () => {
