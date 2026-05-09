@@ -10,9 +10,12 @@ const Footer = () => {
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="font-display text-3xl text-gradient-sunset mb-4">Pipip</h3>
+            <h3 className="font-display text-3xl text-gradient-sunset mb-4">
+              Pipip
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Self-drive scooters in Mumbai. Explore the city your way with our reliable and affordable rental service.
+              Self-drive scooters in Mumbai. Explore the city your way with our
+              reliable and affordable rental service.
             </p>
             <div className="flex gap-4">
               <a
@@ -45,7 +48,9 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold text-foreground mb-4">Quick Links</h4>
+            <h4 className="text-lg font-semibold text-foreground mb-4">
+              Quick Links
+            </h4>
             <ul className="space-y-2">
               {[
                 { label: "Home", href: "/#home" },
@@ -138,7 +143,13 @@ const Footer = () => {
                   @pipip_mumbai
                 </a>
               </li>
-              <li>Bhendi Bazar, Mumbai - 400003</li>
+              <li>
+                Hub Address :- Rahat Tower, Nishanpada Road, Khadak, Dongri,
+                Mumbai, Maharashtra 400009
+              </li>
+              <li>
+                Head office :- Pipip services, 108, 1st Floor, Plot No. 88/89, Surat Sadan, Surat Street, Masjid Bunder, Mumbai, Maharashtra 400009
+              </li>
             </ul>
           </div>
         </div>
@@ -148,7 +159,9 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <p>© {currentYear} Pipip. All rights reserved.</p>
             <p className="flex items-center gap-1">
-              Made with <Heart className="w-4 h-4 text-destructive fill-destructive" /> in Mumbai
+              Made with{" "}
+              <Heart className="w-4 h-4 text-destructive fill-destructive" /> in
+              Mumbai
             </p>
           </div>
         </div>
