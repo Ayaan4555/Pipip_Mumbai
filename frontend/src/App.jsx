@@ -23,6 +23,8 @@ import Contact from "./components/Contact";
 import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import TermsAndConditions from "./Pages/TermsAndConditions";
 import RefundPolicy from "./Pages/RefundPolicy";
+import AnalyticsTracker from "./Pages/AnalyticsTracker";
+
 
 
 
@@ -56,6 +58,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+             <AnalyticsTracker />
            
         </Routes>
       </BrowserRouter>
