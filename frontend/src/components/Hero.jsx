@@ -236,7 +236,7 @@ const features = [
 useEffect(() => {
   const getServer = async () => {
     try {
-      await axios.get("https://localhost:5000/api/rentals");
+      await axios.get("https://pipip-backend-eid3.onrender.com/api/rentals");
     } catch (err) {
       console.error("Server ping failed", err);
     }
