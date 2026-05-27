@@ -102,7 +102,7 @@ const Pricing = () => {
             Simple Pricing
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Affordable rates with no hidden charges. Pay as you ride!
+            Affordable bike on rent and scooty on rent in Mumbai rates with no hidden charges. Pay as you ride!
           </p>
         </motion.div>
 

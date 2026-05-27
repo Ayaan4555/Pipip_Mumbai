@@ -248,11 +248,18 @@ useEffect(() => {
       id="home"
       className="relative min-h-screen flex items-center pt-[140px] overflow-hidden"
     >
+
+    {/* Visually Hidden SEO Header for search engines */}
+      <h1 className="sr-only">
+        Bike Rental in Mumbai | Rent a Bike, Scooty on Rent & Two Wheeler Rental in Mumbai - Pipip Services
+      </h1>
+
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
           src={heroImage}
-          alt="Pipip Scooter in Mumbai"
+          // alt="Pipip Scooter in Mumbai"
+          alt="Self drive bike rental in Mumbai - Pipip scooty on rent"
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/50" />

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { RotateCcw, UserX, Building2, ArrowDownToLine, ShieldCheck, AlertTriangle, Ban } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import useSEO from "../hooks/useSEO";
 
 const sections = [
   {
@@ -56,6 +57,10 @@ const sections = [
 ];
 
 const RefundPolicy = () => {
+  useSEO({
+    title: "Refund & Cancellation Policy | Pipip Bike Rentals Mumbai",
+    description: "Read the Pipip Refund and Cancellation Policy. Learn about security deposit returns, cancellation charges, and how we process refunds."
+  });
   return (
     <div className="min-h-screen bg-background">
       <Header />

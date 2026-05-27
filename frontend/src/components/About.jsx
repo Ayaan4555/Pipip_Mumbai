@@ -49,7 +49,7 @@ const About = () => {
             Why Choose Pipip?
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Experience the freedom of exploring Mumbai on your own terms with our reliable self-drive scooter service.
+            Experience the freedom of exploring Mumbai on your own terms with our premium self drive bike rental in Mumbai. Easily find a bike on rent or scooty on rent near you.
           </p>
         </motion.div>
 
@@ -73,8 +73,7 @@ const About = () => {
                 {" "}
                 Pipip Services
               </span>
-              . We are committed to delivering premium mobility solutions and
-              exceptional customer service across the Mumbai region.
+              . We are committed to delivering the best self drive bike rental Mumbai has to offer. Whether you are looking for an affordable bike rental Mumbai, daily bike rental Mumbai, or the cheapest scooty on rent, we provide premium two wheeler rentals.
             </p>
           </div>
         </motion.div>

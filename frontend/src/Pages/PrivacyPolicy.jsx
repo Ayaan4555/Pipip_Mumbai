@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import useSEO from "../hooks/useSEO";
 
 const sections = [
   {
@@ -79,7 +80,13 @@ const sections = [
   },
 ];
 
+
+
 const PrivacyPolicy = () => {
+  useSEO({
+    title: "Privacy Policy | Pipip Bike Rentals Mumbai",
+    description: "Read our Privacy Policy to understand how we protect your personal details, DL, and Aadhaar ID proofs at Pipip Bike Rentals Mumbai."
+  });
   return (
     <div className="min-h-screen bg-background">
       <Header />

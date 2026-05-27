@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import useSEO from "../hooks/useSEO";
 
 
 const sections = [
@@ -116,6 +117,10 @@ const sections = [
 ];
 
 const TermsAndConditions = () => {
+  useSEO({
+    title: "Terms & Conditions | Pipip Bike Rentals Mumbai",
+    description: "Read the Terms and Conditions of Pipip Bike Rentals. Learn about renting rules, host/guest responsibilities, liability policy, and Mumbai jurisdiction disputes."
+  });
   return (
     <div className="min-h-screen bg-background">
       <Header />

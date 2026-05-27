@@ -36,6 +36,7 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import useSEO from "../hooks/useSEO";
 
 const initialCustomerData = {
   name: "",
@@ -73,6 +74,10 @@ export default function BookBike() {
 
   const { data: bike, isLoading: bikeLoading } = useBike(bikeId || "");
   const { data: areas } = useActiveAreas();
+  useSEO({
+    title: bike ? `Book ${bike.model} on Rent in Mumbai | Pipip Rentals` : "Book a Bike on Rent in Mumbai - Pipip",
+    description: bike ? `Rent ${bike.model} in Mumbai starting at just Rs. ${bike.price_per_day}/day. Easy online bike booking, zero hidden charges, and quick pickup.` : "Book your self-drive bike rental online in Mumbai."
+  });
   const createCustomer = useCreateCustomer();
   const createBooking = useCreateBooking();
   const { checkAvailability, checking } = useBikeAvailability();

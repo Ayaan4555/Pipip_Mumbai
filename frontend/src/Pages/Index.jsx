@@ -9,12 +9,18 @@ import RentalForm from "../components/RentalForm";
 import { useEffect } from "react";
 import FeaturedBikes from "../components/FeaturedBIke";
 import FAQ from "../components/FAQ";
+import useSEO from "../hooks/useSEO";
 
 
 
 const Index = () => {
 
   const location = useLocation();
+
+  useSEO({
+    title: "Pipip | Bike Rental in Mumbai - Rent Scooty & Bikes on Rent",
+    description: "Affordable self drive bike rental in Mumbai. Rent a scooty or bike online starting from Rs. 600/day . Choose Activa, Burgman , Royal Enfield, and KTM. Easy online booking, pay on pickup."
+  });
 
   useEffect(() => {
     // Check if we just arrived here from another page with a 'scrollTo' instruction
