@@ -25,13 +25,31 @@ const api = axios.create({
 //   });
 // }
 
+// export function useBookingStats(period = "all", startDate = null, endDate = null) {
+//   return useQuery({
+//     queryKey: ["booking-stats", period, startDate, endDate],
+//     queryFn: async () => {
+//       const params = { period };
+//       if (startDate) params.startDate = startDate;
+//       if (endDate) params.endDate = endDate;
+//       const { data } = await api.get(`/reports/stats`, { params });
+//       return data;
+//     },
+//   });
+// }
+
 export function useBookingStats(period = "all", startDate = null, endDate = null) {
   return useQuery({
     queryKey: ["booking-stats", period, startDate, endDate],
     queryFn: async () => {
       const params = { period };
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
+      
+      if (startDate && endDate) {
+        // Force local day boundaries to match Excel parameters exactly
+        params.startDate = new Date(`${startDate}T00:00:00`).toISOString();
+        params.endDate = new Date(`${endDate}T23:59:59.999`).toISOString();
+      }
+
       const { data } = await api.get(`/reports/stats`, { params });
       return data;
     },
@@ -42,18 +60,33 @@ export function useBookingStats(period = "all", startDate = null, endDate = null
  * Hook: Fetch revenue broken down by bike
  * GET /api/reports/bike-revenue
  */
+// export function useBikeRevenueReport(fromDate, toDate) {
+//   return useQuery({
+//     queryKey: ['bike-revenue', fromDate, toDate],
+//     queryFn: async () => {
+//       const { data } = await api.get(`/reports/bike-revenue`, {
+//         params: { 
+//           fromDate: fromDate?.toISOString(), 
+//           toDate: toDate?.toISOString() 
+//         }
+//       });
+//       return data;
+//     }
+//   });
+// }
 export function useBikeRevenueReport(fromDate, toDate) {
   return useQuery({
-    queryKey: ['bike-revenue', fromDate, toDate],
+    queryKey: ["bike-revenue", fromDate, toDate],
     queryFn: async () => {
       const { data } = await api.get(`/reports/bike-revenue`, {
-        params: { 
-          fromDate: fromDate?.toISOString(), 
-          toDate: toDate?.toISOString() 
-        }
+        params: {
+          // Wrap in fresh Date constructors to safeguard conversions
+          fromDate: fromDate ? new Date(fromDate).toISOString() : undefined,
+          toDate: toDate ? new Date(toDate).toISOString() : undefined,
+        },
       });
       return data;
-    }
+    },
   });
 }
 

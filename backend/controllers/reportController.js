@@ -83,17 +83,70 @@ const {
 //   }
 // };
 
+// exports.getBookingStats = async (req, res) => {
+//   try {
+//     const { period = "all", startDate, endDate } = req.query;
+//     let query = {};
+
+//     // Custom date range takes priority over period
+//     if (startDate && endDate) {
+//       query.createdAt = {
+//         $gte: startOfDay(new Date(startDate)),
+//         $lte: endOfDay(new Date(endDate)),
+//       };
+//     } else if (period !== "all") {
+//       let start, end;
+//       const now = new Date();
+//       if (period === "today") {
+//         start = startOfDay(now);
+//         end = endOfDay(now);
+//       } else if (period === "week") {
+//         start = startOfWeek(now);
+//         end = endOfWeek(now);
+//       } else if (period === "month") {
+//         start = startOfMonth(now);
+//         end = endOfMonth(now);
+//       }
+//       query.createdAt = { $gte: start, $lte: end };
+//     }
+
+//     const bookings = await Booking.find(query);
+
+//     const stats = {
+//       total_bookings: bookings.length,
+//       pending_bookings: bookings.filter((b) => b.status === "pending").length,
+//       active_bookings: bookings.filter((b) =>
+//         ["active", "confirmed"].includes(b.status),
+//       ).length,
+//       completed_bookings: bookings.filter((b) => b.status === "completed")
+//         .length,
+//       cancelled_bookings: bookings.filter((b) => b.status === "cancelled")
+//         .length,
+//       total_revenue: bookings
+//         .filter((b) => b.status === "completed")
+//         .reduce((sum, b) => sum + (b.total_amount || 0), 0),
+//     };
+
+//     res.json(stats);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.getBookingStats = async (req, res) => {
   try {
     const { period = "all", startDate, endDate } = req.query;
     let query = {};
 
-    // Custom date range takes priority over period
+    // Use start_datetime so it matches your bike-revenue logic perfectly
     if (startDate && endDate) {
-      query.createdAt = {
-        $gte: startOfDay(new Date(startDate)),
-        $lte: endOfDay(new Date(endDate)),
-      };
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      query.start_datetime = { $gte: start, $lte: end };
     } else if (period !== "all") {
       let start, end;
       const now = new Date();
@@ -107,7 +160,7 @@ exports.getBookingStats = async (req, res) => {
         start = startOfMonth(now);
         end = endOfMonth(now);
       }
-      query.createdAt = { $gte: start, $lte: end };
+      query.start_datetime = { $gte: start, $lte: end };
     }
 
     const bookings = await Booking.find(query);
@@ -134,6 +187,56 @@ exports.getBookingStats = async (req, res) => {
 };
 
 // 2. Revenue per Bike (Top Performers)
+// exports.getBikeRevenueReport = async (req, res) => {
+//   try {
+//     const { fromDate, toDate } = req.query;
+//     let matchQuery = { status: "completed" };
+
+//     if (fromDate || toDate) {
+//       matchQuery.start_datetime = {};
+//       if (fromDate) matchQuery.start_datetime.$gte = new Date(fromDate);
+//       if (toDate) matchQuery.start_datetime.$lte = new Date(toDate);
+//     }
+
+//     const report = await Booking.aggregate([
+//       { $match: matchQuery },
+//       {
+//         $lookup: {
+//           from: "bikes", // Name of your bikes collection
+//           localField: "bike_id",
+//           foreignField: "_id",
+//           as: "bike_info",
+//         },
+//       },
+//       { $unwind: "$bike_info" },
+//       {
+//         $group: {
+//           _id: "$bike_id",
+//           model: { $first: "$bike_info.model" },
+//           number_plate: { $first: "$bike_info.number_plate" },
+//           bike_owner: { $first: "$bike_info.bike_owner" },
+//           total_bookings: { $sum: 1 },
+//           total_revenue: { $sum: "$total_amount" },
+//           // Calculating hours: (End - Start) / ms_per_hour
+//           total_hours: {
+//             $sum: {
+//               $divide: [
+//                 { $subtract: ["$end_datetime", "$start_datetime"] },
+//                 3600000,
+//               ],
+//             },
+//           },
+//         },
+//       },
+//       { $sort: { total_revenue: -1 } },
+//     ]);
+
+//     res.json(report);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.getBikeRevenueReport = async (req, res) => {
   try {
     const { fromDate, toDate } = req.query;
@@ -141,15 +244,27 @@ exports.getBikeRevenueReport = async (req, res) => {
 
     if (fromDate || toDate) {
       matchQuery.start_datetime = {};
-      if (fromDate) matchQuery.start_datetime.$gte = new Date(fromDate);
-      if (toDate) matchQuery.start_datetime.$lte = new Date(toDate);
+      
+      if (fromDate) {
+        // Sets time to 00:00:00.000 local time equivalent
+        const start = new Date(fromDate);
+        start.setHours(0, 0, 0, 0);
+        matchQuery.start_datetime.$gte = start;
+      }
+      
+      if (toDate) {
+        // Sets time to 23:59:59.999 local time equivalent
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        matchQuery.start_datetime.$lte = end;
+      }
     }
 
     const report = await Booking.aggregate([
       { $match: matchQuery },
       {
         $lookup: {
-          from: "bikes", // Name of your bikes collection
+          from: "bikes",
           localField: "bike_id",
           foreignField: "_id",
           as: "bike_info",
@@ -164,7 +279,6 @@ exports.getBikeRevenueReport = async (req, res) => {
           bike_owner: { $first: "$bike_info.bike_owner" },
           total_bookings: { $sum: 1 },
           total_revenue: { $sum: "$total_amount" },
-          // Calculating hours: (End - Start) / ms_per_hour
           total_hours: {
             $sum: {
               $divide: [
