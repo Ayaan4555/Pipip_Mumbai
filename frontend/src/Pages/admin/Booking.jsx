@@ -1368,40 +1368,112 @@ export default function Bookings() {
     activeTab !== "all" ? { status: activeTab } : undefined,
   );
 
-  const handleExport = () => {
+  // const handleExport = () => {
+  //   if (!bookings || bookings.length === 0) {
+  //     toast.error("No data to export");
+  //     return;
+  //   }
+
+  //   const exportData = bookings.map((b) => ({
+  //     Booking_ID: b._id,
+  //     Customer_Name: b.customer_name || b.customers?.name,
+  //     Phone: b.contact_number || b.customers?.phone,
+  //     Email: b.customer_email || b.customers?.email,
+  //     Bike: b.bikes?.model,
+  //     Number_Plate: b.bikes?.number_plate,
+  //     Start_Date: format(new Date(b.start_datetime), "dd-MM-yyyy HH:mm"),
+  //     End_Date: format(new Date(b.end_datetime), "dd-MM-yyyy HH:mm"),
+  //     Status: b.status,
+  //     Payment_Status: b.payment_status,
+  //     Rental_Type: b.rental_type,
+  //     Total_Amount: b.total_amount,
+  //     Deposit: b.deposit_amount,
+  //     Fuel_Quantity: b.fuel_quantity,
+  //     Fuel_Out: b.fuel_out_liters,
+  //     Fuel_In: b.fuel_in_liters,
+  //     Penalty: b.penalty_amount,
+  //     Challan: b.challan_amount,
+  //     Damage: b.damage_cost,
+  //     Payment_Method: b.payment_method,
+  //     Source: b.booking_source,
+  //     Lead_Source: b.lead_source,
+  //     Source_Name: b.source_name,
+  //     Account_Manager: b.account_manager,
+  //     Notes: b.notes,
+  //     Remarks: b.remarks,
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(exportData);
+  //   const workbook = XLSX.utils.book_new();
+
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Bookings");
+
+  //   const excelBuffer = XLSX.write(workbook, {
+  //     bookType: "xlsx",
+  //     type: "array",
+  //   });
+
+  //   const fileData = new Blob([excelBuffer], {
+  //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //   });
+
+  //   saveAs(fileData, `Bookings_${Date.now()}.xlsx`);
+  // };
+
+const handleExport = () => {
     if (!bookings || bookings.length === 0) {
       toast.error("No data to export");
       return;
     }
 
-    const exportData = bookings.map((b) => ({
-      Booking_ID: b._id,
-      Customer_Name: b.customer_name || b.customers?.name,
-      Phone: b.contact_number || b.customers?.phone,
-      Email: b.customer_email || b.customers?.email,
-      Bike: b.bikes?.model,
-      Number_Plate: b.bikes?.number_plate,
-      Start_Date: format(new Date(b.start_datetime), "dd-MM-yyyy HH:mm"),
-      End_Date: format(new Date(b.end_datetime), "dd-MM-yyyy HH:mm"),
-      Status: b.status,
-      Payment_Status: b.payment_status,
-      Rental_Type: b.rental_type,
-      Total_Amount: b.total_amount,
-      Deposit: b.deposit_amount,
-      Fuel_Quantity: b.fuel_quantity,
-      Fuel_Out: b.fuel_out_liters,
-      Fuel_In: b.fuel_in_liters,
-      Penalty: b.penalty_amount,
-      Challan: b.challan_amount,
-      Damage: b.damage_cost,
-      Payment_Method: b.payment_method,
-      Source: b.booking_source,
-      Lead_Source: b.lead_source,
-      Source_Name: b.source_name,
-      Account_Manager: b.account_manager,
-      Notes: b.notes,
-      Remarks: b.remarks,
-    }));
+    
+
+    const exportData = bookings.map((b) => {
+       const targetBikeId = b.bike_id?._id || b.bike_id;
+     const matchingBike = bikes?.find((bike) => bike._id === targetBikeId);
+
+     // 2️⃣ EXTRACT THE OWNER AND BACKUPS Safely
+     const bikeOwner = matchingBike?.bike_owner || b.bikes?.bike_owner || "";
+
+      return {
+        Booking_ID: b._id,
+        Customer_Name: b.customer_name || b.customers?.name,
+        Phone: b.contact_number || b.customers?.phone,
+        Email: b.customer_email || b.customers?.email,
+        Bike: b.bikes?.model,
+        Number_Plate: b.bikes?.number_plate,
+
+        Owner: bikeOwner,
+        // Start_Date: format(new Date(b.start_datetime), "dd-MM-yyyy HH:mm"),
+        Start_Date: new Date(b.start_datetime).toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+        }),
+        // End_Date: format(new Date(b.end_datetime), "dd-MM-yyyy HH:mm"),
+        End_Date: new Date(b.end_datetime).toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+        }),
+
+        Status: b.status,
+        Payment_Status: b.payment_status,
+        Rental_Type: b.rental_type,
+        Total_Amount: b.total_amount,
+        Deposit: b.deposit_amount,
+        Fuel_Quantity: b.fuel_quantity,
+        Fuel_Out: b.fuel_out_liters,
+        Fuel_In: b.fuel_in_liters,
+        Penalty: b.penalty_amount,
+        Challan: b.challan_amount,
+        Damage: b.damage_cost,
+        Payment_Method: b.payment_method,
+        Source: b.booking_source,
+        Lead_Source: b.lead_source,
+        Source_Name: b.source_name,
+        Account_Manager: b.account_manager,
+        Notes: b.notes,
+        Remarks: b.remarks,
+      };
+    } );
+
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();

@@ -14,13 +14,18 @@ const {
 // 1. General Dashboard Stats
 exports.getBookingStats = async (req, res) => {
   try {
-    const { period = "all" } = req.query;
+    // const { period = "all" } = req.query;
+    const { period = "all", startDate, endDate } = req.query;
     let query = {};
 
     // Date Filtering Logic
-    if (period !== "all") {
-      let start, end;
-      const now = new Date();
+   
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: startOfDay(new Date(startDate)),
+        $lte: endOfDay(new Date(endDate)),
+      };
+    } else if (period !== "all") {
       if (period === "today") {
         start = startOfDay(now);
         end = endOfDay(now);
@@ -86,6 +91,7 @@ exports.getBikeRevenueReport = async (req, res) => {
           _id: "$bike_id",
           model: { $first: "$bike_info.model" },
           number_plate: { $first: "$bike_info.number_plate" },
+          bike_owner: { $first: "$bike_info.bike_owner" },
           total_bookings: { $sum: 1 },
           total_revenue: { $sum: "$total_amount" },
           // Calculating hours: (End - Start) / ms_per_hour
