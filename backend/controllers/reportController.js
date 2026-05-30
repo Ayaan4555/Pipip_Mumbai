@@ -12,20 +12,91 @@ const {
 } = require("date-fns");
 
 // 1. General Dashboard Stats
+// exports.getBookingStats = async (req, res) => {
+//   try {
+//     // const { period = "all" } = req.query;
+//     const { period = "all", startDate, endDate } = req.query;
+//     let query = {};
+
+//     // Date Filtering Logic
+   
+//     // if (startDate && endDate) {
+//     //   query.createdAt = {
+//     //     $gte: startOfDay(new Date(startDate)),
+//     //     $lte: endOfDay(new Date(endDate)),
+//     //   };
+//     // } else if (period !== "all") {
+//     //   if (period === "today") {
+//     //     start = startOfDay(now);
+//     //     end = endOfDay(now);
+//     //   } else if (period === "week") {
+//     //     start = startOfWeek(now);
+//     //     end = endOfWeek(now);
+//     //   } else if (period === "month") {
+//     //     start = startOfMonth(now);
+//     //     end = endOfMonth(now);
+//     //   }
+
+//     // Custom date range takes priority over period
+//     if (startDate && endDate) {
+//       query.createdAt = {
+//         $gte: startOfDay(new Date(startDate)),
+//         $lte: endOfDay(new Date(endDate)),
+//       };
+//     } else if (period !== "all") {
+//       let start, end;
+//       const now = new Date();
+//       if (period === "today") {
+//         start = startOfDay(now);
+//         end = endOfDay(now);
+//       } else if (period === "week") {
+//         start = startOfWeek(now);
+//         end = endOfWeek(now);
+//       } else if (period === "month") {
+//         start = startOfMonth(now);
+//         end = endOfMonth(now);
+//       }
+
+//       query.createdAt = { $gte: start, $lte: end };
+//     }
+
+//     const bookings = await Booking.find(query);
+
+//     const stats = {
+//       total_bookings: bookings.length,
+//       pending_bookings: bookings.filter((b) => b.status === "pending").length,
+//       active_bookings: bookings.filter((b) =>
+//         ["active", "confirmed"].includes(b.status),
+//       ).length,
+//       completed_bookings: bookings.filter((b) => b.status === "completed")
+//         .length,
+//       cancelled_bookings: bookings.filter((b) => b.status === "cancelled")
+//         .length,
+//       total_revenue: bookings
+//         .filter((b) => b.status === "completed")
+//         .reduce((sum, b) => sum + (b.total_amount || 0), 0),
+//     };
+
+//     res.json(stats);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.getBookingStats = async (req, res) => {
   try {
-    // const { period = "all" } = req.query;
     const { period = "all", startDate, endDate } = req.query;
     let query = {};
 
-    // Date Filtering Logic
-   
+    // Custom date range takes priority over period
     if (startDate && endDate) {
       query.createdAt = {
         $gte: startOfDay(new Date(startDate)),
         $lte: endOfDay(new Date(endDate)),
       };
     } else if (period !== "all") {
+      let start, end;
+      const now = new Date();
       if (period === "today") {
         start = startOfDay(now);
         end = endOfDay(now);
@@ -36,7 +107,6 @@ exports.getBookingStats = async (req, res) => {
         start = startOfMonth(now);
         end = endOfMonth(now);
       }
-
       query.createdAt = { $gte: start, $lte: end };
     }
 

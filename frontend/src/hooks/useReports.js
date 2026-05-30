@@ -11,17 +11,30 @@ const api = axios.create({
  * Hook: Fetch general booking stats
  * GET /api/reports/stats?period=today
  */
-export function useBookingStats(period = 'all', startDate = null, endDate = null) {
+// export function useBookingStats(period = 'all', startDate = null, endDate = null) {
+//   return useQuery({
+//     queryKey: ['booking-stats', period , startDate, endDate] ,
+//     queryFn: async () => {
+//       // const { data } = await api.get(`/reports/stats`, { params: { period } });
+//       const params = { period };
+//       if (startDate) params.startDate = startDate;
+//       if (endDate) params.endDate = endDate;
+//       const { data } = await api.get(`/reports/stats`, { params });
+//       return data;
+//     }
+//   });
+// }
+
+export function useBookingStats(period = "all", startDate = null, endDate = null) {
   return useQuery({
-    queryKey: ['booking-stats', period , startDate, endDate] ,
+    queryKey: ["booking-stats", period, startDate, endDate],
     queryFn: async () => {
-      // const { data } = await api.get(`/reports/stats`, { params: { period } });
       const params = { period };
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const { data } = await api.get(`/reports/stats`, { params });
       return data;
-    }
+    },
   });
 }
 
