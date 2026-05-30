@@ -3,7 +3,7 @@ import axios from 'axios';
 import { subDays } from 'date-fns';
 
 // Create an axios instance for cleaner calls
-const api = axios.create({
+export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://pipip-backend-eid3.onrender.com/api',
 });
 
