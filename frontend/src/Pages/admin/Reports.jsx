@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useBookingStats, useBikeRevenueReport, useIdleBikesReport, useDailyRevenueReport } from '../../hooks/useReports';
+import { useBookingStats, useBikeRevenueReport, useIdleBikesReport, useDailyRevenueReport, api} from '../../hooks/useReports';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line , Legend } from 'recharts';
 import { Download, TrendingUp, Bike, DollarSign, Calendar, AlertTriangle , Filter , X , CheckCircle2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
