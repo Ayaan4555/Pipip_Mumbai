@@ -1522,6 +1522,7 @@ const handleExport = () => {
 
 
  const [downloadingBooking, setDownloadingBooking] = useState(null);
+ const [isGeneratingBill, setIsGeneratingBill] = useState(false); // 👈 NEW LOADING STATE
 
   // ====== NEW INVOICE STATES & HANDLER ======
   const [showInvoice, setShowInvoice] = useState(false);
@@ -1558,6 +1559,7 @@ const handleExport = () => {
     if (!downloadingBooking) return;
 
     const generateDirectImage = async () => {
+      setIsGeneratingBill(true); // 👈 1. START LOADING SPINNER NOW
       const element = document.getElementById("direct-bill-hidden-node");
       if (!element) {
         setDownloadingBooking(null);
@@ -1650,6 +1652,7 @@ const handleExport = () => {
       } finally {
         // Reset state tracker to safely cleanly unmount background DOM context structure
         setDownloadingBooking(null);
+        setIsGeneratingBill(false); // 👈 1. STOP LOADING SPINNER NOW
       }
     };
 
@@ -4656,7 +4659,7 @@ const handleExport = () => {
                           </Button>
 
                           {/* ================= ✅ DIRECT EXPORT LINK INITIATION BUTTON ================= */}
-  <Button
+  {/* <Button
     size="sm"
     variant="outline"
     onClick={() => setDownloadingBooking(booking)}
@@ -4664,8 +4667,28 @@ const handleExport = () => {
   >
     <Download className="w-4 h-4 mr-1" />
     Bill
-  </Button>
+  </Button> */}
   {/* ========================================================================= */}
+
+  {/* <Button
+    size="sm"
+    variant="outline"
+    disabled={isGeneratingBill} // Disables clicking while downloading
+    onClick={() => setDownloadingBooking(booking)}
+    className="text-emerald-600 hover:bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:border-emerald-800"
+  >
+    {isGeneratingBill && downloadingBooking?._id === booking._id ? (
+      <>
+        <span className="animate-spin mr-1 inline-block w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full dark:border-emerald-400"></span>
+        Saving...
+      </>
+    ) : (
+      <>
+        <Download className="w-4 h-4 mr-1" />
+        Bill
+      </>
+    )}
+  </Button> */}
 
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||
