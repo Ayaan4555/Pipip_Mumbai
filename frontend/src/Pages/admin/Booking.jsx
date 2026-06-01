@@ -1364,6 +1364,147 @@ export default function Bookings() {
   const [startRideDialog, setStartRideDialog] = useState(null);
   const [startRideData, setStartRideData] = useState({ fuel_out_liters: "" });
 
+  // State to hold the actively targeted booking data for the background downloader
+  const [downloadingBooking, setDownloadingBooking] = useState(null);
+
+  // ====== NEW INVOICE STATES & HANDLER ======
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [generatedInvoice, setGeneratedInvoice] = useState(null);
+
+  const handleDownloadDirectInvoice = (booking) => {
+    // Dynamically look up details from your state definitions
+    const targetBikeId = booking.bike_id?._id || booking.bike_id;
+    const matchingBike = bikes?.find((bike) => bike._id === targetBikeId);
+
+    // Build invoice payload matching standard receipt component schema structures
+    setGeneratedInvoice({
+      bookingId: booking._id,
+      customerName: booking.customer_name || booking.customers?.name || "Customer",
+      phone: booking.contact_number || booking.customers?.phone || "-",
+      bike: {
+        model: booking.vehicle_make_model || matchingBike?.model || "Bike",
+        number_plate: matchingBike?.number_plate || booking.bikes?.number_plate || ""
+      },
+      startDate: booking.start_datetime,
+      endDate: booking.end_datetime,
+      amount: booking.total_amount,
+      deposit: booking.deposit_amount || 0,
+      paymentMethod: booking.payment_method || "cash",
+      status: booking.status
+    });
+
+    setShowInvoice(true);
+    toast.success("Invoice view loaded successfully!");
+  };
+
+  // Background canvas processing effect for immediate receipt layout downloading
+  useEffect(() => {
+    if (!downloadingBooking) return;
+
+    const generateDirectImage = async () => {
+      const element = document.getElementById("direct-bill-hidden-node");
+      if (!element) {
+        setDownloadingBooking(null);
+        return;
+      }
+
+      try {
+        const { default: html2canvas } = await import("html2canvas");
+
+        const canvas = await html2canvas(element, {
+          scale: 3, // Premium quality print multiplier
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          onclone: (clonedDoc) => {
+            const receipt = clonedDoc.getElementById("direct-bill-hidden-node");
+            if (!receipt) return;
+
+            // Force paper print guidelines 
+            receipt.style.backgroundColor = "white";
+            receipt.style.color = "black";
+            receipt.style.borderRadius = "0px";
+            receipt.style.border = "none";
+            receipt.style.boxShadow = "none";
+
+            // Hide decorative web components
+            const webHeader = clonedDoc.querySelector(".gradient-sunset-direct");
+            if (webHeader) webHeader.style.display = "none";
+
+            // Enforce layout parameters for the Tax Invoice header block
+            const printHeader = clonedDoc.querySelector(".print-header-direct");
+            if (printHeader) {
+              printHeader.style.setProperty("display", "flex", "important");
+              printHeader.style.flexDirection = "row";
+              printHeader.style.justifyContent = "space-between";
+              printHeader.style.padding = "2rem";
+              printHeader.style.borderBottom = "4px solid black";
+              printHeader.querySelectorAll("h1, h2, p").forEach((el) => (el.style.color = "black"));
+            }
+
+            const content = clonedDoc.querySelector(".content-area-direct");
+            if (content) {
+              content.style.backgroundColor = "white";
+              content.style.padding = "2rem";
+            }
+
+            // Standardize copy presentation to pure black ink
+            const allText = clonedDoc.querySelectorAll("p, span, h1, h2, h4, div");
+            allText.forEach((text) => {
+              text.style.color = "black";
+              text.style.borderColor = "black";
+            });
+
+            // Outline wrapper styling configuration
+            const amountBox = clonedDoc.querySelector(".amount-box-direct");
+            if (amountBox) {
+              amountBox.style.backgroundColor = "white";
+              amountBox.style.border = "2px solid black";
+              amountBox.style.borderRadius = "0px";
+              amountBox.style.padding = "2rem";
+            }
+
+            const instructions = clonedDoc.querySelector(".instructions-direct");
+            if (instructions) {
+              instructions.style.backgroundColor = "white";
+              instructions.style.border = "1px solid black";
+              instructions.style.color = "black";
+            }
+
+            const badge = clonedDoc.querySelector(".badge-direct");
+            if (badge) {
+              badge.style.setProperty("background-color", "white", "important");
+              badge.style.setProperty("background-image", "none", "important");
+              badge.style.setProperty("color", "black", "important");
+              badge.style.setProperty("border", "1px solid black", "important");
+            }
+          },
+        });
+
+        // Generate download action
+        const image = canvas.toDataURL("image/png", 1.0);
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = `Receipt-${downloadingBooking._id}.png`;
+        link.click();
+        toast.success("Bill downloaded successfully!");
+      } catch (err) {
+        console.error("Direct download execution failed:", err);
+        toast.error("Could not export receipt image file.");
+      } finally {
+        // Reset state tracker to safely cleanly unmount background DOM context structure
+        setDownloadingBooking(null);
+      }
+    };
+
+    // Give React sufficient cycle overhead layout tick timing to render element nodes cleanly
+    const latencyTimeout = setTimeout(() => {
+      generateDirectImage();
+    }, 150);
+
+    return () => clearTimeout(latencyTimeout);
+  }, [downloadingBooking, bikes]);
+
   const { data: bookings, isLoading } = useBookings(
     activeTab !== "all" ? { status: activeTab } : undefined,
   );
@@ -4509,6 +4650,18 @@ const handleExport = () => {
                             {isExpanded ? "Collapse" : "View"}
                           </Button>
 
+                          {/* ================= ✅ DIRECT EXPORT LINK INITIATION BUTTON ================= */}
+  <Button
+    size="sm"
+    variant="outline"
+    onClick={() => setDownloadingBooking(booking)}
+    className="text-emerald-600 hover:bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:border-emerald-800"
+  >
+    <Download className="w-4 h-4 mr-1" />
+    Bill
+  </Button>
+  {/* ========================================================================= */}
+
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||
                             booking.status === "pending") && (
@@ -4877,6 +5030,205 @@ const handleExport = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ================= ✅ OFF-SCREEN INVOICE ENGINE RENDER LAYER ================= */}
+      {downloadingBooking && (
+        <div
+          style={{
+            position: "absolute",
+            top: "-9999px",
+            left: "-9999px",
+            width: "500px",
+            overflow: "hidden",
+          }}
+        >
+          {(() => {
+            const targetBikeId =
+              downloadingBooking.bike_id?._id || downloadingBooking.bike_id;
+            const matchingBike = bikes?.find((b) => b._id === targetBikeId);
+           const rentalBikeModel =
+             
+             matchingBike?.model ||
+             downloadingBooking.bike_id?.model ||
+             "Scooter";
+            // const issuedTimestamp = downloadingBooking.createdAt
+            //   ? new Date(downloadingBooking.createdAt)
+            //   : new Date();
+//  Updated Correct Line (Checks alternative date paths, falls back to today)
+const issuedTimestamp = downloadingBooking.createdAt 
+  ? new Date(downloadingBooking.createdAt) 
+  : downloadingBooking.start_datetime 
+    ? new Date(downloadingBooking.start_datetime) 
+    : new Date();
+            return (
+              <div
+                id="direct-bill-hidden-node"
+                style={{
+                  width: "500px",
+                  backgroundColor: "#ffffff",
+                  padding: "10px",
+                }}
+              >
+                {/* Formal Document Top Line */}
+                <div className="print-header-direct flex justify-between items-start p-8 border-b-4 border-black mb-6">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo.jpeg"
+                      alt="Pipip Logo"
+                      className="w-12 h-12 object-contain"
+                    />
+                    <div>
+                      <h1 className="text-3xl font-black tracking-tighter text-black">
+                        PIPIP RENTALS
+                      </h1>
+                      <p className="text-xs text-black italic">
+                        Premium Bike Rental Service
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <h2 className="text-xl font-bold text-black uppercase">
+                      Tax Invoice
+                    </h2>
+                    <p className="text-xs text-black font-mono">
+                      #{downloadingBooking._id}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="content-area-direct p-8 space-y-8">
+                  <div className="flex flex-row justify-between gap-4 border-b border-dashed border-black pb-6">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-black uppercase tracking-widest">
+                        Order ID
+                      </span>
+                      <p className="text-sm font-mono font-bold text-black">
+                        #{downloadingBooking._id}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-black text-black uppercase tracking-widest">
+                        Issue Date
+                      </span>
+                      <p className="text-sm font-bold text-black">
+                        {issuedTimestamp.toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black text-black uppercase tracking-[0.2em] mb-4">
+                      Summary Details
+                    </h4>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-black">Customer Name</span>
+                      <span className="font-bold text-black">
+                        {downloadingBooking.customer_name ||
+                          downloadingBooking.customer_id?.name ||
+                          "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-black">Contact Number</span>
+                      <span className="font-bold text-black">
+                        +91{" "}
+                        {downloadingBooking.contact_number ||
+                          downloadingBooking.customer_id?.phone ||
+                          "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-black">Bike Model</span>
+                      <span className="font-bold text-black">
+                        {rentalBikeModel}
+                      </span>
+                    </div>
+
+                    {/* <div className="flex justify-between items-center text-sm">
+                      <span className="text-black">Bike Model</span>
+                      <span className="font-bold text-black">
+                        {matchingBike?.bike_name || rentalBikeModel}
+                      </span>
+                    </div> */}
+                    <div className="flex justify-between items-start text-sm">
+                      <span className="text-black">Rental Period</span>
+                      <div className="text-right text-black">
+                        <p className="font-bold">
+                          {downloadingBooking.start_datetime
+                            ? new Date(
+                                downloadingBooking.start_datetime,
+                              ).toLocaleString("en-IN", {
+                                month: "short",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "-"}
+                        </p>
+                        <p className="text-[10px]">
+                          to{" "}
+                          {downloadingBooking.end_datetime
+                            ? new Date(
+                                downloadingBooking.end_datetime,
+                              ).toLocaleString("en-IN", {
+                                month: "short",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="amount-box-direct bg-white p-8 border-2 border-black">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-black tracking-widest">
+                          Total Amount Paid
+                        </span>
+                        <p className="text-5xl font-black text-black">
+                          ₹{downloadingBooking.total_amount}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="badge-direct text-[10px] font-black px-3 py-1 uppercase border border-black bg-white text-black">
+                          {downloadingBooking.payment_method === "online"
+                            ? "Verified PAID"
+                            : "Pay on Pickup"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="instructions-direct p-4 text-[10px] text-black leading-relaxed border border-black bg-white">
+                    <p className="font-bold mb-1 uppercase tracking-tighter">
+                      Instructions:
+                    </p>
+                    <p>
+                      • Carry original identification and driver documents. No
+                      digital snapshots copies accepted.
+                    </p>
+                    <p>
+                      • Helmets provided based on active stock availability
+                      metrics.
+                    </p>
+                    <p>
+                      • Vehicle should be returned at designated area collection
+                      locations.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
