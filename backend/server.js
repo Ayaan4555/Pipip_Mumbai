@@ -57,9 +57,21 @@ const app = express();
 const server = http.createServer(app); // 👈 NEW: Wrap Express app in HTTP server
 
 // Initialize Socket.io with your exact CORS rules
+// const io = new Server(server, {
+//   cors: {
+//     origin: ["https://www.pipip.in"],
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+//   },
+// });
+
 const io = new Server(server, {
   cors: {
-    origin: ["https://www.pipip.in/"],
+    origin: [
+      "https://www.pipip.in",   // 👈 Fixed: Added without trailing slash
+      "https://www.pipip.in/",  // Keeps the existing one safe
+      "http://localhost:5173",  // Recommended: Add local frontend port if you develop locally
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   },
