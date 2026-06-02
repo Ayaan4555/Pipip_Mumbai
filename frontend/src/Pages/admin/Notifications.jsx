@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { cn } from "../../utils/utils";
-import { Button } from "../../components/ui/Button";
+import { cn } from "../../lib/util";
+import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 
 // Determine the backend URL dynamically to support both local development and production
