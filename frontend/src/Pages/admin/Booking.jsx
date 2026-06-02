@@ -4684,7 +4684,7 @@ useEffect(() => {
   
   {/* ========================================================================= */}
 
-  <Button
+  {/* <Button
     size="sm"
     variant="outline"
     disabled={isGeneratingBill} // Disables clicking while downloading
@@ -4702,7 +4702,7 @@ useEffect(() => {
         Bill
       </>
     )}
-  </Button>
+  </Button> */}
 
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||
