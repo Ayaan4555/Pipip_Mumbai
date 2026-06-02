@@ -30,7 +30,11 @@ import NotificationsCenter from "./Pages/admin/Notifications";
 
 
 const queryClient = new QueryClient();
-// 📱 SYSTEM REGISTER: Initialize Service Worker stream interface context
+
+
+const App = () => {
+
+  // 📱 SYSTEM REGISTER: Initialize Service Worker stream interface context
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       navigator.serviceWorker
@@ -40,7 +44,7 @@ const queryClient = new QueryClient();
     }
   }, []);
 
-const App = () => (
+  return(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
       <BrowserRouter>
@@ -78,7 +82,7 @@ const App = () => (
       </BrowserRouter>
       </AuthProvider>
       </QueryClientProvider>
-    
-);
+  ) 
+};
 
 export default App;
