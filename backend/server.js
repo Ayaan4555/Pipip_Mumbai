@@ -40,19 +40,33 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-
+const http = require("http"); // 👈 NEW: Required to attach Socket.io to Express
+const { Server } = require("socket.io"); // 👈 NEW: Socket.io Server import
 const connectDB = require("./config/db");
 const areaRoutes = require("./routes/areaRoutes");
 const bikeRoutes = require("./routes/bikeRoutes");
 const rentalRoutes = require("./routes/rentalRoutes");
-const paymentRoutes =
-  require("./routes/paymentRoutes");
-
+const paymentRoutes = require("./routes/paymentRoutes");
+const notificationRoutes = require("./routes/notificationRoutes"); // 👈 NEW: Notification routes import
 // Connect to MongoDB
 connectDB();
 
+
 const app = express();
 
+const server = http.createServer(app); // 👈 NEW: Wrap Express app in HTTP server
+
+// Initialize Socket.io with your exact CORS rules
+const io = new Server(server, {
+  cors: {
+    origin: ["https://www.pipip.in/"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  },
+});
+
+// Pass the active io instance context globally so controllers can use it via req.app.get("io")
+app.set("io", io);
 
 
 // Middlewares
@@ -78,6 +92,18 @@ app.use("/api/bookings", require("./routes/BookingRoutes"));
 app.use("/api/availability", require("./routes/AvailabilityRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
+
+app.use("/api/notifications", notificationRoutes); // 👈 NEW: Notification routes mounted
+
+
+// 5. Socket.io Connection Monitoring Log
+io.on("connection", (socket) => {
+  console.log(`🔌 Admin dashboard socket connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`❌ Admin dashboard socket disconnected: ${socket.id}`);
+  });
+});
 
 // Global error handler (IMPORTANT)
 app.use((err, req, res, next) => {

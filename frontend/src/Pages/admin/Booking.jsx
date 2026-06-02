@@ -1057,6 +1057,7 @@
 // }
 
 import { useState, useRef, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -1344,6 +1345,8 @@ export default function Bookings() {
   const [previewImage, setPreviewImage] = useState(null);
   const [extraDocFiles, setExtraDocFiles] = useState([]); // Binary files
   const [extraDocPreviews, setExtraDocPreviews] = useState([]); // UI previews
+
+  const [searchParams] = useSearchParams();
 
   const [extendDialog, setExtendDialog] = useState(null);
 
@@ -2268,6 +2271,24 @@ const handleExport = () => {
     runCheck();
   }, [extendData.new_end_datetime]);
 
+useEffect(() => {
+    const searchVal = searchParams.get("search");
+    if (searchVal) {
+      setSearchQuery(searchVal);
+      if (bookings && bookings.length > 0) {
+        const matched = bookings.find(
+          (b) =>
+            b._id === searchVal ||
+            b._id?.toLowerCase().includes(searchVal.toLowerCase())
+        );
+        if (matched) {
+          setExpandedBookingId(matched._id);
+        }
+      }
+    }
+  }, [searchParams, bookings]);
+
+
   const filteredBookings = bookings
     ?.filter((booking) => {
       if (activeTab === "all") return true;
@@ -2278,6 +2299,7 @@ const handleExport = () => {
 
       const query = searchQuery.toLowerCase();
       return (
+        booking._id?.toLowerCase().includes(query) ||
         booking.customers?.name?.toLowerCase().includes(query) ||
         booking.customers?.phone?.includes(query) ||
         booking.bikes?.model?.toLowerCase().includes(query) ||
@@ -4659,18 +4681,10 @@ const handleExport = () => {
                           </Button>
 
                           {/* ================= ✅ DIRECT EXPORT LINK INITIATION BUTTON ================= */}
-  {/* <Button
-    size="sm"
-    variant="outline"
-    onClick={() => setDownloadingBooking(booking)}
-    className="text-emerald-600 hover:bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:border-emerald-800"
-  >
-    <Download className="w-4 h-4 mr-1" />
-    Bill
-  </Button> */}
+  
   {/* ========================================================================= */}
 
-  {/* <Button
+  <Button
     size="sm"
     variant="outline"
     disabled={isGeneratingBill} // Disables clicking while downloading
@@ -4688,7 +4702,7 @@ const handleExport = () => {
         Bill
       </>
     )}
-  </Button> */}
+  </Button>
 
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||

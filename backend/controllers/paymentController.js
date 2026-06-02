@@ -314,6 +314,7 @@
 
 const { Cashfree, CFEnvironment } = require("cashfree-pg");
 const Booking = require("../models/Booking");
+const { sendOrderAlerts } = require("./notificationController");
 
 // 1. Logs to verify environment on Render
 console.log("--- CASHFREE CONFIG CHECK ---");
@@ -730,12 +731,20 @@ exports.verifyWebhook = async (req, res) => {
       const orderId = data.order.order_id;
       
       // Look for the booking
-      const booking = await Booking.findOne({ payment_order_id: orderId });
+      const booking = await Booking.findOneAndUpdate({ payment_order_id: orderId , payment_status: {$ne: "paid"} },{
+
+        payment_status: "paid",
+        booking_source: "online",
+
+      },
+      {new : true}
+    );
       
       if (booking) {
         booking.payment_status = "paid";
         booking.status = "confirmed";
         await booking.save();
+        sendOrderAlerts(booking, req.app.get("io"));
         console.log(`Webhook: Updated existing booking ${orderId}`);
       } else {
         // If booking doesn't exist yet, it means the frontend is still processing.
@@ -986,10 +995,12 @@ exports.verifyPayment = async (req, res) => {
     const isPaid = response.data.some(payment => payment.payment_status === "SUCCESS");
 
     if (isPaid) {
+      sendOrderAlerts(booking, req.app.get("io"));
       return res.status(200).json({
         success: true,
         status: "PAID"
       });
+
     } else {
       return res.status(200).json({
         success: false,

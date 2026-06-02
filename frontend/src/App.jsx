@@ -1,5 +1,5 @@
 
-
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./Pages/Index";
@@ -24,11 +24,22 @@ import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import TermsAndConditions from "./Pages/TermsAndConditions";
 import RefundPolicy from "./Pages/RefundPolicy";
 import AnalyticsTracker from "./Pages/AnalyticsTracker";
+import NotificationsCenter from "./Pages/admin/Notifications";
 
 
 
 
 const queryClient = new QueryClient();
+// 📱 SYSTEM REGISTER: Initialize Service Worker stream interface context
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then(() => console.log("Pipip Background Engine Connected"))
+        .catch((err) => console.error("Service Worker registration failed:", err));
+    }
+  }, []);
+
 const App = () => (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
@@ -47,6 +58,8 @@ const App = () => (
           <Route path="customers" element={<Customers />} />
           <Route path="active-rentals" element={<ActiveRentals />} />
           <Route path="scheduler" element={<Scheduler />} />
+          {/* 👈 NEW: Mount Notifications View cleanly within Admin Grid matching paths entry */}
+          <Route path="notifications" element={<NotificationsCenter />} />
           <Route path="reports" element={<Reports />} />
           <Route index element={<Dashboard />} />
           <Route path="settings" element={<Settings />} />

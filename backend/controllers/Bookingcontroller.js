@@ -218,10 +218,30 @@
 // controllers/booking.controller.js
 const Bike = require("../models/Bike");
 const Booking = require("../models/Booking");
+const { sendOrderAlerts } = require("./notificationController");
 
 exports.createBooking = async (req, res) => {
-  const booking = await Booking.create(req.body);
-  res.status(201).json(booking);
+  // const booking = await Booking.create(req.body);
+  // res.status(201).json(booking);
+
+  try {
+    // Force the source to "online" so your database knows it came from the website
+    const bookingData = {
+      ...req.body,
+      booking_source: "online",
+    };
+
+    const booking = await Booking.create(bookingData);
+
+    // 2. 🔥 CRITICAL HOOK: Trigger the live websocket and smartphone push notification stream!
+    // This transmits the fresh document down to your admin panel dashboard screens.
+    sendOrderAlerts(booking, req.app.get("io"));
+
+    res.status(201).json(booking);
+  } catch (error) {
+    console.error("Website Booking Error:", error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
 

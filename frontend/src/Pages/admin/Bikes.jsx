@@ -2145,7 +2145,8 @@
 //   );
 // }
 
-import { useState } from "react";
+import { useState , useEffect } from "react";
+import {useSearchParams} from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -2251,11 +2252,30 @@ export default function Bikes() {
   const deleteBike = useDeleteBike();
   const [selectedFile, setSelectedFile] = useState(null);
 
+  const [searchParams] = useSearchParams();
+
   // State for multiple extra files
   const [extraFiles, setExtraFiles] = useState([]);
   // State for previews (blob urls)
   const [extraPreviews, setExtraPreviews] = useState([]);
 
+
+  useEffect(() => {
+    const searchVal = searchParams.get("search");
+    if (searchVal) {
+      setSearchQuery(searchVal);
+      if (bikes && bikes.length > 0) {
+        const matched = bikes.find(
+          (b) =>
+            b._id === searchVal ||
+            b.number_plate?.toLowerCase() === searchVal.toLowerCase()
+        );
+        if (matched) {
+          setViewingBike(matched);
+        }
+      }
+    }
+  }, [searchParams, bikes]);
 
 // ===============================
 // SAFE ACTIVE RENTAL LOGIC
