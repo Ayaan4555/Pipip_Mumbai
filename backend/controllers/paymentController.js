@@ -1014,49 +1014,89 @@ exports.verifyWebhook = async (req, res) => {
 //   }
 // };
 
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+
+//     // 1. Fetch the master order object directly from Cashfree API
+//     const response = await Cashfree.PGOrderFetch("2023-08-01", orderId);
+//     const data = response.data;
+
+//     if (data && data.order_status === "PAID") {
+      
+//       // 2. Safely find the booking using the orderId
+//       let booking = await Booking.findOne({ payment_order_id: orderId });
+
+//       if (booking) {
+//         // If the webhook hasn't processed it yet, synchronize the database here instantly
+//         if (booking.payment_status !== "paid") {
+//           booking.payment_status = "paid";
+//           booking.status = "confirmed";
+//           booking.booking_source = "online";
+//           await booking.save();
+          
+//           // 3. Trigger live WebSocket updates to the Admin panel safely
+//           sendOrderAlerts(booking, req.app.get("io"));
+//         }
+
+//         return res.status(200).json({
+//           success: true,
+//           status: "PAID",
+//           booking
+//         });
+//       } else {
+//         // Fallback: Cashfree is paid, but database record is still being created by the client
+//         return res.status(200).json({
+//           success: true,
+//           status: "PAID",
+//           message: "Payment clear, holding booking persistence sync"
+//         });
+//       }
+
+//     } else {
+//       return res.status(200).json({
+//         success: false,
+//         status: data ? data.order_status : "PENDING_OR_FAILED",
+//         message: "Payment not confirmed yet"
+//       });
+//     }
+//   } catch (error) {
+//     console.error("VERIFICATION ERROR:", error.response?.data || error.message);
+//     res.status(500).json({ success: false, message: "Internal Server Error" });
+//   }
+// };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // 1. Fetch the master order object directly from Cashfree API
-    const response = await Cashfree.PGOrderFetch("2023-08-01", orderId);
-    const data = response.data;
+    // Fetch the status from Cashfree using their SDK
+    const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
+    
+    // Check if any of the payments for this order are successful
+    const isPaid = response.data.some(payment => payment.payment_status === "SUCCESS");
 
-    if (data && data.order_status === "PAID") {
-      
-      // 2. Safely find the booking using the orderId
-      let booking = await Booking.findOne({ payment_order_id: orderId });
+    if (isPaid) {
+      // ✅ FIX: Fetch the booking from the database so it's defined for sendOrderAlerts
+      const booking = await Booking.findOne({ payment_order_id: orderId });
 
       if (booking) {
-        // If the webhook hasn't processed it yet, synchronize the database here instantly
-        if (booking.payment_status !== "paid") {
-          booking.payment_status = "paid";
-          booking.status = "confirmed";
-          booking.booking_source = "online";
-          await booking.save();
-          
-          // 3. Trigger live WebSocket updates to the Admin panel safely
-          sendOrderAlerts(booking, req.app.get("io"));
-        }
-
-        return res.status(200).json({
-          success: true,
-          status: "PAID",
-          booking
-        });
+        // Only trigger live alerts if the booking row exists in your DB
+        sendOrderAlerts(booking, req.app.get("io"));
       } else {
-        // Fallback: Cashfree is paid, but database record is still being created by the client
-        return res.status(200).json({
-          success: true,
-          status: "PAID",
-          message: "Payment clear, holding booking persistence sync"
-        });
+        console.log(`Verification: Payment SUCCESS for ${orderId}, but booking not created in DB yet.`);
       }
+
+      return res.status(200).json({
+        success: true,
+        status: "PAID",
+        booking: booking || null // Send booking details back if found
+      });
 
     } else {
       return res.status(200).json({
         success: false,
-        status: data ? data.order_status : "PENDING_OR_FAILED",
+        status: "PENDING_OR_FAILED",
         message: "Payment not confirmed yet"
       });
     }
