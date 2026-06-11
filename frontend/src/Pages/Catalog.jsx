@@ -38,7 +38,7 @@ import { useBikes } from "../hooks/useBikes";
 import { useActiveAreas } from "../hooks/useAreas";
 import useSEO from "../hooks/useSEO";
 import {useClusters} from "../hooks/useClusters"
-
+import {useBikeAvailability} from "../hooks/useBikeAvailability"
 // const Catalog = () => {
 //   const navigate = useNavigate();
 //   const [searchParams] = useSearchParams();
