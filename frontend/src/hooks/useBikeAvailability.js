@@ -79,6 +79,7 @@ export function useBikeAvailability() {
         //   {
 
         //     bikeId,
+        console.trace("CHECK AVAILABILITY CALLED");
 
         const payload = {
 
