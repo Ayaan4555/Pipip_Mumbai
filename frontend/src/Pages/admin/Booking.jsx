@@ -2101,12 +2101,21 @@ const [assignDialog, setAssignDialog] = useState(null);
       }
 
       // Call API
+
       const result = await checkAvailability(
-        activeData.bike_id,
-        start,
-        end,
-        editingBooking,
-      );
+  activeData.bike_id,
+  start,
+  end,
+  false, // not a cluster booking
+  editingBooking // bookingId
+);
+
+      // const result = await checkAvailability(
+      //   activeData.bike_id,
+      //   start,
+      //   end,
+      //   editingBooking,
+      // );
 
       // Ignore same booking conflict
       if (!result.isAvailable && result.bookingId === editingBooking) {
