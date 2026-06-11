@@ -7,7 +7,7 @@ const {
   deleteCluster,
   getClusterById,
 } = require("../controllers/Clustercontroller");
-const { protect } = require("../middelwares/auth");
+const { protect } = require("../middleware/auth");
 
 // Public
 ClusterRouter.get("/", getClusters);
