@@ -3395,12 +3395,21 @@ useEffect(() => {
 
       // 🚨 CHECK AVAILABILITY
 
+      // const result = await checkAvailability(
+      //   bikeId,
+      //   oldEnd,
+      //   newEnd,
+      //   extendDialog._id,
+      // );
+
+
       const result = await checkAvailability(
-        bikeId,
-        oldEnd,
-        newEnd,
-        extendDialog._id,
-      );
+  bikeId,
+  oldEnd,
+  newEnd,
+  false, // not a cluster booking
+  extendDialog._id // bookingId
+);
 
       // ❌ Conflict
 
