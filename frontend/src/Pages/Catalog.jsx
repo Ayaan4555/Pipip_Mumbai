@@ -39,6 +39,8 @@ import { useActiveAreas } from "../hooks/useAreas";
 import useSEO from "../hooks/useSEO";
 import {useClusters} from "../hooks/useClusters"
 import {useBikeAvailability} from "../hooks/useBikeAvailability"
+
+
 // const Catalog = () => {
 //   const navigate = useNavigate();
 //   const [searchParams] = useSearchParams();
@@ -842,6 +844,11 @@ const Catalog = () => {
   const urlAreaId = searchParams.get("area");
   const urlStart = searchParams.get("start");
   const urlEnd = searchParams.get("end");
+
+    useSEO({
+    title: "Bikes & Scooters Catalog | Rent a Bike in Mumbai - Pipip",
+    description: "Choose from our complete catalog of well-maintained self-drive scooters and motorcycles in Mumbai. Activa, KTM, Jupiter, and Royal Enfield available at cheap hourly and daily rates."
+  });
 
   const [selectedArea, setSelectedArea] = useState("all");
   const [ccFilter, setCcFilter] = useState("all");
