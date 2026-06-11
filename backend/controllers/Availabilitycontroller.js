@@ -208,6 +208,7 @@ const Cluster = require("../models/Cluster");
 const Bike = require("../models/Bike");
 
 exports.checkAvailability = async (req, res) => {
+  console.log("BODY RECEIVED:", req.body);
   const { bikeId, clusterId, start_datetime, end_datetime, bookingId } =
     req.body;
 

@@ -91,11 +91,19 @@ export function useBikeAvailability() {
             bookingId: bookingId   // ⭐ MUST SEND
 
           };
-      if (isCluster) {
-        payload.clusterId = bikeId;
-      } else {
-        payload.bikeId = bikeId;
-      }
+      // if (isCluster) {
+      //   payload.clusterId = bikeId;
+      // } else {
+      //   payload.bikeId = bikeId;
+      // }
+
+      payload.bikeID = bikeId;
+
+      console.log("===== Availability Check =====");
+console.log("bikeId:", bikeId);
+console.log("isCluster:", isCluster);
+console.log("bookingId:", bookingId);
+console.log("payload:", payload);
 
       const res = await axios.post("https://pipip-backend-eid3.onrender.com/api/availability", payload);
         return res.data;
