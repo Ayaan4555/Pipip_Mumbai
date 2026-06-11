@@ -97,7 +97,7 @@ export function useBikeAvailability() {
       //   payload.bikeId = bikeId;
       // }
 
-      payload.bikeID = bikeId;
+      payload.bikeId = bikeId;
 
       console.log("===== Availability Check =====");
 console.log("bikeId:", bikeId);
