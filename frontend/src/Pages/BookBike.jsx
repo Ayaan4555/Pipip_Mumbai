@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   XCircle,
   Banknote,
+  Bike,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -37,6 +40,7 @@ import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import useSEO from "../hooks/useSEO";
+import {useCluster} from "../hooks/useClusters"
 
 const initialCustomerData = {
   name: "",
@@ -72,7 +76,35 @@ export default function BookBike() {
   const [confirmedBookingId, setConfirmedBookingId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("online");
 
-  const { data: bike, isLoading: bikeLoading } = useBike(bikeId || "");
+  // const { data: bike, isLoading: bikeLoading } = useBike(bikeId || "");
+
+  const isCluster = searchParams.get("type") === "cluster";
+  const { data: bikeData, isLoading: bikeLoading } = useBike(isCluster ? "" : (bikeId || ""));
+  const { data: clusterData, isLoading: clusterLoading } = useCluster(isCluster ? (bikeId || "") : "");
+  const bike = isCluster ? clusterData : bikeData;
+  const activeLoading = isCluster ? clusterLoading : bikeLoading;
+
+const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const clusterImages = useMemo(() => {
+    if (!isCluster || !bike || !bike.bikes) return [];
+    const imgs = [];
+    bike.bikes.forEach((b) => {
+      if (b.image_url && !imgs.includes(b.image_url)) imgs.push(b.image_url);
+    });
+    return imgs;
+  }, [isCluster, bike]);
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImgIndex((prev) => (prev - 1 + clusterImages.length) % clusterImages.length);
+  };
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImgIndex((prev) => (prev + 1) % clusterImages.length);
+  };
+
+
+
+
   const { data: areas } = useActiveAreas();
   useSEO({
     title: bike ? `Book ${bike.model} on Rent in Mumbai | Pipip Rentals` : "Book a Bike on Rent in Mumbai - Pipip",
@@ -121,7 +153,7 @@ export default function BookBike() {
         return;
       }
 
-      const result = await checkAvailability(bikeId, start, end);
+      const result = await checkAvailability(bikeId, start, end , isCluster);
 
       if (!result.isAvailable) {
         const fromDate = new Date(result.bookedFrom).toLocaleDateString(
@@ -430,7 +462,9 @@ export default function BookBike() {
       // Pass booking details in query params so backend can save them
       const queryParams = new URLSearchParams({
         customerId: customerId,
-        bikeId: bike._id,
+        // bikeId: bike._id,
+        bikeId: isCluster ? "" : bike._id,
+        clusterId: isCluster ? bike._id : "",
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         amount: calculatePrice(true),
@@ -536,7 +570,9 @@ export default function BookBike() {
 
         // Create Booking (Set status to 'confirmed' immediately since we know they paid)
         const booking = await createBooking.mutateAsync({
-          bike_id: bike._id,
+          // bike_id: bike._id,
+          bike_id: isCluster ? null : bike._id,
+        cluster_id: isCluster ? bike._id : null,
           customer_id: customer._id,
           start_datetime: new Date(startDate).toISOString(),
           end_datetime: new Date(endDate).toISOString(),
@@ -547,6 +583,7 @@ export default function BookBike() {
           status: "confirmed", // Mark as confirmed immediately
           payment_status: "paid",
           payment_order_id: paymentOrder.orderId,
+          
         });
 
         setConfirmedBookingId(booking._id);
@@ -663,7 +700,8 @@ export default function BookBike() {
   //   }
   // };
 
-  if (bikeLoading) {
+  // if (bikeLoading) {
+  if(activeLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -1290,10 +1328,12 @@ export default function BookBike() {
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground print:text-black">
-                      Bike Model
+                      {/* Bike Model */}
+                      Vehicle/Category
                     </span>
                     <span className="font-bold print:text-black">
-                      {bike?.model}
+                      {/* {bike?.model} */}
+                      {bike?.name || bike?.model}
                     </span>
                   </div>
                   <div className="flex justify-between items-start text-sm">
@@ -1390,11 +1430,61 @@ export default function BookBike() {
             {/* Bike Summary */}
             <div className="lg:col-span-1">
               <Card className="bg-card border-border sticky top-24">
-                <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                {/* <div className="aspect-video relative overflow-hidden rounded-t-lg">
                   {bike.image_url ? (
+                  {(isCluster ? bike?.bikes?.[0]?.image_url : bike?.image_url) ? ( */}
+
+                  <div className="aspect-video relative overflow-hidden rounded-t-lg bg-muted">
+                  {isCluster && clusterImages.length > 0 ? (
+                    <div className="relative w-full h-full">
+                      <AnimatePresence mode="wait">
+                        <motion.img
+                          key={currentImgIndex}
+                          src={clusterImages[currentImgIndex]}
+                          alt={bike?.name || "Cluster"}
+                          className="w-full h-full object-fill absolute inset-0"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </AnimatePresence>
+                      {clusterImages.length > 1 && (
+                        <>
+                          <button
+                            onClick={handlePrevImage}
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background/85 hover:bg-background text-foreground rounded-full p-1 z-10 shadow-sm"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={handleNextImage}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background/85 hover:bg-background text-foreground rounded-full p-1 z-10 shadow-sm"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      {clusterImages.length > 1 && (
+                        <div className="absolute bottom-3 right-3 flex gap-1 z-10 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          {clusterImages.map((_, idx) => (
+                            <span
+                              key={idx}
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                idx === currentImgIndex ? "w-3 bg-primary" : "w-1.5 bg-white/60"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : bike?.image_url ? (
+
                     <img
                       src={bike.image_url}
                       alt={bike.model}
+                      // src={isCluster ? bike?.bikes?.[0]?.image_url : bike?.image_url}
+                      // alt={bike?.name || bike?.model}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -1405,10 +1495,12 @@ export default function BookBike() {
                 </div>
                 <CardContent className="p-4">
                   <h2 className="text-xl font-bold text-foreground mb-1">
-                    {bike.model}
+                    {/* {bike.model} */}
+                    {bike?.name || bike?.model}
                   </h2>
                   <p className="text-muted-foreground text-sm mb-3">
-                    {bike.number_plate} • {bike.cc}cc
+                    {/* {bike.number_plate} • {bike.cc}cc */}
+                    {isCluster ? "Multiple Available" : bike?.number_plate} • {isCluster ? (bike?.bikes?.[0]?.cc || 125) : bike?.cc}cc
                   </p>
 
                   <div className="flex items-center gap-1 text-sm mb-4">
@@ -1453,6 +1545,13 @@ export default function BookBike() {
                       </>
                     )}
                   </div>
+
+                  {isCluster && (
+                    <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-primary flex items-start gap-2 leading-relaxed">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <span>Note: Any available bike from this cluster fleet category will be assigned to you at pickup.</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

@@ -25,6 +25,7 @@ import TermsAndConditions from "./Pages/TermsAndConditions";
 import RefundPolicy from "./Pages/RefundPolicy";
 import AnalyticsTracker from "./Pages/AnalyticsTracker";
 import NotificationsCenter from "./Pages/admin/Notifications";
+import Clusters from "./Pages/admin/Clusters";
 
 
 
@@ -57,6 +58,7 @@ const App = () => {
 
           <Route path="/admin/panel" element={<AdminLayout />}>
           <Route path="bikes" element={<Bikes />} />
+          <Route path="clusters" element={<Clusters />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="areas" element={<Areas />} />
           <Route path="customers" element={<Customers />} />

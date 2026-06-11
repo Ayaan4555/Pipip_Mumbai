@@ -1087,6 +1087,7 @@ import {
   useCreateBooking,
   useUpdateBooking,
   useAdminCreateBooking,
+  useAssignBike,
 } from "../../hooks/useBooking";
 import { useBikes } from "../../hooks/useBikes";
 import {
@@ -1499,6 +1500,32 @@ const handleExport = () => {
   };
 
   const { data: bikes } = useBikes();
+
+const [assignDialog, setAssignDialog] = useState(null);
+  const [assignBikeId, setAssignBikeId] = useState("");
+  const assignBikeMutation = useAssignBike();
+  const handleAssignBike = async () => {
+    if (!assignDialog || !assignBikeId) return;
+    try {
+      await assignBikeMutation.mutateAsync({
+        id: assignDialog._id,
+        bike_id: assignBikeId,
+      });
+      setAssignDialog(null);
+      setAssignBikeId("");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const assignableBikes = useMemo(() => {
+    if (!assignDialog || !assignDialog.cluster_id || !bikes) return [];
+    const clusterBikeIds = assignDialog.cluster_id.bikes?.map(b => String(b._id || b)) || [];
+    return bikes.filter(
+      (b) => clusterBikeIds.includes(String(b._id)) && b.status === "available"
+    );
+  }, [assignDialog, bikes]);
+
+
   const { data: customers } = useCustomers();
   const updateStatus = useUpdateBookingStatus();
   const createBooking = useCreateBooking();
@@ -4411,6 +4438,71 @@ useEffect(() => {
         </DialogContent>
       </Dialog>
 
+
+          <Dialog
+        open={!!assignDialog}
+        onOpenChange={(open) => !open && setAssignDialog(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bike className="w-5 h-5 text-primary" /> Assign Bike from Fleet
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-muted/45 border border-border rounded-xl">
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                Booked Category
+              </p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">
+                {assignDialog?.cluster_id?.name || "Cluster Category"}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Select an available physical bike to allocate to this customer
+              reservation.
+            </p>
+            <div className="space-y-2">
+              <Label>Available Vehicles *</Label>
+              <Select value={assignBikeId} onValueChange={setAssignBikeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a specific bike" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignableBikes.map((bike) => (
+                    <SelectItem key={bike._id} value={bike._id}>
+                      {bike.model} — {bike.number_plate}{" "}
+                      {bike.bike_colour ? `(${bike.bike_colour})` : ""}
+                    </SelectItem>
+                  ))}
+                  {assignableBikes.length === 0 && (
+                    <div className="py-4 text-center text-sm text-muted-foreground flex items-center justify-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-yellow-500" /> No
+                      available bikes in this category!
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialog(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignBike}
+              className="gradient-sunset font-semibold text-primary-foreground"
+              disabled={!assignBikeId || assignBikeMutation.isPending}
+            >
+              {assignBikeMutation.isPending ? "Assigning..." : "Assign Vehicle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
+
       <div className="flex flex-col gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -4552,7 +4644,7 @@ useEffect(() => {
                             </div>
                           </div>
 
-                          <div className="space-y-0.5">
+                          {/* <div className="space-y-0.5">
                             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                               Bike
                             </p>
@@ -4561,6 +4653,27 @@ useEffect(() => {
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {booking.bikes?.number_plate}
+                            </p>
+                          </div> */}
+
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                              Bike
+                            </p>
+
+                            {!booking.bike_id && booking.cluster_id ? (
+                              <p className="font-semibold text-primary text-sm truncate">
+                                {booking.cluster_id.name}
+                              </p>
+                            ) : (
+                              <p className="font-semibold text-foreground text-sm truncate">
+                                {booking.bikes?.model || "—"}
+                              </p>
+                            )}
+
+                            <p className="text-xs text-muted-foreground">
+                              {booking.bikes?.number_plate ||
+                                (booking.cluster_id ? "Not Assigned" : "—")}
                             </p>
                           </div>
 
@@ -4747,6 +4860,20 @@ useEffect(() => {
                                 </span>
                               </Button>
                             )}
+
+                            {!booking.bike_id && booking.cluster_id && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => setAssignDialog(booking)}
+                              className="gradient-sunset text-primary-foreground font-semibold"
+                            >
+                              <Bike className="w-4 h-4 mr-1" />
+                              <span className="hidden sm:inline">
+                                Assign Bike
+                              </span>
+                            </Button>
+                          )}
 
                           {statusActions[booking.status]?.map((action) => (
                             <Button

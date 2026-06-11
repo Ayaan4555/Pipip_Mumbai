@@ -696,6 +696,7 @@ exports.getAllBookings = async (req, res) => {
     const bookings = await Booking.find()
       .populate("customer_id", "name phone email")
       .populate("bike_id", "model number_plate")
+      .populate("cluster_id")
       .sort({ createdAt: -1 });
 
     const formatted = bookings.map((b) => {
@@ -731,7 +732,9 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate("customer_id", "name phone email")
-      .populate("bike_id", "model number_plate");
+      // .populate("bike_id", "model number_plate");
+      .populate("bike_id", "model number_plate")
+      .populate("cluster_id");
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
@@ -1052,4 +1055,60 @@ booking.is_extended = true;
 
   }
 
+};
+
+
+/**
+ * ASSIGN BIKE TO SCOOTER POOL BOOKING (ADMIN)
+ */
+exports.assignBikeToBooking = async (req, res) => {
+  try {
+    const { bike_id } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (req.user && req.user.role === "staff") {
+      const hasAccess = await checkBookingAreaAccess(booking, req.user);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied: You do not have access to this area's bookings" });
+      }
+
+      const bike = await Bike.findById(bike_id);
+      if (bike) {
+        const hasBikeArea = req.user.assigned_areas.some(
+          (area) => (area._id?.toString() || area.toString()) === bike.area_id?.toString()
+        );
+        if (!hasBikeArea) {
+          return res.status(403).json({ message: "Access denied: Target bike is in an unassigned area" });
+        }
+      }
+    }
+
+    const bike = await Bike.findById(bike_id);
+    if (!bike) return res.status(404).json({ message: "Bike not found" });
+    if (bike.status !== "available") {
+      return res.status(400).json({ message: "Bike is not available" });
+    }
+
+    // Assign bike, confirm booking, mark bike as booked
+    booking.bike_id = bike_id;
+    booking.vehicle_make_model = `${bike.bike_name || ""} ${bike.model}`;
+    booking.status = "confirmed";
+    booking.updated_by_admin = true;
+    await booking.save();
+
+    bike.status = "booked";
+    await bike.save();
+
+    const populated = await Booking.findById(booking._id)
+      .populate("customer_id", "name phone email")
+      .populate("bike_id", "model number_plate")
+      .populate("cluster_id");
+
+    res.json({ message: "Bike assigned successfully", booking: populated });
+  } catch (err) {
+    console.error("Assign Bike Error:", err);
+    res.status(500).json({ message: err.message });
+  }
 };

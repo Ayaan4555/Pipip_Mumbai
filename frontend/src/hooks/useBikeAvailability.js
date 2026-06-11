@@ -57,6 +57,7 @@ export function useBikeAvailability() {
       bikeId,
       startDate,
       endDate,
+      isCluster = false,
       bookingId = null
     ) => {
 
@@ -73,11 +74,13 @@ export function useBikeAvailability() {
 
       try {
 
-        const res = await axios.post(
-          "https://pipip-backend-eid3.onrender.com/api/availability",
-          {
+        // const res = await axios.post(
+        //   "https://pipip-backend-eid3.onrender.com/api/availability",
+        //   {
 
-            bikeId,
+        //     bikeId,
+
+        const payload = {
 
             start_datetime:
               startDate.toISOString(),
@@ -87,9 +90,14 @@ export function useBikeAvailability() {
 
             bookingId: bookingId   // ⭐ MUST SEND
 
-          }
-        );
+          };
+      if (isCluster) {
+        payload.clusterId = bikeId;
+      } else {
+        payload.bikeId = bikeId;
+      }
 
+      const res = await axios.post("https://pipip-backend-eid3.onrender.com/api/availability", payload);
         return res.data;
 
       }

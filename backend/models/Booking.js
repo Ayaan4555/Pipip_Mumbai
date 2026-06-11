@@ -316,6 +316,12 @@ is_extended: {
   default: false,
 },
 
+cluster_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cluster",
+      default: null,
+    },
+
 },
 { timestamps: true }
 );

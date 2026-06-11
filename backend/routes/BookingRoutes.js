@@ -39,6 +39,7 @@ const {
   deleteBooking,
   adminCreateBooking,
   extendBooking,
+  assignBikeToBooking,
 } = require("../controllers/Bookingcontroller");
 const upload = require("../middleware/upload");
 const router = express.Router();
@@ -68,5 +69,7 @@ router.patch(
   "/:id/extend",
   extendBooking
 );
+
+router.put("/:id/assign-bike", assignBikeToBooking);
 
 module.exports = router;

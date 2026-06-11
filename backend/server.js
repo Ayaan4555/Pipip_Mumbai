@@ -106,7 +106,7 @@ app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 
 app.use("/api/notifications", notificationRoutes); // 👈 NEW: Notification routes mounted
-
+app.use("/api/clusters", require("./routes/ClusterRoutes"));
 
 // 5. Socket.io Connection Monitoring Log
 io.on("connection", (socket) => {

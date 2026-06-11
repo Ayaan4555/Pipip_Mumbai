@@ -318,3 +318,21 @@ export function useDeleteBooking() {
     },
   });
 }
+
+export const useAssignBike = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, bike_id }) => {
+      const { data } = await axios.put(`${API_URL}/${id}/assign-bike`, { bike_id });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bikes"] });
+      toast.success("Bike assigned successfully 🎉");
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to assign bike");
+    },
+  });
+};
