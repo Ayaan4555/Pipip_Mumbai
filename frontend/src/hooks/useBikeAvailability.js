@@ -91,13 +91,13 @@ export function useBikeAvailability() {
             bookingId: bookingId   // ⭐ MUST SEND
 
           };
-      // if (isCluster) {
-      //   payload.clusterId = bikeId;
-      // } else {
-      //   payload.bikeId = bikeId;
-      // }
+      if (isCluster) {
+        payload.clusterId = bikeId;
+      } else {
+        payload.bikeId = bikeId;
+      }
 
-      payload.bikeId = bikeId;
+      
 
       console.log("===== Availability Check =====");
 console.log("bikeId:", bikeId);
