@@ -57,7 +57,8 @@ export function useBikeAvailability() {
       bikeId,
       startDate,
       endDate,
-      isCluster = false,
+        isClusterOrBookingId = false,
+      // isCluster = false,
       bookingId = null
     ) => {
 
@@ -81,6 +82,27 @@ export function useBikeAvailability() {
         //     bikeId,
         console.trace("CHECK AVAILABILITY CALLED");
 
+
+        let isCluster = false;
+
+// Old calls:
+// checkAvailability(bikeId,start,end,bookingId)
+
+
+if (
+  typeof isClusterOrBookingId === "string" &&
+  isClusterOrBookingId.length === 24 &&
+  bookingId === null
+) {
+  // Old calls: checkAvailability(bikeId,start,end,bookingId)
+  bookingId = isClusterOrBookingId;
+  isCluster = false;
+} else {
+  isCluster = isClusterOrBookingId === true;
+}
+
+
+
         const payload = {
 
             start_datetime:
@@ -92,11 +114,17 @@ export function useBikeAvailability() {
             bookingId: bookingId   // ⭐ MUST SEND
 
           };
-      if (isCluster) {
-        payload.clusterId = bikeId;
-      } else {
-        payload.bikeId = bikeId;
-      }
+
+          if (isCluster === true) {
+  payload.clusterId = bikeId;
+} else {
+  payload.bikeId = bikeId;
+}
+      // if (isCluster) {
+      //   payload.clusterId = bikeId;
+      // } else {
+      //   payload.bikeId = bikeId;
+      // }
 
       
 
