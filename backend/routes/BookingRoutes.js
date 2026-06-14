@@ -41,7 +41,7 @@ const {
   extendBooking,
   assignBikeToBooking,
 } = require("../controllers/Bookingcontroller");
-const { protect, adminOnly } = require("../middelware/auth");
+const { protect, adminOnly } = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const router = express.Router();
 
