@@ -2386,7 +2386,10 @@ useEffect(() => {
     const fuelValue = Number(startRideData.fuel_out_liters) || null;
     await updateBooking.mutateAsync({
       id: startRideDialog,
-      fuel_out_liters: fuelValue,
+      // fuel_out_liters: fuelValue,
+      data: {
+        fuel_out_liters: fuelValue,
+      },
     });
     await updateStatus.mutateAsync({ id: startRideDialog, status: "active" });
     setStartRideDialog(null);

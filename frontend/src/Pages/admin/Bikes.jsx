@@ -2197,6 +2197,7 @@ import {
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { toast } from "sonner";
+import { useAuth } from "../../lib/AuthProvider";
 
 // const statusColors = {
 //   available: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -2247,6 +2248,10 @@ export default function Bikes() {
   const { data: bikes, isLoading } = useBikes();
   const { data: bookings } = useBookings();
   const { data: areas } = useAreas();
+  const { user, isStaff } = useAuth();
+  const displayAreas = isStaff
+    ? (user?.assigned_areas || [])
+    : (areas || []);
   const createBike = useCreateBike();
   const updateBike = useUpdateBike();
   const deleteBike = useDeleteBike();
@@ -2685,12 +2690,28 @@ const filteredBikes = (bikes || []).filter((bike) => {
         </div>
 
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="gradient-sunset text-primary-foreground">
+          {/* <DialogTrigger asChild>
+            <Button className="gradient-sunset text-primary-foreground"> */}
+            <Button
+              className="gradient-sunset text-primary-foreground"
+              onClick={() => {
+                setEditingBike(null);
+                setSelectedFile(null);
+                setExtraFiles([]);
+                setExtraPreviews([]);
+                const defaultAreaId = isStaff && user?.assigned_areas?.length > 0
+                  ? (user.assigned_areas[0]._id || user.assigned_areas[0])
+                  : "";
+                setFormData({
+                  ...initialFormData,
+                  area_id: defaultAreaId,
+                });
+                setIsOpen(true);
+              }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Bike
             </Button>
-          </DialogTrigger>
+          {/* </DialogTrigger> */}
           <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle className="text-foreground">
@@ -2856,12 +2877,16 @@ const filteredBikes = (bikes || []).filter((bike) => {
                         onValueChange={(value) =>
                           setFormData({ ...formData, area_id: value })
                         }
+
+                        disabled={isStaff && user?.assigned_areas?.length <= 1}
+
                       >
                         <SelectTrigger className="bg-input border-border">
                           <SelectValue placeholder="Select area" />
                         </SelectTrigger>
                         <SelectContent>
-                          {areas?.map((area) => (
+                          {/* {areas?.map((area) => ( */}
+                          {displayAreas?.map((area) => (
                             <SelectItem key={area._id} value={area._id}>
                               {area.name}
                             </SelectItem>
@@ -3201,7 +3226,8 @@ const filteredBikes = (bikes || []).filter((bike) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Areas</SelectItem>
-              {areas?.map((area) => (
+              {/* {areas?.map((area) => ( */}
+              {displayAreas?.map((area) => (
                 <SelectItem key={area._id} value={area._id}>
                   {area.name}
                 </SelectItem>

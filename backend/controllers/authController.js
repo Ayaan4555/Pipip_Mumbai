@@ -21,7 +21,8 @@ exports.getMe = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    // const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("assigned_areas");
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
@@ -31,6 +32,7 @@ exports.login = async (req, res) => {
           fullName: user.fullName,
           email: user.email,
           role: user.role,
+          assigned_areas: user.assigned_areas || [],
         },
       });
     } else {
@@ -44,7 +46,8 @@ exports.login = async (req, res) => {
 // @desc    Register a new user (Signup)
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    // const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role , assigned_areas } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists)
@@ -58,6 +61,7 @@ exports.register = async (req, res) => {
       email,
       password: hashedPassword,
       role: role || "staff",
+      assigned_areas: assigned_areas || [],
     });
 
     res.status(201).json({ message: "User created successfully" });
@@ -69,7 +73,8 @@ exports.register = async (req, res) => {
 // @desc    Get all staff (Settings Page)
 exports.getStaff = async (req, res) => {
   try {
-    const staff = await User.find({}).select("-password");
+    // const staff = await User.find({}).select("-password");
+    const staff = await User.find({}).populate("assigned_areas").select("-password");
     res.json(staff);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -84,6 +89,21 @@ exports.deleteStaff = async (req, res) => {
 
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update staff member's assigned areas
+exports.updateStaffAreas = async (req, res) => {
+  try {
+    const { assigned_areas } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    user.assigned_areas = assigned_areas || [];
+    await user.save();
+    const updatedUser = await User.findById(req.params.id).populate("assigned_areas").select("-password");
+    res.json({ message: "Staff areas updated successfully", user: updatedUser });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

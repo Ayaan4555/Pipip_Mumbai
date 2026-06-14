@@ -114,9 +114,12 @@ export function useBikes() {
   return useQuery({
     queryKey: ["bikes"],
     queryFn: async () => {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch bikes");
-      return res.json();
+      // const res = await fetch(API_URL);
+      // if (!res.ok) throw new Error("Failed to fetch bikes");
+      // return res.json();
+
+      const { data } = await axios.get(API_URL);
+      return data;
     },
   });
 }
@@ -127,13 +130,16 @@ export function useCreateBike() {
 
   return useMutation({
     mutationFn: async (formData) => {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: formData, // form-data (image upload)
-      });
+      // const res = await fetch(API_URL, {
+      //   method: "POST",
+      //   body: formData, // form-data (image upload)
+      // });
 
-      if (!res.ok) throw new Error("Failed to add bike");
-      return res.json();
+      // if (!res.ok) throw new Error("Failed to add bike");
+      // return res.json();
+
+      const { data } = await axios.post(API_URL, formData);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bikes"] });
@@ -148,13 +154,16 @@ export function useUpdateBike() {
 
   return useMutation({
     mutationFn: async ({ id, formData }) => {
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: "PUT", // assuming your backend uses PUT for update
-        body: formData, // form-data (image upload)
-      });
+      // const res = await fetch(`${API_URL}/${id}`, {
+      //   method: "PUT", // assuming your backend uses PUT for update
+      //   body: formData, // form-data (image upload)
+      // });
 
-      if (!res.ok) throw new Error("Failed to update bike");
-      return res.json();
+      // if (!res.ok) throw new Error("Failed to update bike");
+      // return res.json();
+
+      const { data } = await axios.put(`${API_URL}/${id}`, formData);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bikes"] });
@@ -169,11 +178,13 @@ export function useDeleteBike() {
 
   return useMutation({
     mutationFn: async (id) => {
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
-      });
+      // const res = await fetch(`${API_URL}/${id}`, {
+      //   method: "DELETE",
+      // });
 
-      if (!res.ok) throw new Error("Failed to delete bike");
+      // if (!res.ok) throw new Error("Failed to delete bike");
+
+      await axios.delete(`${API_URL}/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bikes"] });

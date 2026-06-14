@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Download, TrendingUp, Bike, DollarSign, Calendar, AlertTriangle , Filter , X , CheckCircle2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from "xlsx"; // Import SheetJS (the package you installed)
+import {useAuth} from "../../lib/AuthProvider";
 
 const COLORS = ['#F97316', '#3B82F6', '#22C55E', '#EAB308', '#8B5CF6'];
 
@@ -771,8 +772,24 @@ const COLORS = ['#F97316', '#3B82F6', '#22C55E', '#EAB308', '#8B5CF6'];
 
 
 export default function Reports() {
+  const {role} = useAuth();
   const [period, setPeriod] = useState("month");
   const [revenueDays, setRevenueDays] = useState(30);
+
+  if (role === "staff") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="p-4 bg-red-500/10 text-red-500 rounded-full">
+          <AlertTriangle className="w-12 h-12" />
+        </div>
+        <h1 className="text-2xl font-bold text-foreground">Access Denied</h1>
+        <p className="text-muted-foreground max-w-md">
+          Staff members are not authorized to view the reports and revenue analytics page. If you believe this is an error, please contact your administrator.
+        </p>
+      </div>
+    );
+  }
+
 
   // Custom date range for summary stats
   const [useCustomRange, setUseCustomRange] = useState(false);

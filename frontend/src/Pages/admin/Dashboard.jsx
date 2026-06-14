@@ -39,6 +39,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
 import { useState } from "react";
+import { useAuth } from "../../lib/AuthProvider";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -50,6 +51,7 @@ const statusColors = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { role } = useAuth();
 
   const [selectedFleet, setSelectedFleet] = useState(null);
   const [fleetSearch, setFleetSearch] = useState("");
@@ -531,6 +533,7 @@ const maintenanceBikes =
             val: `₹${stats?.total_revenue?.toLocaleString()}`,
             icon: DollarSign,
             gradient: "from-green-500 to-green-600",
+            hideForStaff : true,
           },
           {
             title: "Active Bookings",
@@ -544,7 +547,10 @@ const maintenanceBikes =
             icon: Clock,
             gradient: "from-purple-500 to-purple-600",
           },
-        ].map((item, i) => (
+        // ].map((item, i) => (
+          ]
+          .filter((item) => !(role === "staff" && item.hideForStaff))
+          .map((item, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -570,7 +576,9 @@ const maintenanceBikes =
 
       {/* Fleet and Revenue Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="bg-card border-border">
+        {/* <Card className="bg-card border-border"> */}
+
+        <Card className={`bg-card border-border ${role === "staff" ? "lg:col-span-3" : ""}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground">
               <Bike className="w-5 h-5 text-primary" />
@@ -752,7 +760,7 @@ const maintenanceBikes =
         </Dialog>
 
         {/* Revenue Trend Chart */}
-        <Card className="lg:col-span-2 bg-card border-border">
+        {/* <Card className="lg:col-span-2 bg-card border-border">
           <CardHeader>
             <CardTitle className="text-foreground">
               Revenue Trend (Last 14 Days)
@@ -795,7 +803,54 @@ const maintenanceBikes =
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
+
+        {role !== "staff" && (
+          <Card className="lg:col-span-2 bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground">
+                Revenue Trend (Last 14 Days)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={dailyRevenue || []}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(val) => format(new Date(val), "MMM d")}
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
+                  />
+                  <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    formatter={(value) => [`₹${value}`, "Revenue"]}
+                    labelFormatter={(label) =>
+                      format(new Date(label), "MMM d, yyyy")
+                    }
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Activity and Recent Bookings */}
@@ -826,8 +881,12 @@ const maintenanceBikes =
                   label: "Revenue",
                   val: `₹${todayStats?.total_revenue || 0}`,
                   color: "text-green-600",
+                  hideForStaff: true,
                 },
-              ].map((activity, idx) => (
+              // ].map((activity, idx) => (
+                ]
+                .filter((item) => !(role === "staff" && item.hideForStaff))
+                .map((activity, idx) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between border-b border-border pb-2 last:border-0"

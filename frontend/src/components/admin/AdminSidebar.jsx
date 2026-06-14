@@ -241,7 +241,7 @@ export default function AdminSidebar({ unreadCount }) {
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
-            {menuItems.map((item) => (
+            {/* {menuItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -266,7 +266,29 @@ export default function AdminSidebar({ unreadCount }) {
                   </span>
                 )}
               </NavLink>
-            ))}
+            ))} */}
+
+            {menuItems
+              .filter((item) => !(role === "staff" && item.label === "Reports"))
+              .map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.end}
+                  onClick={() => setCollapsed(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                      isActive
+                        ? "gradient-sunset text-primary-foreground shadow-golden font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    )
+                  }
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
           </nav>
 
           {/* User */}

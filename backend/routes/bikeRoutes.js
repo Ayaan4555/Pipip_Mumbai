@@ -8,6 +8,7 @@ const {
   deleteBike,
   getSingleBike,
 } = require("../controllers/bikeController");
+const { protect } = require("../middelwares/auth");
 
 // Public
 router.get("/", getBikes);
@@ -15,7 +16,7 @@ router.get("/", getBikes);
 // Admin
 // router.post("/", upload.single("image_url"), createBike);
 
-router.post("/", upload.fields([
+router.post("/", protect , upload.fields([
   { name: 'image_url', maxCount: 1 },
   { name: 'extra_images', maxCount: 5 }
 ]), createBike);
@@ -24,13 +25,14 @@ router.post("/", upload.fields([
 
 router.put(
   "/:id",
+  protect,
   upload.fields([
     { name: "image_url", maxCount: 1 },
     { name: "extra_images", maxCount: 5 },
   ]),
   updateBike,
 );
-router.delete("/:id", deleteBike);
+router.delete("/:id",protect , deleteBike);
 router.get("/:id",getSingleBike);
 
 module.exports = router;

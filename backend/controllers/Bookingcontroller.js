@@ -218,7 +218,25 @@
 // controllers/booking.controller.js
 const Bike = require("../models/Bike");
 const Booking = require("../models/Booking");
+const Cluster = require("../models/Cluster");
 const { sendOrderAlerts } = require("./notificationController");
+
+// Helper to check if a booking belongs to a staff member's assigned areas
+const checkBookingAreaAccess = async (booking, user) => {
+  if (!user || user.role !== "staff") return true;
+  let areaId = null;
+  if (booking.bike_id) {
+    const bike = await Bike.findById(booking.bike_id);
+    if (bike) areaId = bike.area_id;
+  } else if (booking.cluster_id) {
+    const cluster = await Cluster.findById(booking.cluster_id);
+    if (cluster) areaId = cluster.area_id;
+  }
+  if (!areaId) return false;
+  return user.assigned_areas.some(
+    (assignedArea) => (assignedArea._id?.toString() || assignedArea.toString()) === areaId.toString()
+  );
+};
 
 exports.createBooking = async (req, res) => {
   // const booking = await Booking.create(req.body);
@@ -518,6 +536,15 @@ exports.adminCreateBooking = async (req, res) => {
       return res.status(404).json({ message: "Bike not found" });
     }
 
+    if (req.user && req.user.role === "staff") {
+      const hasBikeArea = req.user.assigned_areas.some(
+        (area) => (area._id?.toString() || area.toString()) === bike.area_id?.toString()
+      );
+      if (!hasBikeArea) {
+        return res.status(403).json({ message: "Access denied: You cannot create bookings for bikes in unassigned areas" });
+      }
+    }
+
     // const start = new Date(start_datetime);
     // const end = new Date(end_datetime);
 
@@ -693,7 +720,19 @@ exports.adminCreateBooking = async (req, res) => {
 
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
+    // const bookings = await Booking.find()
+    const filter = {};
+    if (req.user && req.user.role === "staff") {
+      const bikesInAreas = await Bike.find({ area_id: { $in: req.user.assigned_areas } }).select("_id");
+      const bikeIds = bikesInAreas.map((b) => b._id);
+      const clustersInAreas = await Cluster.find({ area_id: { $in: req.user.assigned_areas } }).select("_id");
+      const clusterIds = clustersInAreas.map((c) => c._id);
+      filter.$or = [
+        { bike_id: { $in: bikeIds } },
+        { cluster_id: { $in: clusterIds } }
+      ];
+    }
+    const bookings = await Booking.find(filter)
       .populate("customer_id", "name phone email")
       .populate("bike_id", "model number_plate")
       .populate("cluster_id")
@@ -738,6 +777,13 @@ exports.getBookingById = async (req, res) => {
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (req.user && req.user.role === "staff") {
+      const hasAccess = await checkBookingAreaAccess(booking, req.user);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied: You do not have access to this area's bookings" });
+      }
     }
 
     res.json({
@@ -790,6 +836,29 @@ exports.updateBooking = async (req, res) => {
     console.log("BODY:", req.body);   // ✅ debug
     console.log("FILE:", req.file);   // ✅ debug
 
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    if (req.user && req.user.role === "staff") {
+      const hasAccess = await checkBookingAreaAccess(booking, req.user);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied: You do not have access to this area's bookings" });
+      }
+      // if (req.body.bike_id) {
+      if (req.body && req.body.bike_id) {
+        const bike = await Bike.findById(req.body.bike_id);
+        if (bike) {
+          const hasBikeArea = req.user.assigned_areas.some(
+            (area) => (area._id?.toString() || area.toString()) === bike.area_id?.toString()
+          );
+          if (!hasBikeArea) {
+            return res.status(403).json({ message: "Access denied: Target bike is in an unassigned area" });
+          }
+        }
+      }
+    }
+
     const body = req.body || {}; // ✅ SAFE FIX
 
     const updateData = {
@@ -826,7 +895,13 @@ exports.updateBooking = async (req, res) => {
       updateData.payment_screenshot = req.file.path;
     }
 
-    const booking = await Booking.findByIdAndUpdate(
+    const oldBikeId = booking.bike_id ? booking.bike_id.toString() : null;
+    const newBikeId = updateData.bike_id ? updateData.bike_id.toString() : null;
+    const oldStatus = booking.status;
+    const newStatus = updateData.status;
+
+    // const booking = await Booking.findByIdAndUpdate(
+    const updatedBooking = await Booking.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
       {
@@ -835,7 +910,30 @@ exports.updateBooking = async (req, res) => {
       }
     );
 
-    res.status(200).json(booking);
+    // Sync bike statuses based on changes
+    if (newBikeId !== oldBikeId) {
+      if (oldBikeId) {
+        await Bike.findByIdAndUpdate(oldBikeId, { status: "available" });
+      }
+      if (newBikeId) {
+        const currentStatus = newStatus || oldStatus;
+        if (currentStatus === "confirmed" || currentStatus === "active") {
+          await Bike.findByIdAndUpdate(newBikeId, { status: "booked" });
+        }
+      }
+    } else if (newStatus && newStatus !== oldStatus) {
+      const bikeToUpdate = newBikeId || oldBikeId;
+      if (bikeToUpdate) {
+        if (newStatus === "completed" || newStatus === "cancelled") {
+          await Bike.findByIdAndUpdate(bikeToUpdate, { status: "available" });
+        } else if (newStatus === "confirmed" || newStatus === "active") {
+          await Bike.findByIdAndUpdate(bikeToUpdate, { status: "booked" });
+        }
+      }
+    }
+
+    // res.status(200).json(booking);
+     res.status(200).json(updatedBooking);
   } catch (error) {
     console.error("Update Booking Error:", error);
     res.status(500).json({ message: error.message });
@@ -905,19 +1003,43 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const booking = await Booking.findByIdAndUpdate(
+    // const booking = await Booking.findByIdAndUpdate(
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    if (req.user && req.user.role === "staff") {
+      const hasAccess = await checkBookingAreaAccess(booking, req.user);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied: You do not have access to this area's bookings" });
+      }
+    }
+    const updatedBooking = await Booking.findByIdAndUpdate(
       req.params.id,
       { status, updated_by_admin: true },
       { new: true },
     );
 
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
+    // if (!booking) {
+    //   return res.status(404).json({ message: "Booking not found" });
+    // }
+
+    // If the status is completed or cancelled, make the bike available
+    if (status === "completed" || status === "cancelled") {
+      if (booking.bike_id) {
+        await Bike.findByIdAndUpdate(booking.bike_id, { status: "available" });
+      }
+    } else if (status === "active" || status === "confirmed") {
+      // If active or confirmed, ensure the bike status is "booked"
+      if (booking.bike_id) {
+        await Bike.findByIdAndUpdate(booking.bike_id, { status: "booked" });
+      }
     }
 
     res.json({
       message: "Booking status updated",
-      booking,
+      // booking,
+      booking : updatedBooking,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -937,6 +1059,10 @@ exports.deleteBooking = async (req, res) => {
 
     await booking.deleteOne();
 
+    if (booking.bike_id) {
+      await Bike.findByIdAndUpdate(booking.bike_id, { status: "available" });
+    }
+    
     res.json({ message: "Booking deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

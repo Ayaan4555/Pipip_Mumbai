@@ -10,6 +10,12 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "staff", "user"],
       default: "staff", // Default to staff for admin panel signups
     },
+    assigned_areas: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Area",
+      },
+    ],
   },
   { timestamps: true },
 );

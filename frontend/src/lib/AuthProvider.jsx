@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-
+import axios from "axios";
 const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
@@ -20,6 +20,9 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      // Configure global axios header for all queries
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       try {
         const res = await fetch(`${API_BASE_URL}/me`, {
           headers: {
@@ -34,6 +37,7 @@ export function AuthProvider({ children }) {
         } else {
           // Token is likely expired or invalid
           localStorage.removeItem("token");
+          delete axios.defaults.headers.common["Authorization"];
           setUser(null);
           setRole(null);
         }
@@ -63,6 +67,7 @@ export function AuthProvider({ children }) {
       }
 
       localStorage.setItem("token", data.token);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
       setUser(data.user);
       setRole(data.user.role);
 
@@ -96,6 +101,7 @@ export function AuthProvider({ children }) {
   // Signout Function
   const signOut = () => {
     localStorage.removeItem("token");
+    delete axios.defaults.headers.common["Authorization"];
     setUser(null);
     setRole(null);
   };
