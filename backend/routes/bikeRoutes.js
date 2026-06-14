@@ -8,7 +8,7 @@ const {
   deleteBike,
   getSingleBike,
 } = require("../controllers/bikeController");
-const { protect } = require("../middelwares/auth");
+const { protect } = require("../middelware/auth");
 
 // Public
 router.get("/", getBikes);
