@@ -156,7 +156,7 @@ const menuItems = [
     end: true,
   },
   { path: "/admin/panel/bikes", icon: Bike, label: "Bikes" },
-  // { path: "/admin/panel/clusters", icon: Boxes, label: "Clusters" },
+  { path: "/admin/panel/clusters", icon: Boxes, label: "Clusters" },
   { path: "/admin/panel/bookings", icon: ClipboardList, label: "Bookings" },
   {
     path: "/admin/panel/active-rentals",
