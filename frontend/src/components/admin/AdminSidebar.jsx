@@ -156,7 +156,7 @@ const menuItems = [
     end: true,
   },
   { path: "/admin/panel/bikes", icon: Bike, label: "Bikes" },
-  // { path: "/admin/panel/clusters", icon: Boxes, label: "Clusters" },
+  { path: "/admin/panel/clusters", icon: Boxes, label: "Clusters" },
   { path: "/admin/panel/bookings", icon: ClipboardList, label: "Bookings" },
   {
     path: "/admin/panel/active-rentals",
@@ -166,11 +166,11 @@ const menuItems = [
   { path: "/admin/panel/scheduler", icon: Calendar, label: "Scheduler" },
   { path: "/admin/panel/customers", icon: Users, label: "Customers" },
   { path: "/admin/panel/areas", icon: MapPin, label: "Areas" },
-  // {
-  //   path: "/admin/panel/notifications", // 👈 NEW: Deep-link route matching the Service Worker 'url' target
-  //   icon: Bell,
-  //   label: "Notifications",
-  // },
+  {
+    path: "/admin/panel/notifications", // 👈 NEW: Deep-link route matching the Service Worker 'url' target
+    icon: Bell,
+    label: "Notifications",
+  },
   { path: "/admin/panel/reports", icon: BarChart3, label: "Reports" },
   { path: "/admin/panel/settings", icon: Settings, label: "Settings" },
 ];

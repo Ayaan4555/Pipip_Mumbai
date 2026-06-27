@@ -1134,6 +1134,7 @@ import { saveAs } from "file-saver";
 import { Download } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import html2canvas from "html2canvas";
 
 const statusColors = {
   pending:
@@ -1555,6 +1556,8 @@ const [assignDialog, setAssignDialog] = useState(null);
  const [downloadingBooking, setDownloadingBooking] = useState(null);
  const [isGeneratingBill, setIsGeneratingBill] = useState(false); // 👈 NEW LOADING STATE
 
+ const [fetchingBillId, setFetchingBillId] = useState(null);
+
   // ====== NEW INVOICE STATES & HANDLER ======
   const [showInvoice, setShowInvoice] = useState(false);
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
@@ -1586,22 +1589,168 @@ const [assignDialog, setAssignDialog] = useState(null);
   };
 
   // Background canvas processing effect for immediate receipt layout downloading
+  // useEffect(() => {
+  //   if (!downloadingBooking) return;
+
+  //   const generateDirectImage = async () => {
+  //     setIsGeneratingBill(true); // 👈 1. START LOADING SPINNER NOW
+  //     const element = document.getElementById("direct-bill-hidden-node");
+  //     if (!element) {
+  //       setDownloadingBooking(null);
+  //       return;
+  //     }
+
+  //     try {
+  //       const { default: html2canvas } = await import("html2canvas");
+
+  //       const canvas = await html2canvas(element, {
+  //         scale: 3, // Premium quality print multiplier
+  //         useCORS: true,
+  //         logging: false,
+  //         backgroundColor: "#ffffff",
+  //         onclone: (clonedDoc) => {
+  //           const receipt = clonedDoc.getElementById("direct-bill-hidden-node");
+  //           if (!receipt) return;
+
+  //           // Force paper print guidelines 
+  //           receipt.style.backgroundColor = "white";
+  //           receipt.style.color = "black";
+  //           receipt.style.borderRadius = "0px";
+  //           receipt.style.border = "none";
+  //           receipt.style.boxShadow = "none";
+
+  //           // Hide decorative web components
+  //           const webHeader = clonedDoc.querySelector(".gradient-sunset-direct");
+  //           if (webHeader) webHeader.style.display = "none";
+
+  //           // Enforce layout parameters for the Tax Invoice header block
+  //           const printHeader = clonedDoc.querySelector(".print-header-direct");
+  //           if (printHeader) {
+  //             printHeader.style.setProperty("display", "flex", "important");
+  //             printHeader.style.flexDirection = "row";
+  //             printHeader.style.justifyContent = "space-between";
+  //             printHeader.style.padding = "2rem";
+  //             printHeader.style.borderBottom = "4px solid black";
+  //             printHeader.querySelectorAll("h1, h2, p").forEach((el) => (el.style.color = "black"));
+  //           }
+
+  //           const content = clonedDoc.querySelector(".content-area-direct");
+  //           if (content) {
+  //             content.style.backgroundColor = "white";
+  //             content.style.padding = "2rem";
+  //           }
+
+  //           // Standardize copy presentation to pure black ink
+  //           const allText = clonedDoc.querySelectorAll("p, span, h1, h2, h4, div");
+  //           allText.forEach((text) => {
+  //             text.style.color = "black";
+  //             text.style.borderColor = "black";
+  //           });
+
+  //           // Outline wrapper styling configuration
+  //           const amountBox = clonedDoc.querySelector(".amount-box-direct");
+  //           if (amountBox) {
+  //             amountBox.style.backgroundColor = "white";
+  //             amountBox.style.border = "2px solid black";
+  //             amountBox.style.borderRadius = "0px";
+  //             amountBox.style.padding = "2rem";
+  //           }
+
+  //           const instructions = clonedDoc.querySelector(".instructions-direct");
+  //           if (instructions) {
+  //             instructions.style.backgroundColor = "white";
+  //             instructions.style.border = "1px solid black";
+  //             instructions.style.color = "black";
+  //           }
+
+  //           const badge = clonedDoc.querySelector(".badge-direct");
+  //           if (badge) {
+  //             badge.style.setProperty("background-color", "white", "important");
+  //             badge.style.setProperty("background-image", "none", "important");
+  //             badge.style.setProperty("color", "black", "important");
+  //             badge.style.setProperty("border", "1px solid black", "important");
+  //           }
+  //         },
+  //       });
+
+  //       // Generate download action
+  //       const image = canvas.toDataURL("image/png", 1.0);
+  //       const link = document.createElement("a");
+  //       link.href = image;
+  //       link.download = `Receipt-${downloadingBooking._id}.png`;
+  //       link.click();
+  //       toast.success("Bill downloaded successfully!");
+  //     } catch (err) {
+  //       console.error("Direct download execution failed:", err);
+  //       toast.error("Could not export receipt image file.");
+  //     } finally {
+  //       // Reset state tracker to safely cleanly unmount background DOM context structure
+  //       setDownloadingBooking(null);
+  //       setIsGeneratingBill(false); // 👈 1. STOP LOADING SPINNER NOW
+  //     }
+  //   };
+
+  //   // Give React sufficient cycle overhead layout tick timing to render element nodes cleanly
+  //   const latencyTimeout = setTimeout(() => {
+  //     generateDirectImage();
+  //   }, 150);
+
+  //   return () => clearTimeout(latencyTimeout);
+  // }, [downloadingBooking, bikes]);
+
+  // Background canvas processing effect for immediate receipt layout downloading
   useEffect(() => {
     if (!downloadingBooking) return;
 
     const generateDirectImage = async () => {
-      setIsGeneratingBill(true); // 👈 1. START LOADING SPINNER NOW
+      setIsGeneratingBill(true); // START LOADING SPINNER NOW
       const element = document.getElementById("direct-bill-hidden-node");
       if (!element) {
         setDownloadingBooking(null);
         return;
       }
 
+      let iframe = null;
       try {
-        const { default: html2canvas } = await import("html2canvas");
+        // 1. Create a hidden isolated iframe to render ONLY the bill element.
+        // This prevents html2canvas from traversing the main page's massive DOM.
+        iframe = document.createElement("iframe");
+        iframe.style.position = "absolute";
+        iframe.style.top = "-9999px";
+        iframe.style.left = "-9999px";
+        iframe.style.width = "500px";
+        iframe.style.visibility = "hidden";
+        document.body.appendChild(iframe);
 
-        const canvas = await html2canvas(element, {
-          scale: 3, // Premium quality print multiplier
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+        // 2. Copy all stylesheets and Tailwind styles from parent document to the iframe
+        const styles = document.querySelectorAll("style, link[rel='stylesheet']");
+        styles.forEach((style) => {
+          doc.head.appendChild(style.cloneNode(true));
+        });
+
+        // 3. Clone and insert the bill element inside the iframe body
+        const clonedElement = element.cloneNode(true);
+        clonedElement.style.position = "static";
+        clonedElement.style.margin = "0";
+        doc.body.appendChild(clonedElement);
+
+        // 4. Wait for any images (e.g. logo) inside the iframe to load
+        const images = Array.from(doc.querySelectorAll("img"));
+        await Promise.all(
+          images.map((img) => {
+            if (img.complete) return Promise.resolve();
+            return new Promise((resolve) => {
+              img.onload = resolve;
+              img.onerror = resolve;
+            });
+          })
+        );
+
+        // 5. Run html2canvas on the isolated element inside the iframe context
+        const canvas = await html2canvas(clonedElement, {
+          scale: 2, // Optimized resolution multiplier (faster than scale 3)
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
@@ -1609,7 +1758,7 @@ const [assignDialog, setAssignDialog] = useState(null);
             const receipt = clonedDoc.getElementById("direct-bill-hidden-node");
             if (!receipt) return;
 
-            // Force paper print guidelines 
+            // Force paper print guidelines
             receipt.style.backgroundColor = "white";
             receipt.style.color = "black";
             receipt.style.borderRadius = "0px";
@@ -1617,7 +1766,9 @@ const [assignDialog, setAssignDialog] = useState(null);
             receipt.style.boxShadow = "none";
 
             // Hide decorative web components
-            const webHeader = clonedDoc.querySelector(".gradient-sunset-direct");
+            const webHeader = clonedDoc.querySelector(
+              ".gradient-sunset-direct",
+            );
             if (webHeader) webHeader.style.display = "none";
 
             // Enforce layout parameters for the Tax Invoice header block
@@ -1628,7 +1779,9 @@ const [assignDialog, setAssignDialog] = useState(null);
               printHeader.style.justifyContent = "space-between";
               printHeader.style.padding = "2rem";
               printHeader.style.borderBottom = "4px solid black";
-              printHeader.querySelectorAll("h1, h2, p").forEach((el) => (el.style.color = "black"));
+              printHeader
+                .querySelectorAll("h1, h2, p")
+                .forEach((el) => (el.style.color = "black"));
             }
 
             const content = clonedDoc.querySelector(".content-area-direct");
@@ -1638,7 +1791,9 @@ const [assignDialog, setAssignDialog] = useState(null);
             }
 
             // Standardize copy presentation to pure black ink
-            const allText = clonedDoc.querySelectorAll("p, span, h1, h2, h4, div");
+            const allText = clonedDoc.querySelectorAll(
+              "p, span, h1, h2, h4, div",
+            );
             allText.forEach((text) => {
               text.style.color = "black";
               text.style.borderColor = "black";
@@ -1653,7 +1808,9 @@ const [assignDialog, setAssignDialog] = useState(null);
               amountBox.style.padding = "2rem";
             }
 
-            const instructions = clonedDoc.querySelector(".instructions-direct");
+            const instructions = clonedDoc.querySelector(
+              ".instructions-direct",
+            );
             if (instructions) {
               instructions.style.backgroundColor = "white";
               instructions.style.border = "1px solid black";
@@ -1681,9 +1838,12 @@ const [assignDialog, setAssignDialog] = useState(null);
         console.error("Direct download execution failed:", err);
         toast.error("Could not export receipt image file.");
       } finally {
-        // Reset state tracker to safely cleanly unmount background DOM context structure
+        // Cleanup temporary iframe
+        if (iframe && iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
         setDownloadingBooking(null);
-        setIsGeneratingBill(false); // 👈 1. STOP LOADING SPINNER NOW
+        setIsGeneratingBill(false); 
       }
     };
 
@@ -1694,6 +1854,12 @@ const [assignDialog, setAssignDialog] = useState(null);
 
     return () => clearTimeout(latencyTimeout);
   }, [downloadingBooking, bikes]);
+
+  const handleBillClick = (booking) => {
+    setFetchingBillId(booking._id);
+    setIsGeneratingBill(true);
+    setDownloadingBooking(booking);
+  };
 
 
   // Add this inside your Bookings component
@@ -4819,7 +4985,7 @@ useEffect(() => {
   
   {/* ========================================================================= */}
 
-  {/* <Button
+  <Button
     size="sm"
     variant="outline"
     disabled={isGeneratingBill} // Disables clicking while downloading
@@ -4837,7 +5003,28 @@ useEffect(() => {
         Bill
       </>
     )}
-  </Button> */}
+  </Button>
+
+  <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isGeneratingBill} // Disables clicking while downloading
+                            onClick={() => handleBillClick(booking)}
+                            className="text-emerald-600 hover:bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:border-emerald-800"
+                          >
+                            {isGeneratingBill &&
+                            fetchingBillId === booking._id ? ( // 👈 Updated comparison check
+                              <>
+                                <span className="animate-spin mr-1 inline-block w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full dark:border-emerald-400"></span>
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="w-4 h-4 mr-1" />
+                                Bill
+                              </>
+                            )}
+                          </Button>
 
                           {(booking.status === "active" ||
                             booking.status === "confirmed" ||
