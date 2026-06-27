@@ -4985,7 +4985,7 @@ useEffect(() => {
   
   {/* ========================================================================= */}
 
-  <Button
+  {/* <Button
     size="sm"
     variant="outline"
     disabled={isGeneratingBill} // Disables clicking while downloading
@@ -5003,7 +5003,7 @@ useEffect(() => {
         Bill
       </>
     )}
-  </Button>
+  </Button> */}
 
   <Button
                             size="sm"
