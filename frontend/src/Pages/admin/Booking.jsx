@@ -4692,7 +4692,7 @@ useEffect(() => {
 
 
       <div className="flex flex-col gap-4">
-        <div className="relative w-full max-w-md">
+        {/* <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by customer, bike, plate..."
@@ -4700,7 +4700,17 @@ useEffect(() => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
-        </div>
+        </div> */}
+
+        <div className="relative w-full max-w-md touch-action-manipulation">
+  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+  <Input
+    placeholder="Search by customer, bike, plate..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="pl-10 pointer-events-auto"
+  />
+</div>
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v)}
