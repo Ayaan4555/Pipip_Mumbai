@@ -3532,6 +3532,7 @@ useEffect(() => {
   // };
 
   const handleExtendRental = async () => {
+    if (extendBooking.isPending) return;
     if (!isExtendAvailable) {
       toast.error("Cannot extend — bike not available");
 
@@ -5408,12 +5409,19 @@ useEffect(() => {
                 Cancel
               </Button>
 
-              <Button
+              {/* <Button
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={handleExtendRental}
               >
                 Extend Rental
-              </Button>
+              </Button> */}
+              <Button
+  className="bg-blue-600 hover:bg-blue-700"
+  onClick={handleExtendRental}
+  disabled={extendBooking.isPending}
+>
+  {extendBooking.isPending ? "Extending..." : "Extend Rental"}
+</Button>
             </div>
           </div>
         </DialogContent>
