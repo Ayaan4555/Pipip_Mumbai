@@ -192,12 +192,25 @@ export function useBikeAvailability() {
       isClusterOrBookingId = false,
       bookingId = null
     ) => {
+      // if (!bikeId || !startDate || !endDate) {
+      //   return {
+      //     isAvailable: false,
+      //     message: "Invalid date selection",
+      //   };
+      // }
+
+
       if (!bikeId || !startDate || !endDate) {
-        return {
-          isAvailable: false,
-          message: "Invalid date selection",
-        };
-      }
+  console.log("DEBUG");
+  console.log("bikeId:", bikeId);
+  console.log("startDate:", startDate);
+  console.log("endDate:", endDate);
+
+  return {
+    isAvailable: false,
+    message: "Invalid date selection",
+  };
+}
 
       setChecking(true);
 
