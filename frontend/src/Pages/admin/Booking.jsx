@@ -3618,15 +3618,28 @@ useEffect(() => {
     }
   };
 
+  // const handleOpenExtend = (booking) => {
+  //   setExtendDialog(booking);
+
+  //   setExtendData({
+  //     new_end_datetime: toLocalISO(booking.end_datetime),
+
+  //     extra_amount: "",
+  //   });
+  // };
+
   const handleOpenExtend = (booking) => {
-    setExtendDialog(booking);
+  console.log("Booking:", booking);
+  console.log("booking.bike_id:", booking.bike_id);
+  console.log("booking.bikes:", booking.bikes);
 
-    setExtendData({
-      new_end_datetime: toLocalISO(booking.end_datetime),
+  setExtendDialog(booking);
 
-      extra_amount: "",
-    });
-  };
+  setExtendData({
+    new_end_datetime: toLocalISO(booking.end_datetime),
+    extra_amount: "",
+  });
+};
 
   const handleExtraDocsChange = (e) => {
     const files = Array.from(e.target.files);
