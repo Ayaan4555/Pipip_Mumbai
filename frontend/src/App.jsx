@@ -26,7 +26,7 @@ import RefundPolicy from "./Pages/RefundPolicy";
 import AnalyticsTracker from "./Pages/AnalyticsTracker";
 import NotificationsCenter from "./Pages/admin/Notifications";
 import Clusters from "./Pages/admin/Clusters";
-import Expenses from "./pages/admin/Expenses";
+import Expenses from "./Pages/admin/Expenses";
 import AboutPage from "./Pages/AboutPage";
 
 
