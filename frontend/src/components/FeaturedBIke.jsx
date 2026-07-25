@@ -48,7 +48,8 @@ const FeaturedBikes = () => {
   };
 
   return (
-    <section className="py-16 bg-background">
+    // <section className="py-16 bg-background">
+    <section id="featured-rides" className="py-16 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">

@@ -53,6 +53,41 @@ const initialCustomerData = {
   aadhaar_image: null, // 👈 FILE
   license_image: null, // 👈 FILE
 };
+
+const POLICY_DATA = {
+  privacy: {
+    title: "Privacy Policy",
+    content: [
+      { title: "1. What We Collect", items: ["Identity & Contact Info: Name, email, address", "Government ID: Aadhaar, Driving License", "Vehicle Info: Registration, insurance, permits", "Payment Details: Bank account, UPI, transaction history", "Location Data: GPS tracking during trips (with consent)"] },
+      { title: "2. How We Use Your Data", items: ["Provide and improve services", "Process bookings and payments", "Ensure safety and security", "Communicate with you", "Comply with laws and regulations"] },
+      { title: "3. Sharing Your Data", items: ["Service providers and partners", "Law enforcement and regulatory authorities", "Hosts and Guests (for trip-related info)"] },
+      { title: "4. Your Rights", items: ["Access and correct your data", "Withdraw consent", "Delete your data", "Nominate someone to manage your data"] }
+    ]
+  },
+  refund: {
+    title: "Refund Policy",
+    content: [
+      { title: "1. Cancellation by User (Before Trip)", items: ["24 hours or more: Full refund minus convenience fee (if applicable).", "Less than 24 hours: 50% of rental amount refunded."] },
+      { title: "2. Cancellation by User (During Trip)", items: ["No refund for remaining rental period."] },
+      { title: "3. Cancellation by Pipip", items: ["If we cancel due to unforeseen circumstances, you'll receive a full refund."] },
+      { title: "4. Refund Process", items: ["Refunds are processed within 5-7 business days to the original payment method."] },
+      { title: "5. Security Deposit", items: ["Refunded within 24-48 hours after vehicle return and inspection."] },
+      { title: "6. Damages and Charges", items: ["Any damages, fines, or charges will be deducted from the security deposit."] }
+    ]
+  },
+  terms: {
+    title: "Terms & Conditions",
+    content: [
+      { title: "1. Introduction", items: ["Welcome to Pipip! These Terms and Conditions govern your use of our Platform. By accessing or using our Platform, you agree to be bound by these Terms."] },
+      { title: "2. User Responsibilities", items: ["Provide accurate information for registration and booking.", "Ensure you have a valid driving license and follow traffic rules.", "Use vehicles responsibly and return them in the same condition."] },
+      { title: "3. Booking and Payment", items: ["Bookings are subject to vehicle availability.", "Payments are processed through our secure payment gateway.", "Rental charges, security deposits, and additional fees apply."] },
+      { title: "4. Cancellation Policy", items: ["Cancellations 48 hours before trip start: Complete refund in 3-5 working days (exc. GST)", "Cancellations 24 hours before trip starts: 50% of the amount (exc. GST)", "Cancellations 12 hours before trip starts: No refund"] },
+      { title: "5. Liability and Insurance", items: ["Pipip is not liable for damages or losses due to User negligence.", "Users are responsible for insurance excess and damages."] }
+    ]
+  }
+};
+
+
 export default function BookBike() {
   const { bikeId } = useParams();
 
@@ -114,6 +149,9 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const createCustomer = useCreateCustomer();
   const createBooking = useCreateBooking();
   const { checkAvailability, checking } = useBikeAvailability();
+
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [activePolicy, setActivePolicy] = useState(null); // 'terms' | 'privacy' | 'refund' | null
 
   const SECURITY_DEPOSIT = 2000;
 
@@ -460,7 +498,8 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: calculatePrice(),
+            // amount: calculatePrice(),
+            amount: 200,
             customerName: customerData.name,
             customerEmail: customerData.email || "customer@pipip.com",
             customerPhone: customerData.phone,
@@ -1393,14 +1432,23 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                 </div>
 
                 {/* Amount Box */}
-                <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 print:bg-white print:border-2 print:border-black print:rounded-none">
-                  <div className="flex justify-between items-end">
+
+               {/* <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 print:bg-white print:border-2 print:border-black print:rounded-none">
+                  <div className="flex justify-between items-end"> */}
+
+                  <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 print:bg-white print:border-2 print:border-black print:rounded-none space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-dashed border-primary/20">
                     <div>
-                      <span className="text-[10px] font-black uppercase text-primary print:text-black tracking-widest">
-                        Total Amount Paid
+                      {/* <span className="text-[10px] font-black uppercase text-primary print:text-black tracking-widest">
+                        Total Amount Paid */}
+
+                        <span className="text-[10px] font-black uppercase text-muted-foreground print:text-black tracking-widest">
+                        Total Bill
                       </span>
-                      <p className="text-5xl font-display font-black text-foreground print:text-black">
-                        ₹{calculatePrice(true)}
+                      {/* <p className="text-5xl font-display font-black text-foreground print:text-black">
+                        ₹{calculatePrice(true)} */}
+                        <p className="text-2xl font-display font-black text-foreground print:text-black">
+                        ₹{calculatePrice(false) + SECURITY_DEPOSIT}
                       </p>
                     </div>
                     <div className="text-right">
@@ -1408,8 +1456,27 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                         className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${paymentMethod === "online" ? "bg-green-500 text-white border-none" : "bg-orange-500 text-white border-none"} print:bg-white print:text-black print:border-black print:border`}
                       >
                         {paymentMethod === "online"
-                          ? "Verified PAID"
+                          // ? "Verified PAID"
+                          ? "Token Paid Online"
                           : "Pay on Pickup"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-muted-foreground print:text-black tracking-widest block">
+                        Amount Paid Now
+                      </span>
+                      <span className="font-bold text-foreground print:text-black">
+                        ₹{paymentMethod === "online" ? "200" : "0"}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-black uppercase text-primary print:text-black tracking-widest block">
+                        Remaining at Pickup
+                      </span>
+                      <span className="font-extrabold text-primary print:text-black text-lg">
+                        ₹{paymentMethod === "online" ? calculatePrice(false) + SECURITY_DEPOSIT - 200 : calculatePrice(false) + SECURITY_DEPOSIT}
                       </span>
                     </div>
                   </div>
@@ -1572,6 +1639,21 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                         ₹{SECURITY_DEPOSIT}
                       </span>
                     </div>
+
+                    <div className="border-t border-border border-dashed my-3" />
+                    <div className="bg-primary/10 border border-primary/20 rounded-2xl p-3 text-center space-y-1 relative overflow-hidden shadow-sm shadow-primary/5">
+                      <div className="absolute -right-6 -top-6 w-16 h-16 bg-primary/10 rounded-full blur-lg pointer-events-none" />
+                      <span className="text-[10px] font-black uppercase text-primary tracking-widest block">
+                        Exclusive Booking Token Offer
+                      </span>
+                      <p className="text-xl font-display font-black text-foreground">
+                        Pay only <span className="text-gradient-sunset font-extrabold">₹200</span> online!
+                      </p>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        Confirm your ride now for ₹200. Pay the remaining balance at pickup!
+                      </p>
+                    </div>
+                    
                     {startDate && endDate && (
                       <>
                         <div className="border-t border-border my-2" />
@@ -1881,10 +1963,61 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                           )}
                         </div>
 
+                        {/* Terms & Conditions Checkbox */}
+                        <div className="flex items-start gap-3 mt-6 border-t border-border pt-4">
+                          <input
+                            id="terms"
+                            type="checkbox"
+                            className="w-4 h-4 mt-1 rounded border-border cursor-pointer accent-primary"
+                            checked={termsAccepted}
+                            onChange={(e) => setTermsAccepted(e.target.checked)}
+                            required
+                          />
+                          <Label htmlFor="terms" className="text-xs text-muted-foreground leading-normal cursor-pointer">
+                            I agree to the{" "}
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActivePolicy("terms");
+                              }}
+                              className="text-primary font-semibold hover:underline cursor-pointer font-bold"
+                            >
+                              Terms & Conditions
+                            </span>
+                            ,{" "}
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActivePolicy("privacy");
+                              }}
+                              className="text-primary font-semibold hover:underline cursor-pointer font-bold"
+                            >
+                              Privacy Policy
+                            </span>
+                            , and{" "}
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActivePolicy("refund");
+                              }}
+                              className="text-primary font-semibold hover:underline cursor-pointer font-bold"
+                            >
+                              Refund Policy
+                            </span>
+                            .
+                          </Label>
+                        </div>
+
                         <Button
                           type="submit"
-                          className="w-full gradient-sunset text-primary-foreground"
-                          disabled={isAvailable === false || checking}
+                          // className="w-full gradient-sunset text-primary-foreground"
+                          // disabled={isAvailable === false || checking}
+
+                          className="w-full gradient-sunset text-primary-foreground mt-4"
+                          disabled={isAvailable === false || checking || !termsAccepted}
                         >
                           {isAvailable === false
                             ? "Bike Not Available"
@@ -1990,15 +2123,57 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                         </div>
 
                         <div className="border-t border-border pt-2">
-                          <div className="flex justify-between items-center">
+                          {/* <div className="flex justify-between items-center">
                             <span className="font-bold text-foreground">
-                              Total Amount
+                              Total Amount */}
+                              <div className="flex justify-between items-center text-sm font-semibold">
+                            <span className="text-foreground">
+                              Total Bill
                             </span>
-                            <span className="text-primary text-xl font-black">
-                              ₹{calculatePrice(true)}
+                            {/* <span className="text-primary text-xl font-black">
+                              ₹{calculatePrice(true)} */}
+                              <span className="text-foreground">
+                              ₹{calculatePrice(false) + SECURITY_DEPOSIT}
                             </span>
                           </div>
                         </div>
+                        {paymentMethod === "online" ? (
+                          <>
+                            <div className="border-t border-border border-dashed pt-2 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-bold text-primary">
+                                  Booking Amount (Pay Online Now)
+                                </span>
+                                <span className="text-primary text-xl font-black">
+                                  ₹200
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                <span>Remaining Amount (Pay at Pickup)</span>
+                                <span className="font-semibold text-foreground">
+                                  ₹{calculatePrice(false) + SECURITY_DEPOSIT - 200}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="bg-primary/5 p-3 rounded-xl border border-primary/25 text-[11px] text-primary/90 leading-relaxed">
+                              💡 <strong>Note:</strong> You will pay only ₹200 now to confirm your booking. The remaining balance of ₹{calculatePrice(false) + SECURITY_DEPOSIT - 200} (including security deposit) is to be paid directly to our staff when you pick up the bike.
+                            </div>
+                          </>
+                        ) : (
+                          <div className="border-t border-border border-dashed pt-2 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-bold text-foreground">
+                                Amount to Pay at Pickup
+                              </span>
+                              <span className="text-primary text-xl font-black">
+                                ₹{calculatePrice(false) + SECURITY_DEPOSIT}
+                              </span>
+                            </div>
+                            <div className="bg-muted p-3 rounded-xl text-[11px] text-muted-foreground leading-relaxed">
+                              💡 <strong>Note:</strong> Since you chose Pay at Pickup, no advance payment is needed. The total bill of ₹{calculatePrice(false) + SECURITY_DEPOSIT} is payable to our staff at shop check-in.
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="border-t border-border/50 my-2" />
@@ -2074,7 +2249,8 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                               Processing...
                             </div>
                           ) : (
-                            `Pay ₹${calculatePrice(true)}`
+                            // `Pay ₹${calculatePrice(true)}`
+                             "Pay ₹200"
                           )}
                         </Button>
                       </div>
@@ -2087,6 +2263,56 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
         </div>
       </main>
       <Footer />
+
+      {/* Policy Modal Dialog */}
+      <AnimatePresence>
+        {activePolicy && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-card border border-border w-full max-w-2xl max-h-[80vh] rounded-[2rem] overflow-hidden flex flex-col shadow-2xl"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-border flex items-center justify-between bg-muted/30">
+                <h2 className="text-2xl font-bold font-display text-foreground">
+                  {POLICY_DATA[activePolicy].title}
+                </h2>
+                <button
+                  onClick={() => setActivePolicy(null)}
+                  className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+              {/* Scrollable Content */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-muted-foreground leading-relaxed">
+                {POLICY_DATA[activePolicy].content.map((sec, idx) => (
+                  <div key={idx} className="space-y-4">
+                    <h3 className="font-semibold text-foreground text-base">
+                      {sec.title}
+                    </h3>
+                    <ul className="space-y-2 pl-4 list-disc">
+                      {sec.items.map((item, j) => (
+                        <li key={j} className="marker:text-primary">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              {/* Footer */}
+              <div className="p-6 border-t border-border flex justify-end bg-muted/30">
+                <Button onClick={() => setActivePolicy(null)} className="gradient-sunset text-white">
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
