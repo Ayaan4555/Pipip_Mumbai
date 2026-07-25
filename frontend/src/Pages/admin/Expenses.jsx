@@ -39,14 +39,14 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { Label } from "../../components/ui/label";
-import { useAuth } from "../../utils/AuthProvider";
+import { useAuth } from "../../lib/AuthProvider";
 import { useExpenses, useCreateExpense, useUpdateExpense } from "../../hooks/useExpenses";
 import {
   useDailyAccounts,
   useCreateDailyAccount,
   useUpdateDailyAccount,
   useDeleteDailyAccount,
-} from "../../hooks/useDailyAccounts";
+} from "../../hooks/useDailyAccount";
 import {
   useTodayReport,
   useHistoricalReports,
