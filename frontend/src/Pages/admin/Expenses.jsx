@@ -52,7 +52,7 @@ import {
   useHistoricalReports,
   useReportSettings,
   useUpdateReportSettings,
-} from "../../hooks/useDailyReports";
+} from "../../hooks/useReports";
 import { useBikes } from "../../hooks/useBikes";
 import {
   useVehicleServices,
@@ -60,7 +60,7 @@ import {
   useCreateVehicleService,
   useUpdateVehicleService,
   useDeleteVehicleService,
-} from "../../hooks/useVehicleServices";
+} from "../../hooks/useVehicleService";
 
 const formatCurrency = (val) => {
   return new Intl.NumberFormat("en-IN", {
