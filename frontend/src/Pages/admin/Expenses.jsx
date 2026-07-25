@@ -52,7 +52,8 @@ import {
   useHistoricalReports,
   useReportSettings,
   useUpdateReportSettings,
-} from "../../hooks/useReports";
+  
+} from "../../hooks/useDailyReports";
 import { useBikes } from "../../hooks/useBikes";
 import {
   useVehicleServices,
