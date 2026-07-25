@@ -39,6 +39,7 @@ const bikeSchema = new mongoose.Schema(
     number_plate: { type: String, required: true, unique: true },
     bike_colour: { type: String },
     bike_owner: { type: String },
+    fine_owner: { type: String },
 
     // Pricing
     price_per_hour: { type: Number, required: true },

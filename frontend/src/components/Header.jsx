@@ -123,7 +123,8 @@ const Header = () => {
   // Define links: path/id, display label, and whether it's a page or a section
   const navLinks = [
     { id: "home", label: "Home", type: "section" },
-    { id: "about", label: "About", type: "section" },
+    // { id: "about", label: "About", type: "section" },
+    { id: "/about", label: "About", type: "page" },
     { id: "pricing", label: "Pricing", type: "section" },
     { id: "/catalog", label: "Catalog", type: "page" }, // Direct page link
     { id: "/contact", label: "Contact", type: "page" },

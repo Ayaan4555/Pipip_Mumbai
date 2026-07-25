@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import About from "../components/About";
+// import About from "../components/About";
 import Contact from "../components/Contact";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -8,7 +8,7 @@ import Pricing from "../components/Pricing";
 import RentalForm from "../components/RentalForm";
 import { useEffect } from "react";
 import FeaturedBikes from "../components/FeaturedBIke";
-import FAQ from "../components/FAQ";
+// import FAQ from "../components/FAQ";
 import useSEO from "../hooks/useSEO";
 import { motion } from "framer-motion";
 import { Sparkles, ChevronRight } from "lucide-react";
@@ -89,10 +89,10 @@ const Index = () => {
           </motion.div>
         </section>
         <FeaturedBikes />
-        <About />
+        {/* <About /> */}
         <Pricing />
         {/* <RentalForm /> */}
-        <FAQ />
+        {/* <FAQ /> */}
       </main>
       <Footer />
     </div>

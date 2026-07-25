@@ -26,6 +26,8 @@ import RefundPolicy from "./Pages/RefundPolicy";
 import AnalyticsTracker from "./Pages/AnalyticsTracker";
 import NotificationsCenter from "./Pages/admin/Notifications";
 import Clusters from "./Pages/admin/Clusters";
+import Expenses from "./pages/admin/Expenses";
+import AboutPage from "./Pages/AboutPage";
 
 
 
@@ -52,6 +54,7 @@ const App = () => {
       <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/catalog" element={<Catalog />} />
@@ -67,6 +70,7 @@ const App = () => {
           {/* 👈 NEW: Mount Notifications View cleanly within Admin Grid matching paths entry */}
           <Route path="notifications" element={<NotificationsCenter />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="expenses" element={<Expenses />} />
           <Route index element={<Dashboard />} />
           <Route path="settings" element={<Settings />} />
           </Route>

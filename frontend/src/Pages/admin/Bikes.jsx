@@ -2224,6 +2224,7 @@ const initialFormData = {
   bike_name: "",
   bike_colour: "",
   bike_owner: "",
+  fine_owner: "",
   insurance_end_date: "",
   puc_end_date: "",
   bike_end_date: "",
@@ -2632,6 +2633,7 @@ const filteredBikes = (bikes || []).filter((bike) => {
       bike_name: bike.bike_name || "",
       bike_colour: bike.bike_colour || "",
       bike_owner: bike.bike_owner || "",
+      fine_owner: bike.fine_owner || "",
 
       bike_expenses: bike.bike_expenses || 0,
       total_km_run: bike.total_km_run || 0,
@@ -2865,6 +2867,23 @@ const filteredBikes = (bikes || []).filter((bike) => {
                           })
                         }
                         placeholder="Owner name"
+                        className="bg-input border-border"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fine_owner">Fine Owner</Label>
+                      <Input
+                        id="fine_owner"
+                        value={formData.fine_owner}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            fine_owner: e.target.value,
+                          })
+                        }
+                        placeholder="Fine owner name"
                         className="bg-input border-border"
                       />
                     </div>
@@ -3376,6 +3395,8 @@ const filteredBikes = (bikes || []).filter((bike) => {
                       value={viewingBike.bike_colour}
                     />
                     <DetailItem label="Owner" value={viewingBike.bike_owner} />
+
+                    <DetailItem label="Fine Owner" value={viewingBike.fine_owner} />
                     <DetailItem
                       label="Area"
                       value={getAreaName(viewingBike.area_id)}

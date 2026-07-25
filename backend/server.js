@@ -108,6 +108,11 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/notifications", notificationRoutes); // 👈 NEW: Notification routes mounted
 app.use("/api/clusters", require("./routes/ClusterRoutes"));
 
+app.use("/api/expenses", require("./routes/ExpenseRoutes"));
+app.use("/api/daily-accounts", require("./routes/DailyAccountRoutes"));
+app.use("/api/daily-reports", require("./routes/dailyReportRoutes"));
+app.use("/api/vehicle-services", require("./routes/VehicleServiceHistoryRoutes"));
+
 // 5. Socket.io Connection Monitoring Log
 io.on("connection", (socket) => {
   console.log(`🔌 Admin dashboard socket connected: ${socket.id}`);
@@ -134,4 +139,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server and Socket.io running on port ${PORT}`);
+  // Start daily report cron automation
+  const { initDailyReportScheduler } = require("./controllers/dailyReportController");
+  initDailyReportScheduler();
 });

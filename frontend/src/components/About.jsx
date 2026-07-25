@@ -25,9 +25,12 @@ const About = () => {
       description: "We accept UPI, and all major payment methods.",
     },
     {
-      icon: Headphones,
-      title: "24/7 Support",
-      description: "Our support team is always available to assist you during your rental.",
+      // icon: Headphones,
+      // title: "24/7 Support",
+      icon: Clock,
+      title: "Service Hours",
+      // description: "Our support team is always available to assist you during your rental.",
+      description: "Our rental operations run daily from 9:00 AM to 11:00 PM. Services are inactive outside these hours.",
     },
   ];
 
