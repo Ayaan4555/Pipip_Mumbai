@@ -167,7 +167,7 @@ const menuItems = [
   { path: "/admin/panel/scheduler", icon: Calendar, label: "Scheduler" },
   { path: "/admin/panel/customers", icon: Users, label: "Customers" },
   { path: "/admin/panel/areas", icon: MapPin, label: "Areas" },
-  { path: "/admin/panel/expenses", icon: Banknote, label: "Expenses" },
+  // { path: "/admin/panel/expenses", icon: Banknote, label: "Expenses" },
   {
     path: "/admin/panel/notifications", // 👈 NEW: Deep-link route matching the Service Worker 'url' target
     icon: Bell,
