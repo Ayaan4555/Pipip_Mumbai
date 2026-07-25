@@ -27,18 +27,18 @@ import {
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
-import { Badge } from "../../components/ui/Badge";
+import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/ui/Dialog";
-import { Label } from "../../components/ui/Label";
+} from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
 import { useAuth } from "../../utils/AuthProvider";
 import { useExpenses, useCreateExpense, useUpdateExpense } from "../../hooks/useExpenses";
 import {
