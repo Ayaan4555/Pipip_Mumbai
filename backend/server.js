@@ -108,7 +108,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/notifications", notificationRoutes); // 👈 NEW: Notification routes mounted
 app.use("/api/clusters", require("./routes/ClusterRoutes"));
 
-app.use("/api/expenses", require("./routes/ExpenseRoutes"));
+app.use("/api/expenses", require("./routes/ExpenseRoute"));
 app.use("/api/daily-accounts", require("./routes/DailyAccountRoutes"));
 app.use("/api/daily-reports", require("./routes/dailyReportRoutes"));
 app.use("/api/vehicle-services", require("./routes/VehicleServiceHistoryRoutes"));
