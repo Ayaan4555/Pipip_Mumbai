@@ -610,7 +610,8 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: calculatePrice(true),
+            // amount: calculatePrice(true),
+            amount:200,
             customerName: customerData.name,
             customerEmail: customerData.email || "customer@pipip.com",
             customerPhone: customerData.phone,
@@ -1653,7 +1654,7 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                         Confirm your ride now for ₹200. Pay the remaining balance at pickup!
                       </p>
                     </div>
-                    
+
                     {startDate && endDate && (
                       <>
                         <div className="border-t border-border my-2" />
