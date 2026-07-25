@@ -17,6 +17,7 @@ import {
   Bike,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -116,6 +117,17 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   const SECURITY_DEPOSIT = 2000;
 
+  const isEligibleForDailyRate = useMemo(() => {
+    if (!startDate || !endDate) return false;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (end <= start) return false;
+    const totalHours = differenceInHours(end, start);
+    if (totalHours < 3) return false;
+    const remainingHours = totalHours % 24;
+    return remainingHours >= 6;
+  }, [startDate, endDate]);
+
   // 1. Helper to get ISO string rounded to the top of the hour
   const getRoundedISO = (date) => {
     const d = new Date(date);
@@ -149,6 +161,13 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
       if (end <= start) {
         setAvailabilityMessage("⚠️ Return date must be after pickup date");
+        setIsAvailable(false);
+        return;
+      }
+
+      const totalHours = differenceInHours(end, start);
+      if (totalHours < 3) {
+        setAvailabilityMessage("⚠️ Minimum booking duration is 3 hours");
         setIsAvailable(false);
         return;
       }
@@ -230,9 +249,31 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
     const days = Math.floor(totalHours / 24);
     const remainingHours = totalHours % 24;
 
-    const rentalPrice =
-      days * Number(bike.price_per_day) +
-      remainingHours * Number(bike.price_per_hour);
+    // const rentalPrice =
+    //   days * Number(bike.price_per_day) +
+    //   remainingHours * Number(bike.price_per_hour);
+
+    let rentalPrice = 0;
+    const hourlyRate = Number(bike.price_per_hour || 0);
+    const dailyRate = Number(bike.price_per_day || 0);
+    if (days === 0) {
+      if (totalHours < 3) {
+        rentalPrice = 3 * hourlyRate;
+      } else if (totalHours <= 5) {
+        rentalPrice = totalHours * hourlyRate;
+      } else {
+        rentalPrice = dailyRate;
+      }
+    } else {
+      rentalPrice = days * dailyRate;
+      if (remainingHours > 0) {
+        if (remainingHours >= 6) {
+          rentalPrice += dailyRate;
+        } else {
+          rentalPrice += Math.min(remainingHours * hourlyRate, dailyRate);
+        }
+      }
+    }
 
     return includeDeposit ? rentalPrice + SECURITY_DEPOSIT : rentalPrice;
   };
@@ -1808,6 +1849,30 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                             )}
                           </AnimatePresence>
 
+                          {/* Daily Rate Offer Message */}
+                          <AnimatePresence>
+                            {isAvailable && isEligibleForDailyRate && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
+                                className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-orange-500/30 shadow-lg shadow-orange-500/5 flex items-start gap-3 relative overflow-hidden"
+                              >
+                                <div className="absolute -right-8 -top-8 w-24 h-24 bg-orange-500/10 rounded-full blur-xl pointer-events-none" />
+                                <Sparkles className="w-5 h-5 text-orange-400 shrink-0 mt-0.5 animate-pulse" />
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-bold text-orange-200">
+                                    Woohoo! You get the entire day offer! 🎁
+                                  </h4>
+                                  <p className="text-xs text-orange-300/90 leading-relaxed">
+                                    Your booking duration qualifies for our <strong>Daily Price Cap</strong>. Any extra hours are upgraded to a full day pass at no additional charge!
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
                           {checking && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
@@ -1904,9 +1969,16 @@ const [currentImgIndex, setCurrentImgIndex] = useState(0);
                           <span className="text-muted-foreground">
                             Rental Amount
                           </span>
-                          <span className="text-foreground font-medium">
-                            ₹{calculatePrice(false)}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-foreground font-medium">
+                              ₹{calculatePrice(false)}
+                            </span>
+                            {isEligibleForDailyRate && (
+                              <span className="text-[10px] text-orange-400 font-semibold flex items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                                <Sparkles className="w-2.5 h-2.5" /> Full day cap applied!
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">

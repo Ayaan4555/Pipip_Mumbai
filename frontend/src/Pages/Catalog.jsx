@@ -894,6 +894,10 @@ const Catalog = () => {
     const combined = [...clusterItems, ...bikeItems];
 
     return combined.filter(item => {
+      if (item.isCluster) {
+        const hasAvailableBike = item.bikes && item.bikes.some(bike => bike.status === "available");
+        if (!hasAvailableBike) return false;
+      }
       const areaId = item.isCluster ? item.area_id?._id || item.area_id : item.area_id;
       const areaMatch =
         selectedArea === "all" ||

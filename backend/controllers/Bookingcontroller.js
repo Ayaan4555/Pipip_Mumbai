@@ -610,16 +610,36 @@ exports.adminCreateBooking = async (req, res) => {
       const hourlyRate = Number(bike.price_per_hour || 0);
       const dailyRate = Number(bike.price_per_day || 0);
 
-      if (totalHours >= 24 && dailyRate > 0) {
-        const days = Math.floor(totalHours / 24);
-        const remainingHours = totalHours % 24;
-        final_total_amount = days * dailyRate + remainingHours * hourlyRate;
+      // if (totalHours >= 24 && dailyRate > 0) {
+      //   const days = Math.floor(totalHours / 24);
+      //   const remainingHours = totalHours % 24;
+      //   final_total_amount = days * dailyRate + remainingHours * hourlyRate;
 
-        if (remainingHours * hourlyRate > dailyRate) {
-          final_total_amount = (days + 1) * dailyRate;
+      const days = Math.floor(totalHours / 24);
+      const remainingHours = totalHours % 24;
+
+        // if (remainingHours * hourlyRate > dailyRate) {
+        //   final_total_amount = (days + 1) * dailyRate;
+
+        if (days === 0) {
+        if (totalHours < 3) {
+          final_total_amount = 3 * hourlyRate;
+        } else if (totalHours <= 5) {
+          final_total_amount = totalHours * hourlyRate;
+        } else {
+          final_total_amount = dailyRate;
+
         }
       } else {
-        final_total_amount = totalHours * hourlyRate;
+        // final_total_amount = totalHours * hourlyRate;
+        final_total_amount = days * dailyRate;
+        if (remainingHours > 0) {
+          if (remainingHours >= 6) {
+            final_total_amount += dailyRate;
+          } else {
+            final_total_amount += Math.min(remainingHours * hourlyRate, dailyRate);
+          }
+        }
       }
     }
 
